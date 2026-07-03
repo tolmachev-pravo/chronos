@@ -10,11 +10,14 @@
 
     @if (_isLoading)
     {
-        <div class="extv-glow__grid mt-5">
-            @for (var i = 0; i < 3; i++)
-            {
-                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="210px" Class="feat-page__skeleton" />
-            }
+        <div class="feat-catalog mt-5">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="260px" Class="feat-page__skeleton" />
+            <div class="extv-glow__grid">
+                @for (var i = 0; i < 3; i++)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="210px" Class="feat-page__skeleton" />
+                }
+            </div>
         </div>
     }
     else if (_features.Count == 0)
@@ -23,10 +26,17 @@
     }
     else
     {
-        <div class="extv-glow__grid mt-5">
-            @foreach (var feature in _features)
+        <div class="feat-catalog mt-5">
+            <FeatureHero Feature="_features[0]" />
+
+            @if (_features.Count > 1)
             {
-                <FeatureCard Feature="feature" />
+                <div class="extv-glow__grid">
+                    @for (var i = 1; i < _features.Count; i++)
+                    {
+                        <FeatureCard Feature="_features[i]" />
+                    }
+                </div>
             }
         </div>
     }
