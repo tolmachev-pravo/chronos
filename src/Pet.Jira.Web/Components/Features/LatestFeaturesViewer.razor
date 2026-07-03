@@ -22,10 +22,10 @@ else
             </MudLink>
         </div>
 
-        <div class="extv-glow__grid mt-4">
-            @foreach (var feature in _features)
+        <div class="feat-promo__bento mt-4" data-count="@_features.Count">
+            @for (var i = 0; i < _features.Count; i++)
             {
-                <FeatureCard Feature="feature" />
+                <FeatureCard Feature="_features[i]" Featured="@(i == 0)" />
             }
         </div>
     </div>

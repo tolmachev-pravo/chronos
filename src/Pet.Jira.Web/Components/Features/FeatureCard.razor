@@ -1,7 +1,11 @@
 @using Pet.Jira.Web.Components.Markdown
 
-<div class="extv-glow__outer feat-card" @onclick="OpenDetailAsync">
-    <MudPaper Elevation="0" Class="extv-glow__card">
+<div class="extv-glow__outer feat-card @(Featured ? "extv-glow__outer--hero" : null)" @onclick="OpenDetailAsync">
+    <MudPaper Elevation="0" Class="@CardClass">
+        @if (Featured)
+        {
+            <MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" Class="extv-glow__ghost" />
+        }
         <div class="extv-glow__card-top">
             <div class="extv-glow__icon">
                 <MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" />
@@ -15,11 +19,21 @@
             }
         </div>
 
-        <MudText Typo="Typo.h6" Class="mt-3" Style="font-weight:600">@Feature.Metadata.Title</MudText>
+        <MudText Typo="@(Featured ? Typo.h5 : Typo.h6)" Class="mt-3" Style="font-weight:600">@Feature.Metadata.Title</MudText>
 
         <div class="feat-card__preview mt-1">
             <MudMarkdown Value="@Feature.PreviewMarkdown" />
         </div>
+
+        @if (Featured && Feature.Metadata.Tags.Count > 0)
+        {
+            <div class="feat-card__tags mt-3">
+                @foreach (var tag in Feature.Metadata.Tags)
+                {
+                    <span class="feat-card__tag">@tag</span>
+                }
+            </div>
+        }
 
         <div class="extv-glow__foot">
             <span class="feat-card__date">

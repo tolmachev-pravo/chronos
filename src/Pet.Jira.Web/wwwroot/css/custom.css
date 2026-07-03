@@ -281,6 +281,205 @@
     white-space: nowrap;
 }
 
+/* ------------------------------------------------------------
+   Bento layout for the latest-features promo.
+   Narrow screens: a plain vertical stack.
+   Wide screens: the first feature becomes a tall "hero" panel
+   on the left; the remaining cards stack on the right.
+   ------------------------------------------------------------ */
+.feat-promo__bento {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+.feat-promo__bento > .extv-glow__outer {
+    min-width: 0; /* let grid items shrink instead of overflowing */
+    animation: feat-rise .5s cubic-bezier(.2,.7,.2,1) both;
+}
+.feat-promo__bento > .extv-glow__outer:nth-child(1) { animation-delay: .04s; }
+.feat-promo__bento > .extv-glow__outer:nth-child(2) { animation-delay: .12s; }
+.feat-promo__bento > .extv-glow__outer:nth-child(3) { animation-delay: .20s; }
+
+@keyframes feat-rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (min-width: 1000px) {
+    .feat-promo__bento[data-count="3"] {
+        grid-template-columns: 1.55fr 1fr;
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+    }
+    .feat-promo__bento[data-count="3"] > .extv-glow__outer:first-child {
+        grid-row: 1 / span 2;
+    }
+    .feat-promo__bento[data-count="2"] {
+        grid-template-columns: 1.55fr 1fr;
+    }
+    /* Hero cell stretches; make the card fill its full height. */
+    .feat-promo__bento .extv-glow__outer--hero,
+    .feat-promo__bento .extv-glow__outer--hero .extv-glow__card {
+        height: 100%;
+    }
+}
+
+/* Hero card enrichment */
+.extv-glow__card--hero {
+    background:
+        radial-gradient(120% 90% at 100% 0%, rgba(var(--mud-palette-primary-rgb), .16), transparent 58%),
+        var(--mud-palette-surface);
+    border-color: rgba(var(--mud-palette-primary-rgb), .35);
+}
+.extv-glow__card--hero .extv-glow__icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+}
+.extv-glow__card--hero .feat-card__preview {
+    font-size: .95rem;
+    max-width: 46ch;
+}
+.extv-glow__ghost {
+    position: absolute;
+    top: -34px;
+    right: -26px;
+    width: 200px !important;
+    height: 200px !important;
+    color: rgba(var(--mud-palette-primary-rgb), .07);
+    transform: rotate(-8deg);
+    pointer-events: none;
+    z-index: 0;
+}
+.extv-glow__card--hero > *:not(.extv-glow__ghost) {
+    position: relative;
+    z-index: 1;
+}
+
+/* Tag chips (hero only) */
+.feat-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+.feat-card__tag {
+    padding: 3px 11px;
+    border-radius: 999px;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--mud-palette-text-secondary);
+    background: rgba(128, 128, 128, .1);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .feat-promo__bento > .extv-glow__outer { animation: none; }
+}
+
+/* ------------------------------------------------------------
+   Features catalog page: a full-width hero banner for the top
+   feature, followed by the standard responsive card grid.
+   ------------------------------------------------------------ */
+.feat-catalog {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.feat-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 30px;
+    border-radius: 20px;
+    cursor: pointer;
+    overflow: hidden;
+    background:
+        radial-gradient(90% 130% at 100% -10%, rgba(var(--mud-palette-primary-rgb), .18), transparent 55%),
+        var(--mud-palette-surface);
+    border: 1px solid rgba(var(--mud-palette-primary-rgb), .32);
+    transition: transform .3s cubic-bezier(.2,.7,.2,1), border-color .3s ease, box-shadow .3s ease;
+    animation: feat-rise .5s cubic-bezier(.2,.7,.2,1) both;
+}
+.feat-hero:hover {
+    transform: translateY(-4px);
+    border-color: var(--mud-palette-primary);
+    box-shadow: 0 26px 55px -26px rgba(var(--mud-palette-primary-rgb), .6);
+}
+.feat-hero__body {
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    max-width: 680px;
+}
+.feat-hero__badge { margin-bottom: 14px; }
+.feat-hero__title { line-height: 1.15; }
+.feat-hero__preview { font-size: 1rem; max-width: 62ch; }
+.feat-hero__foot {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+/* Decorative "orb" artwork — hidden on narrow screens, revealed when wide. */
+.feat-hero__art { display: none; }
+
+@media (min-width: 1000px) {
+    .feat-hero {
+        grid-template-columns: 1.5fr .85fr;
+        align-items: center;
+        padding: 40px 46px;
+    }
+    .feat-hero__art {
+        position: relative;
+        display: grid;
+        place-items: center;
+        align-self: stretch;
+        min-height: 210px;
+    }
+    .feat-hero__art::before,
+    .feat-hero__art::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+    }
+    .feat-hero__art::before {
+        width: 270px;
+        height: 270px;
+        border: 1px solid rgba(var(--mud-palette-primary-rgb), .18);
+    }
+    .feat-hero__art::after {
+        width: 190px;
+        height: 190px;
+        background: radial-gradient(circle, rgba(var(--mud-palette-primary-rgb), .16), transparent 70%);
+    }
+    .feat-hero__art-glyph {
+        position: relative;
+        z-index: 1;
+        width: 150px !important;
+        height: 150px !important;
+        color: rgba(var(--mud-palette-primary-rgb), .55);
+        filter: drop-shadow(0 10px 34px rgba(var(--mud-palette-primary-rgb), .4));
+        animation: feat-hero-float 6s ease-in-out infinite;
+    }
+}
+
+@keyframes feat-hero-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-9px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .feat-hero { animation: none; }
+    .feat-hero__art-glyph { animation: none; }
+}
+
 /* Feature detail dialog */
 .feat-detail__meta {
     display: flex;
