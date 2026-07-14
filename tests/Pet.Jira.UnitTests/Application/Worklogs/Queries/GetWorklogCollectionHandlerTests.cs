@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Pet.Jira.Application.Authentication;
 using Pet.Jira.Application.Extensions.YandexCalendar.Dto;
 using Pet.Jira.Application.Extensions.YandexCalendar.Queries;
-using Pet.Jira.Application.Worklogs;
 using Pet.Jira.Application.Worklogs.Queries;
 using Pet.Jira.Domain.Models.Users;
 using Pet.Jira.Domain.Models.Worklogs;
@@ -19,7 +18,6 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
     [TestFixture]
     public class GetWorklogCollectionHandlerTests
     {
-        private Mock<IWorklogDataSource> _dataSourceMock;
         private Mock<IMediator> _mediatorMock;
         private Mock<IIdentityService> _identityServiceMock;
         private GetWorklogCollection.QueryHandler _sut;
@@ -27,16 +25,15 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
         [SetUp]
         public void Setup()
         {
-            _dataSourceMock = new Mock<IWorklogDataSource>();
             _mediatorMock = new Mock<IMediator>();
             _identityServiceMock = new Mock<IIdentityService>();
 
-            _dataSourceMock
-                .Setup(x => x.GetRawIssueWorklogsAsync(It.IsAny<GetRawIssueWorklogs.Query>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<IWorklog>());
-            _dataSourceMock
-                .Setup(x => x.GetIssueWorklogsAsync(It.IsAny<GetIssueWorklogs.Query>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new List<IWorklog>());
+            _mediatorMock
+                .Setup(x => x.Send(It.IsAny<GetRawIssueWorklogs.Query>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IEnumerable<IWorklog>)new List<IWorklog>());
+            _mediatorMock
+                .Setup(x => x.Send(It.IsAny<GetIssueWorklogs.Query>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IEnumerable<IWorklog>)new List<IWorklog>());
             _identityServiceMock
                 .Setup(x => x.GetCurrentUserAsync())
                 .ReturnsAsync(new User { Username = "user1" });
@@ -45,7 +42,6 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
                 .ReturnsAsync((IReadOnlyList<YandexCalendarEventDto>)new List<YandexCalendarEventDto>());
 
             _sut = new GetWorklogCollection.QueryHandler(
-                _dataSourceMock.Object,
                 _mediatorMock.Object,
                 _identityServiceMock.Object);
         }
