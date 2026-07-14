@@ -1,0 +1,23 @@
+@page "/performance"
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-4">
+    <MudPaper Class="pa-4" Elevation="1">
+        <div class="d-flex align-center justify-space-between mb-3">
+            <MudText Typo="Typo.h5">Performance</MudText>
+            <div class="d-flex gap-2">
+                <MudButton Variant="Variant.Outlined"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Refresh"
+                           OnClick="Refresh">Обновить</MudButton>
+                <MudButton Variant="Variant.Text"
+                           Color="Color.Error"
+                           StartIcon="@Icons.Material.Filled.DeleteSweep"
+                           OnClick="Reset">Сбросить</MudButton>
+            </div>
+        </div>
+
+        <MudDivider Class="mb-3" />
+
+        <MudMarkdown Value="@Body" />
+    </MudPaper>
+</MudContainer>

@@ -1,0 +1,50 @@
+using Microsoft.AspNetCore.Components;
+using Pet.Jira.Application.Tracing;
+using System;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+
+namespace Pet.Jira.Web.Components.Performance
+{
+    public partial class Performance : ComponentBase
+    {
+        [Inject] private IPerformanceStatsCollector StatsCollector { get; set; } = default!;
+
+        private string Body => BuildMarkdownTable();
+
+        private void Refresh() => StateHasChanged();
+
+        private void Reset()
+        {
+            StatsCollector.Reset();
+            StateHasChanged();
+        }
+
+        private string BuildMarkdownTable()
+        {
+            var measures = StatsCollector.Measures
+                .OrderByDescending(measure => measure.Sum)
+                .ToList();
+
+            if (measures.Count == 0)
+            {
+                return "_Нет измерений. Выполните операцию (например, откройте ворклоги) и нажмите «Обновить»._";
+            }
+
+            var stringBuilder = new StringBuilder();
+            stringBuilder.AppendLine("| Category | Count | Sum, ms | Min, ms | Max, ms | Average, ms |");
+            stringBuilder.AppendLine("|---|--:|--:|--:|--:|--:|");
+            foreach (var measure in measures)
+            {
+                stringBuilder.AppendLine(
+                    $"| {measure.Category} | {measure.Count} | {Milliseconds(measure.Sum)} | {Milliseconds(measure.Min)} | {Milliseconds(measure.Max)} | {Milliseconds(measure.Average)} |");
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        private static string Milliseconds(TimeSpan value) =>
+            value.TotalMilliseconds.ToString("F1", CultureInfo.InvariantCulture);
+    }
+}
