@@ -44,13 +44,5 @@ namespace Pet.Jira.Application.Tracing
                 }
             }
         }
-
-        private const string Format = "|{0,-40}|{1,18}|{2,18}|{3,18}|{4,7}|{5,18}|";
-
-        public override string ToString() => String.Format(Format, Category, Sum, Max, Min, Count, Average);
-
-        public static readonly string Headers = String.Format(Format, nameof(Category), nameof(Sum), nameof(Max), nameof(Min), nameof(Count), nameof(Average));
-
-        public static readonly string HeaderDelimeter = String.Format(Format, "-", "-", "-", "-", "-", "-");
     }
 }
