@@ -11,6 +11,7 @@ using RestSharp.Authenticators;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -30,6 +31,11 @@ namespace Pet.Jira.Infrastructure.Jira
 
         private static ParallelOptions DefaultParallelOptions =>
             new() { MaxDegreeOfParallelism = (int)Math.Round(Environment.ProcessorCount * 0.8) };
+
+        // The Jira server offset is process-global (single instance), so cache it across
+        // requests and users. Benign races only cause a couple of extra fetches.
+        private static TimeSpan? _cachedServerUtcOffset;
+        private static readonly SemaphoreSlim ServerUtcOffsetLock = new(1, 1);
 
         public JiraService(
             IOptions<JiraConfiguration> jiraConfiguration,
@@ -416,6 +422,81 @@ namespace Pet.Jira.Infrastructure.Jira
                 method: RestSharp.Method.GET,
                 resource: $"/rest/dev-status/latest/issue/detail?issueId={jiraIdentifier}&applicationType={applicationType}&dataType={dataType}",
                 token: cancellationToken);
+        }
+
+        /// <summary>
+        /// Get worklogs via the Tempo Timesheets REST API, filtered by date on the
+        /// server side. Unlike the per-issue Jira worklog endpoint, this does not pull
+        /// every worklog of an issue into memory. See issue #245.
+        /// </summary>
+        /// <param name="dateFrom">Inclusive lower bound of the worklog date.</param>
+        /// <param name="dateTo">Inclusive upper bound of the worklog date.</param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<IEnumerable<TempoWorklogDto>> GetTempoWorklogsAsync(
+            DateTime dateFrom,
+            DateTime dateTo,
+            CancellationToken cancellationToken = default)
+        {
+            // Fixed Tempo Timesheets Server/DC v3 endpoint. Not configurable: the
+            // TempoWorklogDto contract is tied to this version's response shape.
+            const string tempoWorklogsPath = "/rest/tempo-timesheets/3/worklogs";
+            var resource = $"{tempoWorklogsPath}" +
+                $"?dateFrom={dateFrom:yyyy-MM-dd}&dateTo={dateTo:yyyy-MM-dd}";
+
+            var worklogs = await _jiraClient.RestClient
+                .ExecuteRequestAsync<TempoWorklogDto[]>(
+                    method: RestSharp.Method.GET,
+                    resource: resource,
+                    token: cancellationToken);
+
+            return worklogs ?? Array.Empty<TempoWorklogDto>();
+        }
+
+        /// <summary>
+        /// Get the Jira server's current UTC offset (from /rest/api/2/serverInfo), cached
+        /// process-wide. Needed to interpret naive Tempo worklog timestamps, which are in
+        /// the Jira server timezone. See issue #245.
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public async Task<TimeSpan> GetServerUtcOffsetAsync(
+            CancellationToken cancellationToken = default)
+        {
+            if (_cachedServerUtcOffset.HasValue)
+            {
+                return _cachedServerUtcOffset.Value;
+            }
+
+            await ServerUtcOffsetLock.WaitAsync(cancellationToken);
+            try
+            {
+                if (_cachedServerUtcOffset.HasValue)
+                {
+                    return _cachedServerUtcOffset.Value;
+                }
+
+                var serverInfo = await _jiraClient.RestClient
+                    .ExecuteRequestAsync<ServerInfoDto>(
+                        method: RestSharp.Method.GET,
+                        resource: "/rest/api/2/serverInfo",
+                        token: cancellationToken);
+
+                var offset = DateTimeOffset.TryParse(
+                    serverInfo?.ServerTime,
+                    CultureInfo.InvariantCulture,
+                    DateTimeStyles.None,
+                    out var serverTime)
+                    ? serverTime.Offset
+                    : TimeZoneInfo.Local.BaseUtcOffset;
+
+                _cachedServerUtcOffset = offset;
+                return offset;
+            }
+            finally
+            {
+                ServerUtcOffsetLock.Release();
+            }
         }
 
         private static Atlassian.Jira.Jira CreateBearerRestClient(string url, string bearerToken)

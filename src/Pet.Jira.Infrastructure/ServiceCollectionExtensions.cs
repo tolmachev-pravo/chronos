@@ -34,8 +34,24 @@ namespace Pet.Jira.Infrastructure
         public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration jiraConfigurationSection)
         {
             services.AddTransient<IJiraService, JiraService>();
-            services.AddTransient<IWorklogDataSource, JiraWorklogDataSource>();
             services.Configure<JiraConfiguration>(jiraConfigurationSection);
+
+            // Actual-worklog source (issue #245): Tempo (date-filtered, low memory) when
+            // enabled, otherwise the per-issue Jira source. JiraWorklogDataSource is also
+            // registered as itself so TempoWorklogDataSource can delegate raw worklogs and
+            // fall back to it. Bound directly here because IJiraConfiguration is not yet
+            // available from the container at registration time.
+            services.AddTransient<JiraWorklogDataSource>();
+            var tempoEnabled = jiraConfigurationSection
+                .GetValue($"{nameof(JiraConfiguration.Tempo)}:{nameof(TempoConfiguration.Enabled)}", true);
+            if (tempoEnabled)
+            {
+                services.AddTransient<IWorklogDataSource, TempoWorklogDataSource>();
+            }
+            else
+            {
+                services.AddTransient<IWorklogDataSource, JiraWorklogDataSource>();
+            }
             services.AddSingleton<IJiraLinkGenerator, JiraLinkGenerator>();
             services.AddTransient<IWorklogRepository, WorklogRepository>();
             services.AddTransient<IAuthenticationService, AuthenticationService>();
