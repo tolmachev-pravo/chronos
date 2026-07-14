@@ -4,12 +4,13 @@ using System.Collections.Generic;
 namespace Pet.Jira.Application.Tracing
 {
     /// <summary>
-    /// Collects aggregated timing statistics (count / sum / min / max / average) per category.
-    /// Registered as a singleton so the dev debug panel can read process-wide measures.
+    /// Collects aggregated timing and allocation statistics (count / sum / min / max /
+    /// average) per category. Registered as a singleton so the dev debug panel can read
+    /// process-wide measures.
     /// </summary>
     public interface IPerformanceStatsCollector
     {
-        void Record(string category, TimeSpan elapsed);
+        void Record(string category, TimeSpan elapsed, long allocatedBytes);
 
         IReadOnlyCollection<Measure> Measures { get; }
 

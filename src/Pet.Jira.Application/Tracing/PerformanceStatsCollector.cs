@@ -10,9 +10,9 @@ namespace Pet.Jira.Application.Tracing
         private readonly ConcurrentDictionary<string, Measure> _measures =
             new ConcurrentDictionary<string, Measure>(StringComparer.InvariantCultureIgnoreCase);
 
-        public void Record(string category, TimeSpan elapsed)
+        public void Record(string category, TimeSpan elapsed, long allocatedBytes)
         {
-            _measures.GetOrAdd(category, c => new Measure(c)).Update(elapsed);
+            _measures.GetOrAdd(category, c => new Measure(c)).Update(elapsed, allocatedBytes);
         }
 
         public IReadOnlyCollection<Measure> Measures => _measures.Values.ToArray();
