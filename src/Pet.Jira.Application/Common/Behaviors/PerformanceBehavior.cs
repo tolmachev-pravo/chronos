@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pet.Jira.Application.Tracing;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,16 +35,23 @@ namespace Pet.Jira.Application.Common.Behaviors
             CancellationToken cancellationToken)
         {
             var startTimestamp = Stopwatch.GetTimestamp();
+            // Process-wide allocation counter: captures allocations on parallel worker
+            // threads too (e.g. Parallel.ForEachAsync over issues), unlike the per-thread
+            // counter. It measures allocation throughput, not retained memory, and is only
+            // representative when requests do not run concurrently.
+            var startAllocatedBytes = GC.GetTotalAllocatedBytes(precise: false);
 
             var response = await next();
 
             var elapsed = Stopwatch.GetElapsedTime(startTimestamp);
+            var allocatedBytes = Math.Max(0,
+                GC.GetTotalAllocatedBytes(precise: false) - startAllocatedBytes);
 
             // Queries/commands are nested types (e.g. GetWorklogCollection.Query), so the
             // outer type gives a meaningful, collision-free category name.
             var requestName = typeof(TRequest).DeclaringType?.Name ?? typeof(TRequest).Name;
 
-            _stats.Record(requestName, elapsed);
+            _stats.Record(requestName, elapsed, allocatedBytes);
 
             if (elapsed.TotalMilliseconds > SlowRequestThresholdMs)
             {
