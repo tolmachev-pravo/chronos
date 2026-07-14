@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace Pet.Jira.Application.Tracing
 {
@@ -24,24 +23,24 @@ namespace Pet.Jira.Application.Tracing
         public TimeSpan Min { get; private set; }
         public int Count { get; private set; }
 
-        public TimeSpan Average => new(Sum.Ticks / Count);
+        public TimeSpan Average => Count == 0 ? TimeSpan.Zero : new(Sum.Ticks / Count);
 
-        public void Update(Stopwatch stopwatch)
+        public void Update(TimeSpan elapsed)
         {
             lock (_syncRoot)
             {
                 Count++;
 
-                Sum += stopwatch.Elapsed;
+                Sum += elapsed;
 
-                if (stopwatch.Elapsed > Max)
+                if (elapsed > Max)
                 {
-                    Max = stopwatch.Elapsed;
+                    Max = elapsed;
                 }
 
-                if (stopwatch.Elapsed < Min)
+                if (elapsed < Min)
                 {
-                    Min = stopwatch.Elapsed;
+                    Min = elapsed;
                 }
             }
         }

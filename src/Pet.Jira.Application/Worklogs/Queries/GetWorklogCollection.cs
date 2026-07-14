@@ -34,16 +34,13 @@ namespace Pet.Jira.Application.Worklogs.Queries
 
         public class QueryHandler : IRequestHandler<Query, Model>
         {
-            private readonly IWorklogDataSource _worklogDataSource;
             private readonly IMediator _mediator;
             private readonly IIdentityService _identityService;
 
             public QueryHandler(
-                IWorklogDataSource worklogDataSource,
                 IMediator mediator,
                 IIdentityService identityService)
             {
-                _worklogDataSource = worklogDataSource;
                 _mediator = mediator;
                 _identityService = identityService;
             }
@@ -59,7 +56,7 @@ namespace Pet.Jira.Application.Worklogs.Queries
             private async Task<IEnumerable<WorkingDay>> CalculateWorklogCollection(Query query,
                 CancellationToken cancellationToken)
             {
-                var rawIssueWorklogs = await _worklogDataSource.GetRawIssueWorklogsAsync(
+                var rawIssueWorklogs = await _mediator.Send(
                     new GetRawIssueWorklogs.Query()
                     {
                         StartDate = query.StartDate,
@@ -68,7 +65,7 @@ namespace Pet.Jira.Application.Worklogs.Queries
                         CommentWorklogTime = query.CommentWorklogTime
                     }, cancellationToken);
 
-                var issueWorklogs = await _worklogDataSource.GetIssueWorklogsAsync(
+                var issueWorklogs = await _mediator.Send(
                     new GetIssueWorklogs.Query()
                     {
                         StartDate = query.StartDate,

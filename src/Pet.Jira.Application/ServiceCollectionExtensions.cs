@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Pet.Jira.Application.Common.Behaviors;
 using Pet.Jira.Application.Storage;
 using Pet.Jira.Application.Time;
+using Pet.Jira.Application.Tracing;
 using Pet.Jira.Application.Users;
 using Pet.Jira.Application.Worklogs;
 using Pet.Jira.Application.Worklogs.Dto;
@@ -21,8 +22,11 @@ namespace Pet.Jira.Application
             services.AddSingleton<IMemoryCache<string, UserTheme>, UserThemeMemoryCache>();
             services.AddSingleton<IMemoryCache<string, UserWorklogFilter>, UserWorklogFilterMemoryCache>();
 
+			services.AddSingleton<IPerformanceStatsCollector, PerformanceStatsCollector>();
+
 			services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 			services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
 			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 			services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
