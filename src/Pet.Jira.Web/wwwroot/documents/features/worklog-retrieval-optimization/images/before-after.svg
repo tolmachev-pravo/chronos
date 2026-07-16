@@ -1,0 +1,34 @@
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect x="8" y="8" width="704" height="284" rx="16" fill="#F7F8FA" stroke="#E4E7EE" stroke-width="1.5"/>
+
+  <text x="28" y="40" font-size="19" font-weight="700" fill="#1F2430">GetIssueWorklogs — до и после</text>
+
+  <!-- Section A: time -->
+  <text x="28" y="72" font-size="13" fill="#8A93A6">Среднее время выполнения</text>
+
+  <text x="28" y="95" font-size="13" fill="#8A93A6">До</text>
+  <rect x="120" y="80" width="380" height="20" rx="4" fill="#AAB2C4"/>
+  <text x="508" y="95" font-size="13" font-weight="600" fill="#1F2430">5174.7 мс</text>
+
+  <text x="28" y="123" font-size="13" fill="#8A93A6">После</text>
+  <rect x="120" y="108" width="26" height="20" rx="4" fill="#1FC8A5"/>
+  <text x="154" y="123" font-size="13" font-weight="600" fill="#1F2430">351.7 мс</text>
+
+  <!-- Section B: allocations -->
+  <text x="28" y="158" font-size="13" fill="#8A93A6">Аллокации памяти (среднее)</text>
+
+  <text x="28" y="181" font-size="13" fill="#8A93A6">До</text>
+  <rect x="120" y="166" width="380" height="20" rx="4" fill="#AAB2C4"/>
+  <text x="508" y="181" font-size="13" font-weight="600" fill="#1F2430">833.6 MB</text>
+
+  <text x="28" y="209" font-size="13" fill="#8A93A6">После</text>
+  <rect x="120" y="194" width="6" height="20" rx="3" fill="#1FC8A5"/>
+  <text x="134" y="209" font-size="13" font-weight="600" fill="#1F2430">0.95 MB</text>
+
+  <!-- Callout chips -->
+  <rect x="28" y="248" width="156" height="30" rx="15" fill="#E3F8F2"/>
+  <text x="106" y="268" font-size="13" font-weight="600" fill="#0E9E82" text-anchor="middle">≈ 15× быстрее</text>
+
+  <rect x="196" y="248" width="236" height="30" rx="15" fill="#EEE9FB"/>
+  <text x="314" y="268" font-size="13" font-weight="600" fill="#6A45C9" text-anchor="middle">≈ 900× меньше памяти</text>
+</svg>
