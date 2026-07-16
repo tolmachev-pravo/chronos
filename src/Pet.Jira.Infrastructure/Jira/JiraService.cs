@@ -476,18 +476,21 @@ namespace Pet.Jira.Infrastructure.Jira
                     return _cachedServerUtcOffset.Value;
                 }
 
-                var serverInfo = await _jiraClient.RestClient
-                    .ExecuteRequestAsync<ServerInfoDto>(
-                        method: RestSharp.Method.GET,
-                        resource: "/rest/api/2/serverInfo",
-                        token: cancellationToken);
+                // Download raw JSON and parse with System.Text.Json. The Newtonsoft
+                // serializer behind ExecuteRequestAsync auto-converts the "serverTime"
+                // datetime string to the app host's local timezone, corrupting the offset
+                // (e.g. returns +4 on a +4 host for a +3 server). System.Text.Json keeps
+                // the string verbatim. See issue #245.
+                var serverInfoUrl = _config.Url.AppendUrl("rest", "api", "2", "serverInfo");
+                var serverInfoData = _jiraClient.RestClient.DownloadData(serverInfoUrl);
+                var serverTime = GetJsonParameterValue(serverInfoData, "serverTime");
 
                 var offset = DateTimeOffset.TryParse(
-                    serverInfo?.ServerTime,
+                    serverTime,
                     CultureInfo.InvariantCulture,
                     DateTimeStyles.None,
-                    out var serverTime)
-                    ? serverTime.Offset
+                    out var parsedServerTime)
+                    ? parsedServerTime.Offset
                     : TimeZoneInfo.Local.BaseUtcOffset;
 
                 _cachedServerUtcOffset = offset;
