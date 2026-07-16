@@ -4,5 +4,6 @@
     {
         string Url { get; set; }
         string[] CachedIssues { get; set; }
+        TempoConfiguration Tempo { get; set; }
     }
 }

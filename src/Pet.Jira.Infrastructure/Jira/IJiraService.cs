@@ -76,5 +76,13 @@ namespace Pet.Jira.Infrastructure.Jira
 
         Task<DevStatusDetailDto> GetIssueDevStatusDetailAsync(string jiraIdentifier, string applicationType = "github",
            string dataType = "pullrequest", CancellationToken cancellationToken = default);
+
+        Task<IEnumerable<TempoWorklogDto>> GetTempoWorklogsAsync(
+            DateTime dateFrom,
+            DateTime dateTo,
+            CancellationToken cancellationToken = default);
+
+        Task<TimeSpan> GetServerUtcOffsetAsync(
+            CancellationToken cancellationToken = default);
     }
 }
