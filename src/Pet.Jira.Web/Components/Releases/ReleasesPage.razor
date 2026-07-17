@@ -1,0 +1,33 @@
+@using Pet.Jira.Web.Components.Common
+
+<div class="rel-page">
+    <div class="pet-section-head">
+        <MudText Typo="Typo.h5" Style="font-weight:700">Releases</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
+            История релизов приложения — прямиком со страницы релизов в GitHub.
+        </MudText>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="rel-list mt-5">
+            @for (var i = 0; i < 3; i++)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px" Class="rel-page__skeleton" />
+            }
+        </div>
+    }
+    else if (_releases.Count == 0)
+    {
+        <Stub Message="Релизов пока нет. Загляните позже!" />
+    }
+    else
+    {
+        <div class="rel-list mt-5">
+            @foreach (var release in _releases)
+            {
+                <ReleaseCard Release="release" />
+            }
+        </div>
+    }
+</div>

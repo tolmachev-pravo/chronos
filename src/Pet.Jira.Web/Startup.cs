@@ -20,6 +20,7 @@ using Pet.Jira.Web.Common;
 using Pet.Jira.Web.Components.Clipboard;
 using Pet.Jira.Web.Components.Features;
 using Pet.Jira.Web.Components.Markdown;
+using Pet.Jira.Web.Components.Releases;
 using Pet.Jira.Web.Logging;
 using System;
 using Thinktecture.Blazor.AsyncClipboard;
@@ -57,6 +58,15 @@ namespace Pet.Jira.Web
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddTransient<IMarkdownService, MarkdownService>();
             services.AddTransient<IFeatureCatalogService, FeatureCatalogService>();
+
+            // Releases (GitHub Releases API)
+            services.Configure<ReleaseOptions>(Configuration.GetSection(ReleaseOptions.SectionName));
+            services.AddHttpClient<IReleaseService, GitHubReleaseService>(client =>
+            {
+                client.BaseAddress = new Uri("https://api.github.com/");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Pet.Jira");
+                client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            });
 
             // Layers
             services.AddInfrastructureLayer(Configuration.GetSection("Jira"));

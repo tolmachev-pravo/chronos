@@ -372,3 +372,6 @@ docs/
 
 # Superpowers plugin workspace
 .superpowers/
+
+# Application "Releases" feature source — not build output; overrides the [Rr]eleases/ rule above
+!src/Pet.Jira.Web/Components/Releases/
