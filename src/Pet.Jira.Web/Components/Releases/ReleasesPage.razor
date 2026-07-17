@@ -17,17 +17,33 @@
             }
         </div>
     }
-    else if (_releases.Count == 0)
-    {
-        <Stub Message="Релизов пока нет. Загляните позже!" />
-    }
-    else
+    else if (_result.Releases.Count > 0)
     {
         <div class="rel-list mt-5">
-            @foreach (var release in _releases)
+            @foreach (var release in _result.Releases)
             {
                 <ReleaseCard Release="release" />
             }
         </div>
+    }
+    else if (_result.LoadFailed)
+    {
+        <div class="rel-error mt-5">
+            <MudIcon Icon="@Icons.Material.Outlined.CloudOff" Class="rel-error__icon" />
+            <MudText Typo="Typo.h6" Class="rel-error__title">Не удалось загрузить релизы</MudText>
+            <MudText Typo="Typo.body2" Class="rel-error__text">
+                Похоже, GitHub сейчас недоступен из приложения.
+                Вы можете посмотреть релизы напрямую на GitHub.
+            </MudText>
+            <MudButton Href="@_result.ReleasesUrl" Target="_blank"
+                       Variant="Variant.Filled" Color="Color.Primary"
+                       EndIcon="@Icons.Material.Filled.OpenInNew" Class="mt-2">
+                Открыть релизы на GitHub
+            </MudButton>
+        </div>
+    }
+    else
+    {
+        <Stub Message="Релизов пока нет. Загляните позже!" />
     }
 </div>

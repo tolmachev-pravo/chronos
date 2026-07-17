@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Pet.Jira.Web.Shared;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Pet.Jira.Web.Components.Releases
@@ -11,14 +10,14 @@ namespace Pet.Jira.Web.Components.Releases
         [Inject] private IReleaseService ReleaseService { get; init; } = default!;
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; } = default!;
 
-        private IReadOnlyList<ReleaseSummary> _releases = Array.Empty<ReleaseSummary>();
+        private ReleasesResult _result = new();
         private bool _isLoading = true;
 
         protected override async Task OnInitializedAsync()
         {
             try
             {
-                _releases = await ReleaseService.GetReleasesAsync();
+                _result = await ReleaseService.GetReleasesAsync();
             }
             catch (Exception e)
             {

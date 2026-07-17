@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,8 +9,9 @@ namespace Pet.Jira.Web.Components.Releases
     public interface IReleaseService
     {
         /// <summary>
-        /// Returns published releases ordered from newest to oldest.
+        /// Returns published releases (newest first) together with a failure flag and a direct
+        /// GitHub link, so the UI can offer the user a fallback when the live fetch fails.
         /// </summary>
-        Task<IReadOnlyList<ReleaseSummary>> GetReleasesAsync(CancellationToken cancellationToken = default);
+        Task<ReleasesResult> GetReleasesAsync(CancellationToken cancellationToken = default);
     }
 }
