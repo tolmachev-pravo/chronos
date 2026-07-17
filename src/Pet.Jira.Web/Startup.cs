@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using MudBlazor;
 using MudBlazor.Services;
 using Pet.Jira.Application;
@@ -20,6 +21,7 @@ using Pet.Jira.Web.Common;
 using Pet.Jira.Web.Components.Clipboard;
 using Pet.Jira.Web.Components.Features;
 using Pet.Jira.Web.Components.Markdown;
+using Pet.Jira.Web.Components.Releases;
 using Pet.Jira.Web.Logging;
 using System;
 using Thinktecture.Blazor.AsyncClipboard;
@@ -57,6 +59,18 @@ namespace Pet.Jira.Web
             services.AddTransient<IIdentityService, IdentityService>();
             services.AddTransient<IMarkdownService, MarkdownService>();
             services.AddTransient<IFeatureCatalogService, FeatureCatalogService>();
+
+            // Releases (GitHub Releases API)
+            services.AddMemoryCache();
+            services.Configure<ReleaseOptions>(Configuration.GetSection(ReleaseOptions.SectionName));
+            services.AddHttpClient<IReleaseService, GitHubReleaseService>((provider, client) =>
+            {
+                var options = provider.GetRequiredService<IOptions<ReleaseOptions>>().Value;
+                client.BaseAddress = new Uri("https://api.github.com/");
+                client.Timeout = TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds));
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Pet.Jira");
+                client.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
+            });
 
             // Layers
             services.AddInfrastructureLayer(Configuration.GetSection("Jira"));
