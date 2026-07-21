@@ -93,10 +93,34 @@ namespace Pet.Jira.Infrastructure.Jira
         /// <param name="query"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task<IEnumerable<IWorklog>> GetRawIssueWorklogsAsync(
-            GetRawIssueWorklogs.Query query,
+        public Task<IEnumerable<IWorklog>> GetAssigneeRawIssueWorklogsAsync(
+            GetAssigneeJiraEvents.Query query,
             CancellationToken cancellationToken = default)
-            => _fallback.GetRawIssueWorklogsAsync(query, cancellationToken);
+            => _fallback.GetAssigneeRawIssueWorklogsAsync(query, cancellationToken);
+
+        /// <summary>
+        /// Raw worklogs (changelog/comment/tester based) are not provided by Tempo —
+        /// delegate to the existing Jira implementation.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<IEnumerable<IWorklog>> GetTesterRawIssueWorklogsAsync(
+            GetTesterJiraEvents.Query query,
+            CancellationToken cancellationToken = default)
+            => _fallback.GetTesterRawIssueWorklogsAsync(query, cancellationToken);
+
+        /// <summary>
+        /// Raw worklogs (changelog/comment/tester based) are not provided by Tempo —
+        /// delegate to the existing Jira implementation.
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        public Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(
+            GetCommentJiraEvents.Query query,
+            CancellationToken cancellationToken = default)
+            => _fallback.GetCommentRawIssueWorklogsAsync(query, cancellationToken);
 
         private static bool IsAuthoredByCurrentUser(TempoWorklogDto worklog, UserProfile userProfile)
             => string.Equals(worklog.Author?.Login, userProfile.Username, StringComparison.OrdinalIgnoreCase);

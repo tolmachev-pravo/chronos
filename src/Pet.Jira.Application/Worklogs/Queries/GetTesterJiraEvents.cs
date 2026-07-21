@@ -7,14 +7,18 @@ using System.Threading.Tasks;
 
 namespace Pet.Jira.Application.Worklogs.Queries
 {
-    public class GetRawIssueWorklogs
+    /// <summary>
+    /// Estimated worklogs derived from the "In Testing" status changes of issues where
+    /// the current user is the tester. Split out from the former GetRawIssueWorklogs so
+    /// its performance can be measured independently. See issue #258.
+    /// </summary>
+    public class GetTesterJiraEvents
     {
         public class Query : IRequest<IEnumerable<IWorklog>>
         {
             public DateTime StartDate { get; set; }
             public DateTime EndDate { get; set; }
             public string IssueStatusId { get; set; }
-            public TimeSpan CommentWorklogTime { get; set; }
         }
 
         public class QueryHandler : IRequestHandler<Query, IEnumerable<IWorklog>>
@@ -29,7 +33,7 @@ namespace Pet.Jira.Application.Worklogs.Queries
             public Task<IEnumerable<IWorklog>> Handle(
                 Query request,
                 CancellationToken cancellationToken)
-                => _worklogDataSource.GetRawIssueWorklogsAsync(request, cancellationToken);
+                => _worklogDataSource.GetTesterRawIssueWorklogsAsync(request, cancellationToken);
         }
     }
 }

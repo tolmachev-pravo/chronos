@@ -56,14 +56,36 @@ namespace Pet.Jira.Application.Worklogs.Queries
             private async Task<IEnumerable<WorkingDay>> CalculateWorklogCollection(Query query,
                 CancellationToken cancellationToken)
             {
-                var rawIssueWorklogs = await _mediator.Send(
-                    new GetRawIssueWorklogs.Query()
+                // Sent sequentially so PerformanceBehavior can measure each Jira-events
+                // request (assignee/tester/comment) in isolation — its allocation stats
+                // are only representative for non-concurrent requests. See issue #258.
+                var assigneeWorklogs = await _mediator.Send(
+                    new GetAssigneeJiraEvents.Query()
                     {
                         StartDate = query.StartDate,
                         EndDate = query.EndDate,
-                        IssueStatusId = query.IssueStatusId,
+                        IssueStatusId = query.IssueStatusId
+                    }, cancellationToken);
+
+                var testerWorklogs = await _mediator.Send(
+                    new GetTesterJiraEvents.Query()
+                    {
+                        StartDate = query.StartDate,
+                        EndDate = query.EndDate,
+                        IssueStatusId = query.IssueStatusId
+                    }, cancellationToken);
+
+                var commentWorklogs = await _mediator.Send(
+                    new GetCommentJiraEvents.Query()
+                    {
+                        StartDate = query.StartDate,
+                        EndDate = query.EndDate,
                         CommentWorklogTime = query.CommentWorklogTime
                     }, cancellationToken);
+
+                var rawIssueWorklogs = assigneeWorklogs
+                    .Concat(testerWorklogs)
+                    .Concat(commentWorklogs);
 
                 var issueWorklogs = await _mediator.Send(
                     new GetIssueWorklogs.Query()

@@ -72,13 +72,14 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
 		/// <summary>
-		/// Get raw issue worklogs
+		/// Get estimated worklogs from the "In Progress" status changes of issues
+		/// assigned to the current user. See issue #258.
 		/// </summary>
 		/// <param name="query"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async Task<IEnumerable<IWorklog>> GetRawIssueWorklogsAsync(
-			GetRawIssueWorklogs.Query query,
+		public async Task<IEnumerable<IWorklog>> GetAssigneeRawIssueWorklogsAsync(
+			GetAssigneeJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
 		{
 			var issueQuery = _queryFactory.Create()
@@ -119,21 +120,18 @@ namespace Pet.Jira.Infrastructure.Jira
 				result.AddRange(rawIssueWorklogs);
 			}
 
-			var commentWorklogs = await GetCommentRawIssueWorklogsAsync(query, cancellationToken);
-			var testerWorklogs = await GetTesterRawIssueWorklogsAsync(query, cancellationToken);
-			result.AddRange(commentWorklogs);
-			result.AddRange(testerWorklogs);
 			return result.Where(item => item.Author == userProfile.Username);
 		}
 
 		/// <summary>
-		/// Get raw issue worklogs
+		/// Get estimated worklogs from the current user's comments on watched issues
+		/// they are not assigned to. See issue #258.
 		/// </summary>
 		/// <param name="query"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async Task<IEnumerable<RawIssueWorklog>> GetCommentRawIssueWorklogsAsync(
-			GetRawIssueWorklogs.Query query,
+		public async Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(
+			GetCommentJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
 		{
 			var issueQuery = _queryFactory.Create()
@@ -175,13 +173,14 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
 		/// <summary>
-		/// Get raw issue worklogs
+		/// Get estimated worklogs from the "In Testing" status changes of issues where
+		/// the current user is the tester. See issue #258.
 		/// </summary>
 		/// <param name="query"></param>
 		/// <param name="cancellationToken"></param>
 		/// <returns></returns>
-		public async Task<IEnumerable<RawIssueWorklog>> GetTesterRawIssueWorklogsAsync(
-			GetRawIssueWorklogs.Query query,
+		public async Task<IEnumerable<IWorklog>> GetTesterRawIssueWorklogsAsync(
+			GetTesterJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
 		{
 			var issueQuery = _queryFactory.Create()
