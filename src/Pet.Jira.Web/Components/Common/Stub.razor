@@ -1,20 +1,82 @@
-﻿<style>
-    .pet-stub-logo {
-        width: 256px;
-        height: 256px;
+<style>
+    /* ── Stub / empty-state / 404 — living Chronos wordmark ──────────────── */
+    .stub {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 22px;
+        width: 100%;
+        flex: 1 1 auto;
+        min-height: clamp(220px, 42vh, 460px);
+        padding: 40px 24px;
+        text-align: center;
+        --stub-gold: #e3a93b;
     }
 
-    @@media (max-width:1000px) {
-        .pet-stub-logo {
-            width: 200px;
-            height: 200px;
+    /* The wordmark: CHRON · [live clock O] · S */
+    .stub__wm {
+        display: inline-flex;
+        align-items: center;
+        font-weight: 800;
+        letter-spacing: .16em;
+        line-height: 1;
+        color: var(--mud-palette-text-primary);
+        font-size: clamp(1.7rem, 3vw, 2.2rem);
+        padding-left: .16em; /* balance the tracking */
+        animation: stub-rise .7s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .stub__o {
+        width: 1.02em;
+        height: 1.02em;
+        margin: 0 .015em;
+        flex: none;
+        filter: drop-shadow(0 3px 8px rgba(var(--mud-palette-primary-rgb), .35));
+    }
+    .stub__o .ring { fill: none; stroke: var(--mud-palette-primary); stroke-width: 8; }
+    .stub__o .min {
+        stroke: var(--stub-gold); stroke-width: 7; stroke-linecap: round;
+        transform-origin: 50px 50px; animation: stub-spin 8s linear infinite;
+    }
+    .stub__o .hour {
+        stroke: var(--mud-palette-primary); stroke-width: 7; stroke-linecap: round;
+        transform-origin: 50px 50px; animation: stub-spin 48s linear infinite;
+    }
+    .stub__o .pin { fill: var(--stub-gold); }
+
+    .stub__msg {
+        max-width: 40ch;
+        color: var(--mud-palette-text-secondary);
+        animation: stub-rise .7s .12s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    @@keyframes stub-spin { to { transform: rotate(360deg); } }
+    @@keyframes stub-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Full-viewport mode (standalone 404) on web; empty states stay content-sized. */
+    @@media (min-width: 600px) {
+        .stub--fill {
+            min-height: calc(100vh - var(--mud-appbar-height, 64px) - 32px);
         }
+        .stub--fill .stub__wm { font-size: clamp(2.4rem, 5vw, 3.6rem); }
+    }
+
+    @@media (prefers-reduced-motion: reduce) {
+        .stub__wm, .stub__msg, .stub__o .min, .stub__o .hour { animation: none !important; opacity: 1 !important; }
     }
 </style>
 
-<MudContainer Class="pet-horizontal-center pet-vertical-center">
-    <MudIcon Icon="@Icon" ViewBox="@ViewBox" Class="pet-stub-logo" />
-    <MudText Typo="Typo.body2" Color="@Color" Class="mt-4">@Message</MudText>
-</MudContainer>
+<div class="stub @(FillViewport ? "stub--fill" : null)">
+    <span class="stub__wm">
+        CHRON<svg class="stub__o" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="ring" cx="50" cy="50" r="42" />
+            <line class="hour" x1="50" y1="50" x2="50" y2="30" />
+            <line class="min" x1="50" y1="50" x2="50" y2="16" />
+            <circle class="pin" cx="50" cy="50" r="6" />
+        </svg>S
+    </span>
+    <MudText Typo="Typo.body1" Color="@Color" Class="stub__msg">@Message</MudText>
+</div>
 
 @code {}
