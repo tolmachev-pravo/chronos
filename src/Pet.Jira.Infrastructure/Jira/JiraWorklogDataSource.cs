@@ -38,6 +38,20 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
 		/// <summary>
+		/// Search options for the Jira-event queries. The events only need the issue
+		/// summary for display; the heavy work is the per-issue changelog/comment fetch
+		/// that follows. Restricting the search to the summary field keeps the initial
+		/// JQL response small instead of pulling every navigable field. See issue #258.
+		/// </summary>
+		private static IssueSearchOptions CreateEventSearchOptions(string jql) =>
+			new(jql)
+			{
+				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest,
+				FetchBasicFields = false,
+				AdditionalFields = { "summary" }
+			};
+
+		/// <summary>
 		/// Get issue worklogs
 		/// </summary>
 		/// <param name="query"></param>
@@ -88,10 +102,7 @@ namespace Pet.Jira.Infrastructure.Jira
 				.WhereWas("status", "In Progress", query.StartDate, query.EndDate)
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
-			var issueSearchOptions = new IssueSearchOptions(issueQuery)
-			{
-				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest
-			};
+			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
 
 			var issues = await _jiraService.GetIssuesAsync(issueSearchOptions, cancellationToken);
 
@@ -140,10 +151,7 @@ namespace Pet.Jira.Infrastructure.Jira
 				.Where("assignee", JiraQueryComparisonType.NotEqual, JiraQueryMacros.CurrentUser)
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
-			var issueSearchOptions = new IssueSearchOptions(issueQuery)
-			{
-				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest
-			};
+			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
 
 			var issues = await _jiraService.GetIssuesAsync(issueSearchOptions, cancellationToken);
 
@@ -189,10 +197,7 @@ namespace Pet.Jira.Infrastructure.Jira
 				.Where("type", JiraQueryComparisonType.NotEqual, "Story")
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
-			var issueSearchOptions = new IssueSearchOptions(issueQuery)
-			{
-				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest
-			};
+			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
 
 			var issues = await _jiraService.GetIssuesAsync(issueSearchOptions, cancellationToken);
 
