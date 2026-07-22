@@ -62,9 +62,9 @@ namespace Pet.Jira.UnitTests.Infrastructure.Jira
 
         private static class IssueStatus
         {
-            public static string InProgress = "2";
-            public static string Open = "1";
-            public static string InReview = "3";
+            public static string InProgress = "In Progress";
+            public static string Open = "Open";
+            public static string InReview = "In Review";
         }
 
         class ChangeLogItemConvertToCases : IEnumerable
@@ -73,13 +73,13 @@ namespace Pet.Jira.UnitTests.Infrastructure.Jira
             private readonly string _user1 = "user1";
             private readonly string _user2 = "user2";
 
-            private IssueChangeLogItemDto CreateItem(IssueChangeLogDto changeLog, string author, string fromId, string toId)
+            private IssueChangeLogItemDto CreateItem(IssueChangeLogDto changeLog, string author, string fromValue, string toValue)
             {
                 return new IssueChangeLogItemDto
                 {
                     Author = author,
-                    FromId = fromId,
-                    ToId = toId,
+                    FromValue = fromValue,
+                    ToValue = toValue,
                     ChangeLog = changeLog
                 };
             }

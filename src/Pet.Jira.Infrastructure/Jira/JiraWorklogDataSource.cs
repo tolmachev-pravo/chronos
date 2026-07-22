@@ -99,7 +99,7 @@ namespace Pet.Jira.Infrastructure.Jira
 			var issueQuery = _queryFactory.Create()
 				.Where("assignee", JiraQueryComparisonType.Equal, JiraQueryMacros.CurrentUser)
 				.Where("type", JiraQueryComparisonType.NotEqual, "Story")
-				.WhereWas("status", "In Progress", query.StartDate, query.EndDate)
+				.WhereWas("status", JiraConstants.Status.InProgress.Name, query.StartDate, query.EndDate)
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
 			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
@@ -112,10 +112,12 @@ namespace Pet.Jira.Infrastructure.Jira
 			var changeLogFilter = new Func<IssueChangeLog, bool>(changeLog =>
 				changeLog.Items.Any(item => item.FieldName == JiraConstants.Status.FieldName));
 
+			// Match the status by name, consistent with the JQL above — avoids depending
+			// on a hardcoded status id that varies between Jira instances. See issue #258.
 			var changeLogItemFilter = new Func<IssueChangeLogItem, bool>(changeLogItem =>
 				changeLogItem.FieldName == JiraConstants.Status.FieldName
-				&& (changeLogItem.ToId == query.IssueStatusId
-					|| changeLogItem.FromId == query.IssueStatusId));
+				&& (changeLogItem.ToValue == JiraConstants.Status.InProgress.Name
+					|| changeLogItem.FromValue == JiraConstants.Status.InProgress.Name));
 
 			var issueChangeLogItems = await _jiraService.GetIssueChangeLogItemsAsync(issues, changeLogFilter, changeLogItemFilter, cancellationToken);
 
@@ -126,7 +128,7 @@ namespace Pet.Jira.Infrastructure.Jira
 					.Where(item => item.ChangeLog.Issue.Key == issue.Key)
 					.OrderBy(item => item.ChangeLog.CreatedDate)
 					.ToList()
-					.ConvertTo<RawIssueWorklog>(query.IssueStatusId, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Assignee)
+					.ConvertTo<RawIssueWorklog>(JiraConstants.Status.InProgress.Name, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Assignee)
 					.Where(issueWorklog => issueWorklog.IsBetween(query.StartDate, query.EndDate));
 				result.AddRange(rawIssueWorklogs);
 			}
@@ -192,9 +194,9 @@ namespace Pet.Jira.Infrastructure.Jira
 			CancellationToken cancellationToken = default)
 		{
 			var issueQuery = _queryFactory.Create()
-				.Where("updatedDate", JiraQueryComparisonType.GreaterOrEqual, query.StartDate)
 				.Where("Tester", JiraQueryComparisonType.Equal, JiraQueryMacros.CurrentUser)
 				.Where("type", JiraQueryComparisonType.NotEqual, "Story")
+				.WhereWas("status", JiraConstants.Status.InTesting.Name, query.StartDate, query.EndDate)
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
 			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
@@ -207,10 +209,13 @@ namespace Pet.Jira.Infrastructure.Jira
 			var changeLogFilter = new Func<IssueChangeLog, bool>(changeLog =>
 				changeLog.Items.Any(item => item.FieldName == JiraConstants.Status.FieldName));
 
+			// Match the "In Testing" status by name in both the filter and ConvertTo, so
+			// the interval detection is driven by the same status the changelog items
+			// were filtered on — no hardcoded status id. See issue #258.
 			var changeLogItemFilter = new Func<IssueChangeLogItem, bool>(changeLogItem =>
 				changeLogItem.FieldName == JiraConstants.Status.FieldName
-				&& (changeLogItem.ToId == "10116" // In Testing
-					|| changeLogItem.FromId == "10116"));
+				&& (changeLogItem.ToValue == JiraConstants.Status.InTesting.Name
+					|| changeLogItem.FromValue == JiraConstants.Status.InTesting.Name));
 
 			var issueChangeLogItems = await _jiraService.GetIssueChangeLogItemsAsync(issues, changeLogFilter, changeLogItemFilter, cancellationToken);
 
@@ -221,7 +226,7 @@ namespace Pet.Jira.Infrastructure.Jira
 					.Where(item => item.ChangeLog.Issue.Key == issue.Key)
 					.OrderBy(item => item.ChangeLog.CreatedDate)
 					.ToList()
-					.ConvertTo<RawIssueWorklog>(query.IssueStatusId, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Tester)
+					.ConvertTo<RawIssueWorklog>(JiraConstants.Status.InTesting.Name, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Tester)
 					.Where(issueWorklog => issueWorklog.IsBetween(query.StartDate, query.EndDate));
 				result.AddRange(rawIssueWorklogs);
 			}

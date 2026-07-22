@@ -244,6 +244,8 @@ namespace Pet.Jira.Infrastructure.Jira
                         {
                             FromId = issueChangeLogItem.FromId,
                             ToId = issueChangeLogItem.ToId,
+                            FromValue = issueChangeLogItem.FromValue,
+                            ToValue = issueChangeLogItem.ToValue,
                             ChangeLog = IssueChangeLogDto.Create(issueChangeLog, issue),
                             Author = issueChangeLog.Author.Username
                         });

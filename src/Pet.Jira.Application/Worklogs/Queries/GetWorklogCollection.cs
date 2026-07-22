@@ -63,16 +63,14 @@ namespace Pet.Jira.Application.Worklogs.Queries
                     new GetAssigneeJiraEvents.Query()
                     {
                         StartDate = query.StartDate,
-                        EndDate = query.EndDate,
-                        IssueStatusId = query.IssueStatusId
+                        EndDate = query.EndDate
                     }, cancellationToken);
 
                 var testerWorklogs = await _mediator.Send(
                     new GetTesterJiraEvents.Query()
                     {
                         StartDate = query.StartDate,
-                        EndDate = query.EndDate,
-                        IssueStatusId = query.IssueStatusId
+                        EndDate = query.EndDate
                     }, cancellationToken);
 
                 var commentWorklogs = await _mediator.Send(
