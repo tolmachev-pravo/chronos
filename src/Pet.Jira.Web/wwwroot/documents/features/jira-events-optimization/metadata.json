@@ -1,0 +1,8 @@
+{
+  "id": "jira-events-optimization",
+  "title": "Ускорение сбора событий Jira",
+  "author": "tolmachev-pravo",
+  "date": "2026-07-22",
+  "tags": ["performance", "worklogs"],
+  "isHighlighted": false
+}

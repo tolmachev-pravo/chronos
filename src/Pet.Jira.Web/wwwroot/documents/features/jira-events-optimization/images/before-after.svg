@@ -1,0 +1,38 @@
+<svg viewBox="0 0 720 330" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect x="8" y="8" width="704" height="314" rx="16" fill="#F7F8FA" stroke="#E4E7EE" stroke-width="1.5"/>
+
+  <text x="28" y="40" font-size="19" font-weight="700" fill="#1F2430">GetWorklogCollection — до и после</text>
+
+  <!-- Section A: average time -->
+  <text x="28" y="72" font-size="13" fill="#8A93A6">Среднее время выполнения</text>
+
+  <text x="28" y="95" font-size="13" fill="#8A93A6">До</text>
+  <rect x="120" y="80" width="380" height="20" rx="4" fill="#AAB2C4"/>
+  <text x="508" y="95" font-size="13" font-weight="600" fill="#1F2430">4512.6 мс</text>
+
+  <text x="28" y="123" font-size="13" fill="#8A93A6">После</text>
+  <rect x="120" y="108" width="104" height="20" rx="4" fill="#1FC8A5"/>
+  <text x="232" y="123" font-size="13" font-weight="600" fill="#1F2430">1240.1 мс</text>
+
+  <!-- Section B: split into three measurable queries (after) -->
+  <text x="28" y="160" font-size="13" fill="#8A93A6">После — каждый источник событий измеряется отдельно</text>
+
+  <text x="28" y="182" font-size="13" fill="#8A93A6">Исполнитель</text>
+  <rect x="150" y="169" width="300" height="16" rx="4" fill="#8260E5"/>
+  <text x="458" y="182" font-size="13" font-weight="600" fill="#1F2430">1239.1 мс</text>
+
+  <text x="28" y="208" font-size="13" fill="#8A93A6">Комментарии</text>
+  <rect x="150" y="195" width="84" height="16" rx="4" fill="#8260E5"/>
+  <text x="242" y="208" font-size="13" font-weight="600" fill="#1F2430">348.2 мс</text>
+
+  <text x="28" y="234" font-size="13" fill="#8A93A6">Тестирование</text>
+  <rect x="150" y="221" width="29" height="16" rx="4" fill="#8260E5"/>
+  <text x="187" y="234" font-size="13" font-weight="600" fill="#1F2430">120.1 мс</text>
+
+  <!-- Chips -->
+  <rect x="28" y="264" width="150" height="30" rx="15" fill="#E3F8F2"/>
+  <text x="103" y="284" font-size="13" font-weight="600" fill="#0E9E82" text-anchor="middle">≈ 3.6× быстрее</text>
+
+  <rect x="190" y="264" width="286" height="30" rx="15" fill="#EEE9FB"/>
+  <text x="333" y="284" font-size="13" font-weight="600" fill="#6A45C9" text-anchor="middle">3 измеримых запроса вместо 1</text>
+</svg>
