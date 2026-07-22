@@ -10,7 +10,9 @@ namespace Pet.Jira.Infrastructure.Jira
         public static class Status
         {
             public const string FieldName = "status";
-            public static IssueStatus Default => new() { Id = "3", Name = "In Progress" };
+            public static IssueStatus InProgress => new() { Id = "3", Name = "In Progress" };
+            public static IssueStatus InTesting => new() { Id = "10116", Name = "In Testing" };
+            public static IssueStatus Default => InProgress;
         }
     }
 }

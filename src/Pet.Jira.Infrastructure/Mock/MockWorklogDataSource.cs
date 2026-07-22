@@ -1,4 +1,4 @@
-﻿using Pet.Jira.Application.Worklogs;
+using Pet.Jira.Application.Worklogs;
 using Pet.Jira.Application.Worklogs.Queries;
 using Pet.Jira.Domain.Models.Worklogs;
 using System.Collections.Generic;
@@ -15,9 +15,26 @@ namespace Pet.Jira.Infrastructure.Mock
             return Task.FromResult(MockWorklogStorage.IssueWorklogs.AsEnumerable());
         }
 
-        public Task<IEnumerable<IWorklog>> GetRawIssueWorklogsAsync(GetRawIssueWorklogs.Query query, CancellationToken cancellationToken = default)
+        public Task<IEnumerable<IWorklog>> GetAssigneeRawIssueWorklogsAsync(GetAssigneeJiraEvents.Query query, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(MockWorklogStorage.RawIssueWorklogs.AsEnumerable());
+            return Task.FromResult(FilterBySource(WorklogSource.Assignee));
+        }
+
+        public Task<IEnumerable<IWorklog>> GetTesterRawIssueWorklogsAsync(GetTesterJiraEvents.Query query, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(FilterBySource(WorklogSource.Tester));
+        }
+
+        public Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(GetCommentJiraEvents.Query query, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(FilterBySource(WorklogSource.Comment));
+        }
+
+        private static IEnumerable<IWorklog> FilterBySource(WorklogSource source)
+        {
+            return MockWorklogStorage.RawIssueWorklogs
+                .Where(worklog => worklog is RawIssueWorklog raw && raw.Source == source)
+                .ToList();
         }
     }
 }

@@ -38,11 +38,19 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
 		/// <summary>
-		/// Get issue worklogs
+		/// Search options for the Jira-event queries. The events only need the issue
+		/// summary for display; the heavy work is the per-issue changelog/comment fetch
+		/// that follows. Restricting the search to the summary field keeps the initial
+		/// JQL response small instead of pulling every navigable field. See issue #258.
 		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
+		private static IssueSearchOptions CreateEventSearchOptions(string jql) =>
+			new(jql)
+			{
+				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest,
+				FetchBasicFields = false,
+				AdditionalFields = { "summary" }
+			};
+
 		public async Task<IEnumerable<IWorklog>> GetIssueWorklogsAsync(
 			GetIssueWorklogs.Query query,
 			CancellationToken cancellationToken = default)
@@ -72,25 +80,20 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
 		/// <summary>
-		/// Get raw issue worklogs
+		/// Get estimated worklogs from the "In Progress" status changes of issues
+		/// assigned to the current user. See issue #258.
 		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
-		public async Task<IEnumerable<IWorklog>> GetRawIssueWorklogsAsync(
-			GetRawIssueWorklogs.Query query,
+		public async Task<IEnumerable<IWorklog>> GetAssigneeRawIssueWorklogsAsync(
+			GetAssigneeJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
 		{
 			var issueQuery = _queryFactory.Create()
 				.Where("assignee", JiraQueryComparisonType.Equal, JiraQueryMacros.CurrentUser)
 				.Where("type", JiraQueryComparisonType.NotEqual, "Story")
-				.WhereWas("status", "In Progress", query.StartDate, query.EndDate)
+				.WhereWas("status", JiraConstants.Status.InProgress.Name, query.StartDate, query.EndDate)
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
-			var issueSearchOptions = new IssueSearchOptions(issueQuery)
-			{
-				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest
-			};
+			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
 
 			var issues = await _jiraService.GetIssuesAsync(issueSearchOptions, cancellationToken);
 
@@ -100,10 +103,12 @@ namespace Pet.Jira.Infrastructure.Jira
 			var changeLogFilter = new Func<IssueChangeLog, bool>(changeLog =>
 				changeLog.Items.Any(item => item.FieldName == JiraConstants.Status.FieldName));
 
+			// Match the status by name, consistent with the JQL above — avoids depending
+			// on a hardcoded status id that varies between Jira instances. See issue #258.
 			var changeLogItemFilter = new Func<IssueChangeLogItem, bool>(changeLogItem =>
 				changeLogItem.FieldName == JiraConstants.Status.FieldName
-				&& (changeLogItem.ToId == query.IssueStatusId
-					|| changeLogItem.FromId == query.IssueStatusId));
+				&& (changeLogItem.ToValue == JiraConstants.Status.InProgress.Name
+					|| changeLogItem.FromValue == JiraConstants.Status.InProgress.Name));
 
 			var issueChangeLogItems = await _jiraService.GetIssueChangeLogItemsAsync(issues, changeLogFilter, changeLogItemFilter, cancellationToken);
 
@@ -114,26 +119,20 @@ namespace Pet.Jira.Infrastructure.Jira
 					.Where(item => item.ChangeLog.Issue.Key == issue.Key)
 					.OrderBy(item => item.ChangeLog.CreatedDate)
 					.ToList()
-					.ConvertTo<RawIssueWorklog>(query.IssueStatusId, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Assignee)
+					.ConvertTo<RawIssueWorklog>(JiraConstants.Status.InProgress.Name, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Assignee)
 					.Where(issueWorklog => issueWorklog.IsBetween(query.StartDate, query.EndDate));
 				result.AddRange(rawIssueWorklogs);
 			}
 
-			var commentWorklogs = await GetCommentRawIssueWorklogsAsync(query, cancellationToken);
-			var testerWorklogs = await GetTesterRawIssueWorklogsAsync(query, cancellationToken);
-			result.AddRange(commentWorklogs);
-			result.AddRange(testerWorklogs);
 			return result.Where(item => item.Author == userProfile.Username);
 		}
 
 		/// <summary>
-		/// Get raw issue worklogs
+		/// Get estimated worklogs from the current user's comments on watched issues
+		/// they are not assigned to. See issue #258.
 		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
-		public async Task<IEnumerable<RawIssueWorklog>> GetCommentRawIssueWorklogsAsync(
-			GetRawIssueWorklogs.Query query,
+		public async Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(
+			GetCommentJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
 		{
 			var issueQuery = _queryFactory.Create()
@@ -142,10 +141,7 @@ namespace Pet.Jira.Infrastructure.Jira
 				.Where("assignee", JiraQueryComparisonType.NotEqual, JiraQueryMacros.CurrentUser)
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
-			var issueSearchOptions = new IssueSearchOptions(issueQuery)
-			{
-				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest
-			};
+			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
 
 			var issues = await _jiraService.GetIssuesAsync(issueSearchOptions, cancellationToken);
 
@@ -175,25 +171,20 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
 		/// <summary>
-		/// Get raw issue worklogs
+		/// Get estimated worklogs from the "In Testing" status changes of issues where
+		/// the current user is the tester. See issue #258.
 		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
-		public async Task<IEnumerable<RawIssueWorklog>> GetTesterRawIssueWorklogsAsync(
-			GetRawIssueWorklogs.Query query,
+		public async Task<IEnumerable<IWorklog>> GetTesterRawIssueWorklogsAsync(
+			GetTesterJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
 		{
 			var issueQuery = _queryFactory.Create()
-				.Where("updatedDate", JiraQueryComparisonType.GreaterOrEqual, query.StartDate)
 				.Where("Tester", JiraQueryComparisonType.Equal, JiraQueryMacros.CurrentUser)
 				.Where("type", JiraQueryComparisonType.NotEqual, "Story")
+				.WhereWas("status", JiraConstants.Status.InTesting.Name, query.StartDate, query.EndDate)
 				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
 				.ToString();
-			var issueSearchOptions = new IssueSearchOptions(issueQuery)
-			{
-				MaxIssuesPerRequest = JiraConstants.DefaultMaxIssuesPerRequest
-			};
+			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
 
 			var issues = await _jiraService.GetIssuesAsync(issueSearchOptions, cancellationToken);
 
@@ -203,10 +194,13 @@ namespace Pet.Jira.Infrastructure.Jira
 			var changeLogFilter = new Func<IssueChangeLog, bool>(changeLog =>
 				changeLog.Items.Any(item => item.FieldName == JiraConstants.Status.FieldName));
 
+			// Match the "In Testing" status by name in both the filter and ConvertTo, so
+			// the interval detection is driven by the same status the changelog items
+			// were filtered on — no hardcoded status id. See issue #258.
 			var changeLogItemFilter = new Func<IssueChangeLogItem, bool>(changeLogItem =>
 				changeLogItem.FieldName == JiraConstants.Status.FieldName
-				&& (changeLogItem.ToId == "10116" // In Testing
-					|| changeLogItem.FromId == "10116"));
+				&& (changeLogItem.ToValue == JiraConstants.Status.InTesting.Name
+					|| changeLogItem.FromValue == JiraConstants.Status.InTesting.Name));
 
 			var issueChangeLogItems = await _jiraService.GetIssueChangeLogItemsAsync(issues, changeLogFilter, changeLogItemFilter, cancellationToken);
 
@@ -217,7 +211,7 @@ namespace Pet.Jira.Infrastructure.Jira
 					.Where(item => item.ChangeLog.Issue.Key == issue.Key)
 					.OrderBy(item => item.ChangeLog.CreatedDate)
 					.ToList()
-					.ConvertTo<RawIssueWorklog>(query.IssueStatusId, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Tester)
+					.ConvertTo<RawIssueWorklog>(JiraConstants.Status.InTesting.Name, _timeProvider, userProfile.TimeZoneInfo, WorklogSource.Tester)
 					.Where(issueWorklog => issueWorklog.IsBetween(query.StartDate, query.EndDate));
 				result.AddRange(rawIssueWorklogs);
 			}

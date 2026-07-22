@@ -244,6 +244,8 @@ namespace Pet.Jira.Infrastructure.Jira
                         {
                             FromId = issueChangeLogItem.FromId,
                             ToId = issueChangeLogItem.ToId,
+                            FromValue = issueChangeLogItem.FromValue,
+                            ToValue = issueChangeLogItem.ToValue,
                             ChangeLog = IssueChangeLogDto.Create(issueChangeLog, issue),
                             Author = issueChangeLog.Author.Username
                         });
@@ -386,16 +388,17 @@ namespace Pet.Jira.Infrastructure.Jira
             Func<Comment, bool> filter = null,
             CancellationToken cancellationToken = default)
         {
-            var result = new List<IssueCommentDto> { };
-            foreach (var issue in issues)
+            var result = new ConcurrentBag<IssueCommentDto> { };
+            await Parallel.ForEachAsync(issues, DefaultParallelOptions, async (issue, cancellationToken) =>
             {
                 var options = new CommentQueryOptions();
                 var comments = await _jiraClient.Issues.GetCommentsAsync(issue.Key, options, cancellationToken);
                 comments = comments.WhereIfNotNull(filter);
-
-                result.AddRange(comments.Select(comment =>
-                    IssueCommentDto.Create(comment, issue)));
-            }
+                foreach (var comment in comments)
+                {
+                    result.Add(IssueCommentDto.Create(comment, issue));
+                }
+            });
 
             return result;
         }

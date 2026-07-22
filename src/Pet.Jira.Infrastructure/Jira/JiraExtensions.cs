@@ -18,7 +18,7 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
         public static IEnumerable<T> ConvertTo<T>(this IList<IssueChangeLogItemDto> issueChangeLogItems,
-            string issueStatusId,
+            string statusName,
             ITimeProvider timeProvider,
             TimeZoneInfo timeZoneInfo,
 			WorklogSource worklogSource)
@@ -29,7 +29,7 @@ namespace Pet.Jira.Infrastructure.Jira
             {
                 var item = issueChangeLogItems[i];
                 // 1. Первый элемент сразу выходит из прогресса. Значит это завершающий
-                if (item.FromId == issueStatusId)
+                if (item.FromValue == statusName)
                 {
                     yield return new T()
                     {

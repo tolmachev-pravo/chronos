@@ -56,23 +56,53 @@ namespace Pet.Jira.Application.Worklogs.Queries
             private async Task<IEnumerable<WorkingDay>> CalculateWorklogCollection(Query query,
                 CancellationToken cancellationToken)
             {
-                var rawIssueWorklogs = await _mediator.Send(
-                    new GetRawIssueWorklogs.Query()
+                // Kick off the independent data fetches concurrently to cut wall-clock.
+                // Safe against the scoped, non-thread-safe ApplicationDbContext: only the
+                // calendar path touches it, and it runs as a single task, so there is no
+                // concurrent DbContext access; the Jira queries use transient services with
+                // no shared state. Trade-off: PerformanceBehavior's per-request allocation
+                // stats are not representative while these run concurrently. See issue #258.
+                var assigneeTask = _mediator.Send(
+                    new GetAssigneeJiraEvents.Query()
+                    {
+                        StartDate = query.StartDate,
+                        EndDate = query.EndDate
+                    }, cancellationToken);
+
+                var testerTask = _mediator.Send(
+                    new GetTesterJiraEvents.Query()
+                    {
+                        StartDate = query.StartDate,
+                        EndDate = query.EndDate
+                    }, cancellationToken);
+
+                var commentTask = _mediator.Send(
+                    new GetCommentJiraEvents.Query()
                     {
                         StartDate = query.StartDate,
                         EndDate = query.EndDate,
-                        IssueStatusId = query.IssueStatusId,
                         CommentWorklogTime = query.CommentWorklogTime
                     }, cancellationToken);
 
-                var issueWorklogs = await _mediator.Send(
+                var issueWorklogsTask = _mediator.Send(
                     new GetIssueWorklogs.Query()
                     {
                         StartDate = query.StartDate,
                         EndDate = query.EndDate
                     }, cancellationToken);
 
-                var (calendarWorklogs, blockedEventsByDay) = await GetCalendarWorklogsAsync(query, cancellationToken);
+                var calendarTask = GetCalendarWorklogsAsync(query, cancellationToken);
+
+                await Task.WhenAll(
+                    assigneeTask, testerTask, commentTask, issueWorklogsTask, calendarTask);
+
+                var rawIssueWorklogs = (await assigneeTask)
+                    .Concat(await testerTask)
+                    .Concat(await commentTask);
+
+                var issueWorklogs = await issueWorklogsTask;
+
+                var (calendarWorklogs, blockedEventsByDay) = await calendarTask;
 
                 var allRawWorklogs = rawIssueWorklogs.Concat(calendarWorklogs);
 

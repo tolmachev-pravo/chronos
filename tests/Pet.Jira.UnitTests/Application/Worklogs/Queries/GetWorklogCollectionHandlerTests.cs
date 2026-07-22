@@ -29,7 +29,13 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
             _identityServiceMock = new Mock<IIdentityService>();
 
             _mediatorMock
-                .Setup(x => x.Send(It.IsAny<GetRawIssueWorklogs.Query>(), It.IsAny<CancellationToken>()))
+                .Setup(x => x.Send(It.IsAny<GetAssigneeJiraEvents.Query>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IEnumerable<IWorklog>)new List<IWorklog>());
+            _mediatorMock
+                .Setup(x => x.Send(It.IsAny<GetTesterJiraEvents.Query>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((IEnumerable<IWorklog>)new List<IWorklog>());
+            _mediatorMock
+                .Setup(x => x.Send(It.IsAny<GetCommentJiraEvents.Query>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IEnumerable<IWorklog>)new List<IWorklog>());
             _mediatorMock
                 .Setup(x => x.Send(It.IsAny<GetIssueWorklogs.Query>(), It.IsAny<CancellationToken>()))
