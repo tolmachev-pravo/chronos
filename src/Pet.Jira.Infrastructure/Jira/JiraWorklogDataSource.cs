@@ -51,12 +51,6 @@ namespace Pet.Jira.Infrastructure.Jira
 				AdditionalFields = { "summary" }
 			};
 
-		/// <summary>
-		/// Get issue worklogs
-		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
 		public async Task<IEnumerable<IWorklog>> GetIssueWorklogsAsync(
 			GetIssueWorklogs.Query query,
 			CancellationToken cancellationToken = default)
@@ -89,9 +83,6 @@ namespace Pet.Jira.Infrastructure.Jira
 		/// Get estimated worklogs from the "In Progress" status changes of issues
 		/// assigned to the current user. See issue #258.
 		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
 		public async Task<IEnumerable<IWorklog>> GetAssigneeRawIssueWorklogsAsync(
 			GetAssigneeJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
@@ -140,9 +131,6 @@ namespace Pet.Jira.Infrastructure.Jira
 		/// Get estimated worklogs from the current user's comments on watched issues
 		/// they are not assigned to. See issue #258.
 		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
 		public async Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(
 			GetCommentJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
@@ -186,9 +174,6 @@ namespace Pet.Jira.Infrastructure.Jira
 		/// Get estimated worklogs from the "In Testing" status changes of issues where
 		/// the current user is the tester. See issue #258.
 		/// </summary>
-		/// <param name="query"></param>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
 		public async Task<IEnumerable<IWorklog>> GetTesterRawIssueWorklogsAsync(
 			GetTesterJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
