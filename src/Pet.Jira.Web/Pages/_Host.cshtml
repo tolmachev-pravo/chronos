@@ -43,34 +43,39 @@
         <a class="dismiss">🗙</a>
     </div>
 
-    <script src="_framework/blazor.server.js" autostart="false"></script>
-    <script>
-        // Try harder to reconnect to the same circuit before falling back to reload
-        Blazor.start({
-            reconnectionOptions: {
-                maxRetries: 30,
-                retryIntervalMilliseconds: 2000
-            }
-        });
-    </script>
+    @* Blazor toggles the components-reconnect-* classes on this element and fills
+       the attempt counters; styling in css/custom.css keys off those classes. *@
+    <div id="components-reconnect-modal">
+        <div class="pet-rc__dialog" role="alertdialog" aria-live="assertive">
+            <div class="pet-rc__state pet-rc__state--show">
+                <div class="pet-rc__spinner" aria-hidden="true"></div>
+                <h2 class="pet-rc__title">Соединение потеряно</h2>
+                <p class="pet-rc__text">
+                    Восстанавливаем связь с сервером…
+                    <span class="pet-rc__attempt">
+                        Попытка <span id="components-reconnect-current-attempt">1</span>
+                        из <span id="components-reconnect-max-retries"></span>
+                    </span>
+                </p>
+            </div>
+            @* Terminal state for both 'failed' and 'rejected' — state is gone, reload is the only option. *@
+            <div class="pet-rc__state pet-rc__state--reload">
+                <div class="pet-rc__icon" aria-hidden="true">↻</div>
+                <h2 class="pet-rc__title">Не удалось восстановить соединение</h2>
+                <p class="pet-rc__text">
+                    Связь с сервером не восстановилась, а состояние страницы потеряно.
+                    Перезагрузите страницу, чтобы продолжить работу.
+                </p>
+                <button type="button" class="pet-rc__btn" onclick="location.reload()">
+                    Перезагрузить страницу
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="_framework/blazor.server.js"></script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_content/MudBlazor.Markdown/MudBlazor.Markdown.min.js"></script>
     <script src="scripts/clipboard.js"></script>
-
-    <script>
-        // Wait until a 'reload' button appears
-        new MutationObserver((mutations, observer) => {
-            if (document.querySelector('#components-reconnect-modal h5 a')) {
-                // Now every 10 seconds, see if the server appears to be back, and if so, reload
-                async function attemptReload() {
-                    await fetch(''); // Check the server really is back
-                    location.reload();
-                }
-                observer.disconnect();
-                attemptReload();
-                setInterval(attemptReload, 10000);
-            }
-        }).observe(document.body, { childList: true, subtree: true });
-    </script>
 </body>
 </html>

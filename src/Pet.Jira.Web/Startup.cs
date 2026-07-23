@@ -47,16 +47,15 @@ namespace Pet.Jira.Web
             services.AddRazorPages();
             services.AddServerSideBlazor(options =>
                 {
-                    // Show detailed circuit errors only in Development
                     options.DetailedErrors = Environment.IsDevelopment();
-                    // Keep a disconnected circuit for a while so short network
-                    // blips restore the page state without a full reload
+                    // Retain the disconnected circuit so a reconnect within this window
+                    // restores page state instead of forcing a reload (see _Host.cshtml).
                     options.DisconnectedCircuitRetentionPeriod = TimeSpan.FromMinutes(3);
                     options.DisconnectedCircuitMaxRetained = 100;
                 })
                 .AddHubOptions(options =>
                 {
-                    // Give the connection more headroom on unstable networks / VPN
+                    // Looser timeouts to survive brief drops on unstable networks / VPN.
                     options.ClientTimeoutInterval = TimeSpan.FromSeconds(60);
                     options.KeepAliveInterval = TimeSpan.FromSeconds(15);
                     options.HandshakeTimeout = TimeSpan.FromSeconds(30);

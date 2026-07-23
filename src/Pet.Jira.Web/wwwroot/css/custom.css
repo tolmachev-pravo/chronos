@@ -605,3 +605,141 @@
 }
 .rel-card__date-icon { opacity: .55; }
 
+/* ============================================================
+   Blazor Server reconnection overlay (#components-reconnect-modal),
+   rendered in _Host.cshtml outside the Blazor tree. Colors use
+   --mud-palette-* — they cascade here, so the overlay follows the app's
+   light/dark theme. MudBlazor ships its own styles for this id and loads
+   AFTER this file, hence the body-scoped scrim override below.
+   ============================================================ */
+#components-reconnect-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: pet-rc-fade .2s ease both;
+}
+/* body-scoped + !important to outrank MudBlazor's background-color:!important,
+   so the overlay dims the page instead of filling it solid. */
+body #components-reconnect-modal {
+    background: rgba(0, 0, 0, .55) !important;
+}
+#components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-rejected {
+    display: flex;
+}
+/* 1s grace before the overlay fades in, so brief blips that reconnect within it
+   never flash the modal. Only 'show' is delayed; the terminal states appear at
+   once. Disappearance is instant — removing the class drops it to display:none,
+   there is no fade-out. */
+#components-reconnect-modal.components-reconnect-show {
+    animation-delay: 1s;
+    pointer-events: none;
+}
+
+.pet-rc__dialog {
+    width: 100%;
+    max-width: 380px;
+    padding: 32px 28px;
+    border-radius: 18px;
+    text-align: center;
+    background: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    border: 1px solid var(--mud-palette-lines-default);
+    box-shadow: 0 24px 60px -18px rgba(0, 0, 0, .5);
+    animation: pet-rc-pop .25s cubic-bezier(.2,.7,.2,1) both;
+}
+
+/* Show only the block for the current class; 'failed' and 'rejected' share the
+   reload block (both mean state is unrecoverable). */
+.pet-rc__state { display: none; }
+#components-reconnect-modal.components-reconnect-show .pet-rc__state--show { display: block; }
+#components-reconnect-modal.components-reconnect-failed .pet-rc__state--reload,
+#components-reconnect-modal.components-reconnect-rejected .pet-rc__state--reload { display: block; }
+
+.pet-rc__title {
+    margin: 18px 0 8px;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+.pet-rc__text {
+    margin: 0;
+    font-size: .9rem;
+    line-height: 1.5;
+    color: var(--mud-palette-text-secondary);
+}
+.pet-rc__attempt {
+    display: block;
+    margin-top: 10px;
+    font-size: .8rem;
+    color: var(--mud-palette-text-secondary);
+    opacity: .8;
+}
+
+.pet-rc__spinner {
+    width: 52px;
+    height: 52px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 4px solid rgba(var(--mud-palette-primary-rgb), .18);
+    border-top-color: var(--mud-palette-primary);
+    animation: pet-rc-spin .8s linear infinite;
+}
+
+.pet-rc__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin: 0 auto;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--mud-palette-primary);
+    background: rgba(var(--mud-palette-primary-rgb), .12);
+}
+
+/* id-scoped to beat MudBlazor's own button rule (uppercase + 40px auto margin). */
+#components-reconnect-modal .pet-rc__btn {
+    display: block;
+    margin: 22px auto 0 !important;
+    padding: 10px 26px;
+    border: none;
+    border-radius: 999px;
+    font-size: .9rem;
+    font-weight: 600;
+    font-family: inherit;
+    text-transform: none;
+    letter-spacing: normal;
+    color: #fff;
+    background: var(--mud-palette-primary);
+    cursor: pointer;
+    transition: background-color .2s ease, box-shadow .2s ease, transform .1s ease;
+    box-shadow: 0 8px 20px -8px rgba(var(--mud-palette-primary-rgb), .8);
+}
+#components-reconnect-modal .pet-rc__btn:hover {
+    background: var(--mud-palette-primary-darken);
+    box-shadow: 0 10px 26px -8px rgba(var(--mud-palette-primary-rgb), .9);
+}
+#components-reconnect-modal .pet-rc__btn:active { transform: translateY(1px); }
+
+@keyframes pet-rc-spin { to { transform: rotate(360deg); } }
+@keyframes pet-rc-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pet-rc-pop {
+    from { opacity: 0; transform: translateY(12px) scale(.97); }
+    to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #components-reconnect-modal,
+    .pet-rc__dialog { animation: none; }
+    .pet-rc__spinner { animation-duration: 2s; }
+}
+
