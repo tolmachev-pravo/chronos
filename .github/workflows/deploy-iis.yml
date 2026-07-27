@@ -1,46 +1,103 @@
 name: Deploy to IIS (Self-Hosted)
 
 on:
-  push:
-    branches: [ master ]
+  release:
+    types: [ published ]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to deploy, for example v1.6.0'
+        required: true
+        type: string
+
+# two deployments must never touch the site at the same time
+concurrency:
+  group: deploy-iis
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    # pre-releases are published for testing and must not reach production on their own
+    if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
     runs-on: self-hosted
-    
+
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      APP_POOL: _jira.copilot
+      SITE_PATH: F:\inetpub\sites\jira.copilot
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0 # full history with tags is required by MinVer
+    # No checkout and no build: the site is deployed from the artifact the Release
+    # workflow built and tested on the tag, so production matches a known release.
+    - name: Download and unpack the release artifact
+      shell: powershell
+      run: |
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+        $asset = "pet-jira-copilot-$env:RELEASE_TAG.zip"
+        $url = "https://github.com/${{ github.repository }}/releases/download/$env:RELEASE_TAG/$asset"
+        $archive = Join-Path $env:RUNNER_TEMP $asset
+        $unpacked = Join-Path $env:RUNNER_TEMP "release"
+
+        Write-Host "Downloading $url"
+        try {
+            Invoke-WebRequest -Uri $url -OutFile $archive -UseBasicParsing
+        } catch {
+            throw "Cannot download $asset — releases published before the Release workflow existed carry no artifact. $($_.Exception.Message)"
+        }
+
+        if (Test-Path $unpacked) { Remove-Item $unpacked -Recurse -Force }
+        Expand-Archive -Path $archive -DestinationPath $unpacked -Force
+
+        # fail here, while the site is still untouched, rather than half way through the copy
+        if (-not (Test-Path (Join-Path $unpacked 'Pet.Jira.Web.dll'))) {
+            throw "The unpacked artifact contains no Pet.Jira.Web.dll, refusing to deploy."
+        }
+
+        Write-Host "Deploying $env:RELEASE_TAG to $env:SITE_PATH"
 
     - name: Stop AppPool (if running)
+      shell: powershell
       run: |
         Import-Module WebAdministration
-        $poolName = "_jira.copilot"
-        $pool = Get-WebAppPoolState -Name $poolName
-        if ($pool.Value -eq "Started") {
-            Stop-WebAppPool -Name $poolName
+        if ((Get-WebAppPoolState -Name $env:APP_POOL).Value -eq "Started") {
+            Stop-WebAppPool -Name $env:APP_POOL
         }
-      shell: powershell
-    
-    - name: Publish .NET App
-      run: |
-        dotnet restore
-        dotnet build --configuration Release
-        dotnet publish -c Release -o ./publish
 
-    - name: Copy files (exclude appsettings.json)
-      run: |
-        $source = "./publish"
-        $destination = "F:\inetpub\sites\jira.copilot"
-        robocopy $source $destination /E /XO /ZB /XF "appsettings.json" "appsettings.*.json" /W:1 /R:3 /NP /LOG+:deploy.log;
-        if ($lastexitcode -lt 8) { $global:LASTEXITCODE = $null }
+    - name: Copy files (keep the appsettings living on the server)
       shell: powershell
-    
+      run: |
+        $source = Join-Path $env:RUNNER_TEMP "release"
+        robocopy $source $env:SITE_PATH /E /ZB /XF "appsettings.json" "appsettings.*.json" /W:1 /R:3 /NP
+        # robocopy reports success with any code below 8
+        if ($LASTEXITCODE -lt 8) { $global:LASTEXITCODE = $null }
+
     - name: Start AppPool
+      if: always() # the site has to come back up even when the copy failed
+      shell: powershell
       run: |
         Import-Module WebAdministration
-        Start-WebAppPool -Name "_jira.copilot"
+        if ((Get-WebAppPoolState -Name $env:APP_POOL).Value -ne "Started") {
+            Start-WebAppPool -Name $env:APP_POOL
+        }
+
+    # Set the SITE_URL repository variable to turn this on, for example https://jira.copilot
+    - name: Smoke check the deployed site
+      if: vars.SITE_URL != ''
       shell: powershell
+      run: |
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $url = "${{ vars.SITE_URL }}".TrimEnd('/') + "/health"
+
+        for ($attempt = 1; $attempt -le 10; $attempt++) {
+            try {
+                $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 15
+                Write-Host "$url answered $($response.StatusCode) on attempt $attempt"
+                exit 0
+            } catch {
+                Write-Host "Attempt ${attempt}: $($_.Exception.Message)"
+                Start-Sleep -Seconds 6
+            }
+        }
+
+        throw "$url did not answer after the deployment of $env:RELEASE_TAG."
