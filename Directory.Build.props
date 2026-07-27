@@ -1,0 +1,16 @@
+<Project>
+
+  <!--
+    Assembly versions are derived from git tags by MinVer (issue #71):
+    on tag v1.6.0 the version is 1.6.0, between tags it is 1.6.1-alpha.0.N.
+    Requires the full history with tags — CI checkouts need fetch-depth: 0.
+  -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="7.0.0" PrivateAssets="all" />
+  </ItemGroup>
+
+</Project>

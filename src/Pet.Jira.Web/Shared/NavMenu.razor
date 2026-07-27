@@ -1,4 +1,6 @@
-﻿<MudPaper Width="100%" Class="py-3" Height="100%" Elevation="1">
+﻿@using Pet.Jira.Web.Common
+
+<MudPaper Width="100%" Class="py-3 d-flex flex-column" Height="100%" Elevation="1">
     <MudNavMenu Bordered="true">
         <MudNavLink Href="/worklogs" Icon="@Icons.Material.Outlined.Timer">Worklogs</MudNavLink>
         @* Temporarily hidden — content superseded by the Features section.
@@ -9,4 +11,10 @@
         <MudNavLink Href="/features" Icon="@Icons.Material.Outlined.AutoAwesome">Features</MudNavLink>
         <MudNavLink Href="/releases" Icon="@Icons.Material.Outlined.Rocket">Releases</MudNavLink>
     </MudNavMenu>
+    <MudSpacer />
+    <MudTooltip Text="@AppVersion.Full" Placement="Placement.Top">
+        <MudLink Href="/releases" Underline="Underline.None" Class="px-4">
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">@AppVersion.Display</MudText>
+        </MudLink>
+    </MudTooltip>
 </MudPaper>

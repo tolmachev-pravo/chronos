@@ -16,6 +16,8 @@ jobs:
         
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0 # full history with tags is required by MinVer
     - name: Setup .NET Core SDK ${{ matrix.dotnet-version }}
       uses: actions/setup-dotnet@v2
       with:
