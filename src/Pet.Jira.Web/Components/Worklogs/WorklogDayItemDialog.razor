@@ -7,6 +7,7 @@
         <MudForm @ref="_form">
             <MudPaper Elevation="0" Class="pet-worklog-day-item-dialog">
                 <MudDatePicker Label="Date" @bind-Date="_model.Worklog.Date"
+                               FirstDayOfWeek="DayOfWeek.Monday"
                                Required="true" RequiredError="Date is required" />
                 <MudTimePicker Label="Start time" @bind-Time="_model.Worklog.StartTime" Editable="true"
                                Required="true" RequiredError="Start time is required" />
