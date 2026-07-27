@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag to deploy, for example v1.6.0'
+        description: 'Published release tag to deploy, for example v1.6.0 (drafts have no downloadable asset)'
         required: true
         type: string
 
@@ -29,6 +29,10 @@ jobs:
     steps:
     # No checkout and no build: the site is deployed from the artifact the Release
     # workflow built and tested on the tag, so production matches a known release.
+    #
+    # Keep every powershell step ASCII-only. The runner writes the step to a UTF-8 file
+    # without a BOM and Windows PowerShell reads it in the system codepage, so a non-ASCII
+    # character arrives mangled and can break parsing before a single line runs.
     - name: Download and unpack the release artifact
       shell: powershell
       run: |
@@ -43,7 +47,7 @@ jobs:
         try {
             Invoke-WebRequest -Uri $url -OutFile $archive -UseBasicParsing
         } catch {
-            throw "Cannot download $asset — releases published before the Release workflow existed carry no artifact. $($_.Exception.Message)"
+            throw "Cannot download $asset. The release has to be published and built by the Release workflow: a draft keeps its asset private and older releases carry none. $($_.Exception.Message)"
         }
 
         if (Test-Path $unpacked) { Remove-Item $unpacked -Recurse -Force }
