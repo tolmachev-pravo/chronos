@@ -12,7 +12,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+      with:
+        fetch-depth: 0 # full history with tags is required by MinVer
+
     - name: Stop AppPool (if running)
       run: |
         Import-Module WebAdministration
