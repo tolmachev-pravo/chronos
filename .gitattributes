@@ -4,6 +4,12 @@
 * text=auto
 
 ###############################################################################
+# Shell scripts must keep LF even on Windows checkouts: CRLF breaks them
+# both on the CI runners and in Git Bash.
+###############################################################################
+*.sh text eol=lf
+
+###############################################################################
 # Set default behavior for command prompt diff.
 #
 # This is need for earlier builds of msysgit that does not have it on by

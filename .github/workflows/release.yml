@@ -1,0 +1,69 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # full history with tags is required by MinVer
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+
+    - name: Verify the stamped version matches the tag
+      run: |
+        expected="${GITHUB_REF_NAME#v}"
+        actual="$(dotnet build src/Pet.Jira.Web/Pet.Jira.Web.csproj --configuration Release --no-restore -t:MinVer -getProperty:MinVerVersion | tail -1 | tr -d '\r')"
+        if [ "$actual" != "$expected" ]; then
+          echo "::error::MinVer produced version $actual, expected $expected for tag $GITHUB_REF_NAME"
+          exit 1
+        fi
+        echo "Building release $GITHUB_REF_NAME with version $actual"
+
+    - name: Publish web app
+      run: dotnet publish src/Pet.Jira.Web/Pet.Jira.Web.csproj --configuration Release --no-build --output publish
+
+    - name: Package artifact
+      run: |
+        mkdir -p artifact
+        (cd publish && zip -qr "../artifact/pet-jira-copilot-${GITHUB_REF_NAME}.zip" .)
+
+    - name: Create draft release with the artifact
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        asset="artifact/pet-jira-copilot-${GITHUB_REF_NAME}.zip"
+        if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+          echo "Release $GITHUB_REF_NAME already exists — replacing its artifact, notes are left untouched."
+          gh release upload "$GITHUB_REF_NAME" "$asset" --clobber
+        else
+          extra_args=()
+          # tags like v1.6.0-rc.1 become pre-releases, the Releases section marks them accordingly
+          case "$GITHUB_REF_NAME" in
+            *-*) extra_args+=(--prerelease) ;;
+          esac
+          bash .github/scripts/build-release-notes.sh "$GITHUB_REF_NAME" > release-notes.md
+          gh release create "$GITHUB_REF_NAME" --draft --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md "${extra_args[@]}" "$asset"
+        fi
