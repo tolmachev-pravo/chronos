@@ -1,8 +1,12 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using MediatR;
+using Microsoft.AspNetCore.Components;
 using Pet.Jira.Application.Authentication;
+using Pet.Jira.Application.Extensions.Jira.Commands;
 using Pet.Jira.Application.Storage;
 using Pet.Jira.Application.Users;
+using Pet.Jira.Application.Worklogs.Dto;
 using Pet.Jira.Domain.Models.Users;
+using System;
 using System.Threading.Tasks;
 
 namespace Pet.Jira.Web.Shared
@@ -14,7 +18,10 @@ namespace Pet.Jira.Web.Shared
 
         [Inject] private IStorage<string, UserProfile> _userProfileStorage { get; set; }
         [Inject] private IStorage<string, UserTheme> _userThemeStorage { get; set; }
+        [Inject] private IStorage<string, UserWorklogFilter> _userWorklogFilterStorage { get; set; }
         [Inject] private IIdentityService _identityService { get; set; }
+        [Inject] private IMediator _mediator { get; set; }
+        [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
         protected async Task ToggleThemeAsync(bool value)
         {
@@ -54,6 +61,7 @@ namespace Pet.Jira.Web.Shared
             {
                 await RenderThemeAsync();
                 await RenderProfileAsync();
+                await EnsureJiraExtensionAsync();
                 _model.Initialize();
                 StateHasChanged();
             }
@@ -89,6 +97,33 @@ namespace Pet.Jira.Web.Shared
                 await _userProfileStorage.ForceInitAsync(user.Key);
                 var profile = await _userProfileStorage.GetValueAsync(user.Key);
                 _model.Profile.Initialize(profile);
+            }
+        }
+
+        /// <summary>
+        /// Connects the Jira extension for a user that has none yet (issue #242). Runs after
+        /// the first render because the legacy worklog filter lives in local storage and
+        /// needs JS interop; users who already have that filter keep their current behaviour.
+        /// </summary>
+        private async Task EnsureJiraExtensionAsync()
+        {
+            try
+            {
+                var user = await _identityService.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    return;
+                }
+
+                var legacyFilter = await _userWorklogFilterStorage.GetValueAsync(user.Key);
+                await _mediator.Send(new EnsureJiraExtension.Command(
+                    user.Username,
+                    HasLegacyFilter: legacyFilter != null,
+                    LegacyCommentWorklogTime: legacyFilter?.CommentWorklogTime));
+            }
+            catch (Exception e)
+            {
+                ErrorHandler.ProcessError(e);
             }
         }
 
