@@ -29,8 +29,6 @@ namespace Pet.Jira.Application
 			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
 			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
-			services.AddAutoMapper(cfg => cfg.AddMaps(Assembly.GetExecutingAssembly()));
-
 			return services;
         }
     }

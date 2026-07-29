@@ -1,5 +1,3 @@
-﻿using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Pet.Jira.Application.Articles;
 using Pet.Jira.Application.Articles.Dto;
@@ -14,20 +12,16 @@ namespace Pet.Jira.Infrastructure.Articles
     public class ArticleDataSource : IArticleDataSource
     {
         private readonly ApplicationDbContext _dbContext;
-        private readonly IMapper _mapper;
 
-        public ArticleDataSource(
-            ApplicationDbContext dbContext,
-            IMapper mapper)
+        public ArticleDataSource(ApplicationDbContext dbContext)
         {
             _dbContext = dbContext;
-            _mapper = mapper;
         }
 
         public async Task<IEnumerable<ArticleDto>> GetArticlesAsync(CancellationToken cancellationToken = default)
         {
             return await _dbContext.Articles
-                .ProjectTo<ArticleDto>(_mapper.ConfigurationProvider)
+                .Select(ArticleDto.Projection)
                 .ToListAsync(cancellationToken);
         }
     }
