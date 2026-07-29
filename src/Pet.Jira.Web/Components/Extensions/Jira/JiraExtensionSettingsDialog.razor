@@ -1,0 +1,125 @@
+@using Pet.Jira.Web.Components.Markdown
+
+<MudDialog>
+    <DialogContent>
+
+        <div class="jed-header">
+            <MudPaper Elevation="0" Class="jed-icon-wrap">
+                <MudIcon Icon="@Icons.Material.Filled.EventNote" Style="font-size:1.75rem" Color="Color.Primary" />
+            </MudPaper>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight:700;line-height:1.2">Jira</MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.55">События · подгрузка в ворклоги</MudText>
+            </div>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.caption" Style="opacity:.6" Class="mb-4 d-block">
+            Настройки определяют, какие события подгружаются при поиске в разделе Worklogs.
+            Отключённые типы событий не запрашиваются из Jira — поиск работает быстрее.
+        </MudText>
+
+        <div class="jed-setting">
+            <div class="jed-setting-head">
+                <MudSwitch T="bool" @bind-Value="_assigneeEventsEnabled" Color="Color.Primary"
+                           Label="События исполнителя" />
+                <MarkdownTooltip Markdown="jira-extension-assignee-events">
+                    <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Class="jed-info" />
+                </MarkdownTooltip>
+            </div>
+            <MudText Typo="Typo.caption" Style="opacity:.6">
+                Задачи, где вы исполнитель, по времени в статусе «В работе»
+            </MudText>
+        </div>
+
+        <MudDivider Class="my-3" />
+
+        <div class="jed-setting">
+            <div class="jed-setting-head">
+                <MudSwitch T="bool" @bind-Value="_commentEventsEnabled" Color="Color.Primary"
+                           Label="События по комментариям" />
+                <MarkdownTooltip Markdown="jira-extension-comment-events">
+                    <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Class="jed-info" />
+                </MarkdownTooltip>
+            </div>
+            <MudText Typo="Typo.caption" Style="opacity:.6">
+                Ваши комментарии в задачах, где вы наблюдатель, но не исполнитель
+            </MudText>
+
+            <div class="jed-subsetting">
+                <MarkdownTooltip Markdown="jira-extension-comment-time" RootClass="jed-full-width">
+                    <MudTimePicker Label="Время комментария" @bind-Time="_commentWorklogTime"
+                                   Editable="true" Disabled="@(!_commentEventsEnabled)" />
+                </MarkdownTooltip>
+            </div>
+        </div>
+
+        <MudDivider Class="my-3" />
+
+        <div class="jed-setting">
+            <div class="jed-setting-head">
+                <MudSwitch T="bool" @bind-Value="_testerEventsEnabled" Color="Color.Primary"
+                           Label="События тестировщика" />
+                <MarkdownTooltip Markdown="jira-extension-tester-events">
+                    <MudIcon Icon="@Icons.Material.Outlined.Info" Size="Size.Small" Class="jed-info" />
+                </MarkdownTooltip>
+            </div>
+            <MudText Typo="Typo.caption" Style="opacity:.6">
+                Задачи, где вы указаны в поле «Tester», по времени в статусе «В тестировании»
+            </MudText>
+        </div>
+
+    </DialogContent>
+
+    <DialogActions>
+        <MudSpacer />
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Отмена</MudButton>
+        <MudButton OnClick="Save"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Check">
+            Сохранить
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .jed-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .jed-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+    }
+
+    .jed-setting-head {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .jed-info {
+        opacity: .45;
+        flex-shrink: 0;
+    }
+
+    .jed-subsetting {
+        margin-top: 8px;
+        padding-left: 52px;
+        max-width: 260px;
+    }
+
+    .jed-full-width {
+        width: 100% !important;
+    }
+</style>
