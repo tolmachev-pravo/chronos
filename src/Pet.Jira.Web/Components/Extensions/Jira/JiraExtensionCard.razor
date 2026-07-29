@@ -1,0 +1,26 @@
+<MudPaper Elevation="0" Class="@($"extv-glow__card {(_isEnabled ? "extv-glow__card--on" : null)}")">
+    <div class="extv-glow__card-top">
+        <div class="extv-glow__icon">
+            <MudIcon Icon="@Icons.Material.Filled.EventNote" />
+        </div>
+        <div class="@($"extv-glow__status extv-glow__status--{(_isEnabled ? "connected" : "off")}")">
+            <span class="extv-glow__led"></span>
+            @(_isEnabled ? "Активен" : "Отключён")
+        </div>
+    </div>
+
+    <MudText Typo="Typo.h6" Class="mt-3" Style="font-weight:600">Jira</MudText>
+    <MudText Typo="Typo.body2" Style="opacity:.65" Class="mt-1">
+        Выбирайте, какие события Jira попадают в ворклоги
+    </MudText>
+
+    <div class="extv-glow__foot">
+        <MudSwitch T="bool" Value="_isEnabled" Color="Color.Success" ValueChanged="OnToggleChangedAsync" />
+        <MudSpacer />
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Tune"
+                   OnClick="OpenSettingsDialog">
+            Настроить
+        </MudButton>
+    </div>
+</MudPaper>

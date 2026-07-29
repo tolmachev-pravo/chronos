@@ -1,3 +1,4 @@
+@using Pet.Jira.Web.Components.Extensions.Jira
 @using Pet.Jira.Web.Components.Extensions.YandexCalendar
 
 <div class="pet-section-head">
@@ -8,6 +9,9 @@
 </div>
 
 <div class="extv-glow__grid mt-5">
+    <div class="extv-glow__outer">
+        <JiraExtensionCard/>
+    </div>
     <div class="extv-glow__outer">
         <YandexCalendarExtensionCard/>
     </div>

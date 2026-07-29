@@ -7,16 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\documents\components\worklog-filter-comment-time.md" />
-    <Content Remove="wwwroot\documents\components\worklog-filter-daily-working-end-time.md" />
-    <Content Remove="wwwroot\documents\components\worklog-filter-daily-working-start-time.md" />
-    <Content Remove="wwwroot\documents\components\worklog-filter-date-range.md" />
-    <Content Remove="wwwroot\documents\components\worklog-filter-in-work-issue-status.md" />
-    <Content Remove="wwwroot\documents\components\worklog-filter-lunch-time.md" />
-    <Content Remove="wwwroot\documents\components\worklog-menu.md" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="8.0.1" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="8.0.1" />
@@ -57,27 +47,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\documents\components\worklog-filter-daily-working-end-time.md">
+    <Content Update="wwwroot\documents\components\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\documents\components\worklog-filter-date-range.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\documents\components\worklog-filter-daily-working-start-time.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\documents\components\worklog-filter-in-work-issue-status.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\documents\components\worklog-menu.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\documents\components\worklog-filter-lunch-time.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="wwwroot\documents\components\worklog-filter-comment-time.md">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

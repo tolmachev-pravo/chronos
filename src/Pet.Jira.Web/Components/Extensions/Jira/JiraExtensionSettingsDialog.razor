@@ -1,0 +1,130 @@
+<MudDialog>
+    <DialogContent>
+
+        <div class="jed-header">
+            <MudPaper Elevation="0" Class="jed-icon-wrap">
+                <MudIcon Icon="@Icons.Material.Filled.EventNote" Style="font-size:1.75rem" Color="Color.Primary" />
+            </MudPaper>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight:700;line-height:1.2">Jira</MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.55">События · подгрузка в ворклоги</MudText>
+            </div>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <MudText Typo="Typo.caption" Style="opacity:.6" Class="mb-4 d-block">
+            Настройки определяют, какие события подгружаются при поиске в разделе Worklogs.
+            Отключённые типы событий не запрашиваются из Jira — поиск работает быстрее.
+        </MudText>
+
+        <div class="jed-setting">
+            <MudIcon Icon="@Icons.Material.Filled.Assignment" Color="Color.Primary" Class="jed-setting-icon" />
+            <div class="jed-setting-body">
+                <MudSwitch T="bool" @bind-Value="_assigneeEventsEnabled" Color="Color.Primary"
+                           Label="События исполнителя" Class="jed-switch" />
+                <MudText Typo="Typo.caption" Style="opacity:.65">
+                    Задачи, где вы исполнитель. Время берётся из истории статусов: каждый интервал,
+                    когда задача была «В работе», становится предполагаемым ворклогом.
+                </MudText>
+            </div>
+        </div>
+
+        <MudDivider Class="my-3" />
+
+        <div class="jed-setting">
+            <MudIcon Icon="@Icons.Material.Filled.Comment" Color="Color.Info" Class="jed-setting-icon" />
+            <div class="jed-setting-body">
+                <MudSwitch T="bool" @bind-Value="_commentEventsEnabled" Color="Color.Primary"
+                           Label="События по комментариям" Class="jed-switch" />
+                <MudText Typo="Typo.caption" Style="opacity:.65">
+                    Задачи, где вы наблюдатель, но не исполнитель. Каждый ваш комментарий за период
+                    даёт ворклог фиксированной длительности — так удобно списывать время на ревью.
+                </MudText>
+
+                <div class="jed-subsetting">
+                    <div class="jed-subsetting-picker">
+                        <MudTimePicker Label="Время комментария" @bind-Time="_commentWorklogTime"
+                                       Editable="true" Disabled="@(!_commentEventsEnabled)" />
+                    </div>
+                    <MudText Typo="Typo.caption" Style="opacity:.65">
+                        Длительность одного ворклога из комментария. При 00:00 события создаются с нулевым временем.
+                    </MudText>
+                </div>
+            </div>
+        </div>
+
+        <MudDivider Class="my-3" />
+
+        <div class="jed-setting">
+            <MudIcon Icon="@Icons.Material.Filled.BugReport" Color="Color.Secondary" Class="jed-setting-icon" />
+            <div class="jed-setting-body">
+                <MudSwitch T="bool" @bind-Value="_testerEventsEnabled" Color="Color.Primary"
+                           Label="События тестировщика" Class="jed-switch" />
+                <MudText Typo="Typo.caption" Style="opacity:.65">
+                    Задачи, где вы указаны в поле «Tester». Время берётся из истории статусов: каждый интервал,
+                    когда задача была «В тестировании», становится предполагаемым ворклогом.
+                </MudText>
+            </div>
+        </div>
+
+    </DialogContent>
+
+    <DialogActions>
+        <MudSpacer />
+        <MudButton OnClick="Cancel" Variant="Variant.Text">Отмена</MudButton>
+        <MudButton OnClick="Save"
+                   Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Check">
+            Сохранить
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .jed-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .jed-icon-wrap {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: color-mix(in srgb, var(--mud-palette-primary) 14%, transparent);
+    }
+
+    .jed-setting {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .jed-setting-icon {
+        flex-shrink: 0;
+        margin-top: 6px;
+    }
+
+    .jed-setting-body {
+        min-width: 0;
+    }
+
+    .jed-switch {
+        margin-bottom: 2px;
+    }
+
+    .jed-subsetting {
+        margin-top: 10px;
+    }
+
+    .jed-subsetting-picker {
+        max-width: 180px;
+        margin-bottom: 2px;
+    }
+</style>

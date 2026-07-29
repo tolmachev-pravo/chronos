@@ -1,5 +1,4 @@
 ﻿using Pet.Jira.Domain.Models.Abstract;
-using Pet.Jira.Domain.Models.Issues;
 using System;
 
 namespace Pet.Jira.Application.Worklogs.Dto
@@ -9,8 +8,13 @@ namespace Pet.Jira.Application.Worklogs.Dto
         public string Username { get; set; }
         public TimeSpan? DailyWorkingStartTime { get; set; }
         public TimeSpan? DailyWorkingEndTime { get; set; }
-        public IssueStatus IssueStatus { get; set; }
+
+        /// <summary>
+        /// Legacy: the comment duration moved to the Jira extension (issue #242). Kept so
+        /// EnsureJiraExtension can migrate the value stored before the move.
+        /// </summary>
         public TimeSpan? CommentWorklogTime { get; set; } = TimeSpan.Zero;
+
         public TimeSpan? LunchTime { get; set; } = TimeSpan.FromHours(1);
 
         public string Key => Username;

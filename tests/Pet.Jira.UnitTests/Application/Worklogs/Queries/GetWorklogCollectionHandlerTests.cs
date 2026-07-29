@@ -2,6 +2,8 @@ using MediatR;
 using Moq;
 using NUnit.Framework;
 using Pet.Jira.Application.Authentication;
+using Pet.Jira.Application.Extensions.Jira.Dto;
+using Pet.Jira.Application.Extensions.Jira.Queries;
 using Pet.Jira.Application.Extensions.YandexCalendar.Dto;
 using Pet.Jira.Application.Extensions.YandexCalendar.Queries;
 using Pet.Jira.Application.Worklogs.Queries;
@@ -46,6 +48,11 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
             _mediatorMock
                 .Setup(x => x.Send(It.IsAny<GetYandexCalendarEvents.Query>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IReadOnlyList<YandexCalendarEventDto>)new List<YandexCalendarEventDto>());
+            SetupJiraExtension(new JiraExtensionSettingsDto(
+                AssigneeEventsEnabled: true,
+                CommentEventsEnabled: true,
+                CommentWorklogTime: TimeSpan.FromMinutes(10),
+                TesterEventsEnabled: true));
 
             _sut = new GetWorklogCollection.QueryHandler(
                 _mediatorMock.Object,
@@ -58,10 +65,13 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
             EndDate = new DateTime(2026, 6, 1),
             DailyWorkingStartTime = TimeSpan.FromHours(10),
             DailyWorkingEndTime = TimeSpan.FromHours(19),
-            LunchTime = TimeSpan.FromHours(1),
-            IssueStatusId = "3",
-            CommentWorklogTime = TimeSpan.FromMinutes(10)
+            LunchTime = TimeSpan.FromHours(1)
         };
+
+        private void SetupJiraExtension(JiraExtensionSettingsDto settings, bool isEnabled = true) =>
+            _mediatorMock
+                .Setup(x => x.Send(It.IsAny<GetJiraExtension.Query>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new JiraExtensionDto(isEnabled, settings));
 
         private static YandexCalendarEventDto Event(string summary, DateTime start, DateTime end, string? hint) =>
             new(Summary: summary, Start: start, End: end, JiraIssueKeyHint: hint);
@@ -116,6 +126,83 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
             Assert.That(day.CalendarBlockedTime, Is.EqualTo(TimeSpan.Zero));
             Assert.That(day.BlockedCalendarEvents, Is.Empty);
             Assert.That(day.EstimatedWorklogs.Any(w => w.Source == WorklogSource.Calendar), Is.False);
+        }
+
+        [Test]
+        public async Task Handle_CommentEventsDisabled_DoesNotQueryComments()
+        {
+            SetupJiraExtension(JiraExtensionSettingsDto.Default);
+
+            await _sut.Handle(SingleDayQuery());
+
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<GetCommentJiraEvents.Query>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task Handle_TesterEventsDisabled_DoesNotQueryTesterEvents()
+        {
+            SetupJiraExtension(JiraExtensionSettingsDto.Default);
+
+            await _sut.Handle(SingleDayQuery());
+
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<GetTesterJiraEvents.Query>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task Handle_AssigneeEventsDisabled_DoesNotQueryAssigneeEvents()
+        {
+            SetupJiraExtension(JiraExtensionSettingsDto.Default with { AssigneeEventsEnabled = false });
+
+            await _sut.Handle(SingleDayQuery());
+
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<GetAssigneeJiraEvents.Query>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [Test]
+        public async Task Handle_ExtensionDisabled_QueriesNoJiraEventsButKeepsActualWorklogs()
+        {
+            SetupJiraExtension(
+                new JiraExtensionSettingsDto(true, true, TimeSpan.FromMinutes(10), true),
+                isEnabled: false);
+
+            await _sut.Handle(SingleDayQuery());
+
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<GetAssigneeJiraEvents.Query>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<GetTesterJiraEvents.Query>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<GetCommentJiraEvents.Query>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+            _mediatorMock.Verify(
+                x => x.Send(It.IsAny<GetIssueWorklogs.Query>(), It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+
+        [Test]
+        public async Task Handle_CommentEventsEnabled_PassesDurationFromSettings()
+        {
+            SetupJiraExtension(new JiraExtensionSettingsDto(
+                AssigneeEventsEnabled: true,
+                CommentEventsEnabled: true,
+                CommentWorklogTime: TimeSpan.FromMinutes(45),
+                TesterEventsEnabled: false));
+
+            await _sut.Handle(SingleDayQuery());
+
+            _mediatorMock.Verify(
+                x => x.Send(
+                    It.Is<GetCommentJiraEvents.Query>(q => q.CommentWorklogTime == TimeSpan.FromMinutes(45)),
+                    It.IsAny<CancellationToken>()),
+                Times.Once);
         }
 
         [Test]
