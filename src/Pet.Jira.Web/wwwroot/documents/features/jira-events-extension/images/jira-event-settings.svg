@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <!-- self-contained figure background so it reads on light and dark themes -->
+  <rect x="10" y="10" width="740" height="340" rx="18" fill="#F7F8FA" stroke="#E4E7EE"/>
+
+  <!-- ===== Left: extension settings ===== -->
+  <text x="40" y="52" fill="#8A93A6" font-size="14" font-weight="600" letter-spacing="1">НАСТРОЙКИ РАСШИРЕНИЯ JIRA</text>
+  <rect x="36" y="66" width="300" height="250" rx="14" fill="#FFFFFF" stroke="#E4E7EE"/>
+
+  <!-- row 1: assignee events, on -->
+  <rect x="60" y="98" width="22" height="24" rx="4" fill="#ECE7FB" stroke="#8260E5"/>
+  <line x1="66" y1="106" x2="76" y2="106" stroke="#8260E5" stroke-width="2"/>
+  <line x1="66" y1="112" x2="76" y2="112" stroke="#8260E5" stroke-width="2"/>
+  <line x1="66" y1="118" x2="72" y2="118" stroke="#8260E5" stroke-width="2"/>
+  <text x="94" y="116" fill="#1F2430" font-size="13" font-weight="600">События исполнителя</text>
+  <rect x="274" y="100" width="44" height="20" rx="10" fill="#ECE7FB" stroke="#8260E5"/>
+  <circle cx="308" cy="110" r="7" fill="#8260E5"/>
+
+  <line x1="60" y1="140" x2="312" y2="140" stroke="#EEF0F5"/>
+
+  <!-- row 2: comment events, on -->
+  <rect x="60" y="156" width="24" height="20" rx="5" fill="#E6F2FD" stroke="#2F9BF2"/>
+  <path d="M66 176 l0 8 l8 -8 z" fill="#2F9BF2"/>
+  <line x1="66" y1="163" x2="78" y2="163" stroke="#2F9BF2" stroke-width="2"/>
+  <line x1="66" y1="169" x2="74" y2="169" stroke="#2F9BF2" stroke-width="2"/>
+  <text x="94" y="172" fill="#1F2430" font-size="13" font-weight="600">События по комментариям</text>
+  <rect x="274" y="158" width="44" height="20" rx="10" fill="#E6F2FD" stroke="#2F9BF2"/>
+  <circle cx="308" cy="168" r="7" fill="#2F9BF2"/>
+  <text x="94" y="196" fill="#8A93A6" font-size="13">Время комментария · 00:30</text>
+
+  <line x1="60" y1="214" x2="312" y2="214" stroke="#EEF0F5"/>
+
+  <!-- row 3: tester events, off -->
+  <circle cx="71" cy="240" r="9" fill="#FDE7EF" stroke="#F5407F"/>
+  <line x1="62" y1="234" x2="58" y2="230" stroke="#F5407F" stroke-width="1.8"/>
+  <line x1="80" y1="234" x2="84" y2="230" stroke="#F5407F" stroke-width="1.8"/>
+  <line x1="62" y1="246" x2="58" y2="250" stroke="#F5407F" stroke-width="1.8"/>
+  <line x1="80" y1="246" x2="84" y2="250" stroke="#F5407F" stroke-width="1.8"/>
+  <text x="94" y="245" fill="#8A93A6" font-size="13" font-weight="600">События тестировщика</text>
+  <rect x="274" y="230" width="44" height="20" rx="10" fill="#EEF0F5" stroke="#D5DAE4"/>
+  <circle cx="284" cy="240" r="7" fill="#B7BFCE"/>
+  <text x="94" y="268" fill="#8A93A6" font-size="13">выключено</text>
+
+  <!-- ===== Arrow ===== -->
+  <text x="398" y="152" fill="#8A93A6" font-size="12" font-weight="600" text-anchor="middle">поиск подгружает</text>
+  <text x="398" y="168" fill="#8260E5" font-size="12" font-weight="700" text-anchor="middle">только включённое</text>
+  <line x1="352" y1="192" x2="440" y2="192" stroke="#8260E5" stroke-width="2.5"/>
+  <path d="M440 192 l-11 -6 v12 z" fill="#8260E5"/>
+
+  <!-- ===== Right: worklog window ===== -->
+  <text x="464" y="52" fill="#8A93A6" font-size="14" font-weight="600" letter-spacing="1">ОКНО ВОРКЛОГОВ</text>
+  <rect x="460" y="66" width="264" height="250" rx="14" fill="#FFFFFF" stroke="#E4E7EE"/>
+
+  <!-- assignee worklog -->
+  <rect x="484" y="98" width="22" height="24" rx="4" fill="#ECE7FB" stroke="#8260E5"/>
+  <line x1="490" y1="106" x2="500" y2="106" stroke="#8260E5" stroke-width="2"/>
+  <line x1="490" y1="112" x2="500" y2="112" stroke="#8260E5" stroke-width="2"/>
+  <text x="518" y="110" fill="#1F2430" font-size="14" font-weight="600">10:00 → 11:00</text>
+  <text x="518" y="128" fill="#8A93A6" font-size="12">в работе · 1 ч</text>
+
+  <line x1="484" y1="146" x2="700" y2="146" stroke="#EEF0F5"/>
+
+  <!-- comment worklog -->
+  <rect x="484" y="160" width="24" height="20" rx="5" fill="#E6F2FD" stroke="#2F9BF2"/>
+  <path d="M490 180 l0 8 l8 -8 z" fill="#2F9BF2"/>
+  <text x="518" y="172" fill="#1F2430" font-size="14" font-weight="600">14:20 → 14:50</text>
+  <text x="518" y="190" fill="#8A93A6" font-size="12">комментарий · 30 мин</text>
+
+  <line x1="484" y1="208" x2="700" y2="208" stroke="#EEF0F5"/>
+
+  <!-- skipped type -->
+  <rect x="484" y="224" width="216" height="66" rx="10" fill="#F7F8FA" stroke="#E4E7EE" stroke-dasharray="5 4"/>
+  <text x="500" y="250" fill="#8A93A6" font-size="13">События тестировщика</text>
+  <text x="500" y="270" fill="#8A93A6" font-size="13">не запрашиваются из Jira —</text>
+  <text x="500" y="284" fill="#1FC8A5" font-size="13" font-weight="700">поиск быстрее</text>
+</svg>
