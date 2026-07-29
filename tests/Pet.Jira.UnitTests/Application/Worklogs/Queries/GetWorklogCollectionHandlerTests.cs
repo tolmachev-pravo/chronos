@@ -65,8 +65,7 @@ namespace Pet.Jira.UnitTests.Application.Worklogs.Queries
             EndDate = new DateTime(2026, 6, 1),
             DailyWorkingStartTime = TimeSpan.FromHours(10),
             DailyWorkingEndTime = TimeSpan.FromHours(19),
-            LunchTime = TimeSpan.FromHours(1),
-            IssueStatusId = "3"
+            LunchTime = TimeSpan.FromHours(1)
         };
 
         private void SetupJiraExtension(JiraExtensionSettingsDto settings, bool isEnabled = true) =>

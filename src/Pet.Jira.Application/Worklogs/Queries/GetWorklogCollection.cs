@@ -25,7 +25,6 @@ namespace Pet.Jira.Application.Worklogs.Queries
             public DateTime EndDate { get; set; }
             public TimeSpan DailyWorkingStartTime { get; set; }
             public TimeSpan DailyWorkingEndTime { get; set; }
-            public string IssueStatusId { get; set; }
             public TimeSpan LunchTime { get; set; }
         }
 

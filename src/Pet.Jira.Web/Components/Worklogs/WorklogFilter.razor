@@ -1,5 +1,4 @@
-﻿@using Pet.Jira.Domain.Models.Issues
-@using Pet.Jira.Web.Components.Markdown
+﻿@using Pet.Jira.Web.Components.Markdown
 
 <style>
     .pet-full-width {
@@ -17,11 +16,6 @@
     </MarkdownTooltip>
     <MarkdownTooltip Markdown="worklog-filter-daily-working-end-time" RootClass="pet-full-width">
         <MudTimePicker Label="Daily working end time" @bind-Time="_model.Filter.DailyWorkingEndTime" Editable="true" />
-    </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-in-work-issue-status" RootClass="pet-full-width">
-        <MudAutocomplete T="IssueStatus" Label="In work issue status" @bind-Value="_model.Filter.IssueStatus"
-                         SearchFunc="@SearchIssueStatuses" ToStringFunc="status => status?.Name" MaxItems="Int32.MaxValue"
-                         ResetValueOnEmptyText="true" Dense="true" />
     </MarkdownTooltip>
     <MarkdownTooltip Markdown="worklog-filter-lunch-time" RootClass="pet-full-width">
         <MudTimePicker Label="Lunch duration" @bind-Time="_model.Filter.LunchTime" Editable="true" />
