@@ -40,7 +40,6 @@ namespace Pet.Jira.Web.Components.Worklogs
                     DailyWorkingStartTime = _model.Filter.DailyWorkingStartTime.Value,
                     DailyWorkingEndTime = _model.Filter.DailyWorkingEndTime.Value,
                     IssueStatusId = _model.Filter.IssueStatus.Id,
-                    CommentWorklogTime = _model.Filter.CommentWorklogTime.Value,
                     LunchTime = _model.Filter.LunchTime.Value,
                 });
             }
@@ -146,7 +145,11 @@ namespace Pet.Jira.Web.Components.Worklogs
             [Required]
             public IssueStatus IssueStatus { get; set; } = JiraConstants.Status.Default;
 
-            [Required]
+            /// <summary>
+            /// Legacy: the comment duration now lives in the Jira extension (issue #242).
+            /// The value is still round-tripped through local storage so that
+            /// EnsureJiraExtension can migrate it for users who set it before the move.
+            /// </summary>
             public TimeSpan? CommentWorklogTime { get; set; } = TimeSpan.Zero;
 
             [Required]

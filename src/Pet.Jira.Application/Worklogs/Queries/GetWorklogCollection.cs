@@ -1,10 +1,13 @@
 using MediatR;
 using Pet.Jira.Application.Authentication;
 using Pet.Jira.Application.Common.Extensions;
+using Pet.Jira.Application.Extensions.Jira.Dto;
+using Pet.Jira.Application.Extensions.Jira.Queries;
 using Pet.Jira.Application.Extensions.YandexCalendar.Dto;
 using Pet.Jira.Application.Extensions.YandexCalendar.Queries;
 using Pet.Jira.Application.Worklogs.Dto;
 using Pet.Jira.Domain.Models.Issues;
+using Pet.Jira.Domain.Models.Users;
 using Pet.Jira.Domain.Models.Worklogs;
 using System;
 using System.Collections.Generic;
@@ -23,7 +26,6 @@ namespace Pet.Jira.Application.Worklogs.Queries
             public TimeSpan DailyWorkingStartTime { get; set; }
             public TimeSpan DailyWorkingEndTime { get; set; }
             public string IssueStatusId { get; set; }
-            public TimeSpan CommentWorklogTime { get; set; }
             public TimeSpan LunchTime { get; set; }
         }
 
@@ -53,36 +55,56 @@ namespace Pet.Jira.Application.Worklogs.Queries
                 return new Model { WorkingDays = worklogCollection };
             }
 
+            private static readonly Task<IEnumerable<IWorklog>> NoWorklogs =
+                Task.FromResult(Enumerable.Empty<IWorklog>());
+
             private async Task<IEnumerable<WorkingDay>> CalculateWorklogCollection(Query query,
                 CancellationToken cancellationToken)
             {
+                var user = await _identityService.GetCurrentUserAsync();
+
+                // Which kinds of Jira events the user wants (issue #242). A disabled
+                // extension loads none of them; a disabled kind is not requested at all,
+                // so Jira is not queried for it.
+                var extension = await _mediator.Send(
+                    new GetJiraExtension.Query(user?.Username), cancellationToken);
+                var jiraSettings = extension.IsEnabled
+                    ? extension.Settings
+                    : JiraExtensionSettingsDto.Disabled;
+
                 // Kick off the independent data fetches concurrently to cut wall-clock.
                 // Safe against the scoped, non-thread-safe ApplicationDbContext: only the
                 // calendar path touches it, and it runs as a single task, so there is no
                 // concurrent DbContext access; the Jira queries use transient services with
                 // no shared state. Trade-off: PerformanceBehavior's per-request allocation
                 // stats are not representative while these run concurrently. See issue #258.
-                var assigneeTask = _mediator.Send(
-                    new GetAssigneeJiraEvents.Query()
-                    {
-                        StartDate = query.StartDate,
-                        EndDate = query.EndDate
-                    }, cancellationToken);
+                var assigneeTask = jiraSettings.AssigneeEventsEnabled
+                    ? _mediator.Send(
+                        new GetAssigneeJiraEvents.Query()
+                        {
+                            StartDate = query.StartDate,
+                            EndDate = query.EndDate
+                        }, cancellationToken)
+                    : NoWorklogs;
 
-                var testerTask = _mediator.Send(
-                    new GetTesterJiraEvents.Query()
-                    {
-                        StartDate = query.StartDate,
-                        EndDate = query.EndDate
-                    }, cancellationToken);
+                var testerTask = jiraSettings.TesterEventsEnabled
+                    ? _mediator.Send(
+                        new GetTesterJiraEvents.Query()
+                        {
+                            StartDate = query.StartDate,
+                            EndDate = query.EndDate
+                        }, cancellationToken)
+                    : NoWorklogs;
 
-                var commentTask = _mediator.Send(
-                    new GetCommentJiraEvents.Query()
-                    {
-                        StartDate = query.StartDate,
-                        EndDate = query.EndDate,
-                        CommentWorklogTime = query.CommentWorklogTime
-                    }, cancellationToken);
+                var commentTask = jiraSettings.CommentEventsEnabled
+                    ? _mediator.Send(
+                        new GetCommentJiraEvents.Query()
+                        {
+                            StartDate = query.StartDate,
+                            EndDate = query.EndDate,
+                            CommentWorklogTime = jiraSettings.CommentWorklogTime
+                        }, cancellationToken)
+                    : NoWorklogs;
 
                 var issueWorklogsTask = _mediator.Send(
                     new GetIssueWorklogs.Query()
@@ -91,7 +113,7 @@ namespace Pet.Jira.Application.Worklogs.Queries
                         EndDate = query.EndDate
                     }, cancellationToken);
 
-                var calendarTask = GetCalendarWorklogsAsync(query, cancellationToken);
+                var calendarTask = GetCalendarWorklogsAsync(query, user, cancellationToken);
 
                 await Task.WhenAll(
                     assigneeTask, testerTask, commentTask, issueWorklogsTask, calendarTask);
@@ -122,14 +144,13 @@ namespace Pet.Jira.Application.Worklogs.Queries
             /// Calendar failures degrade silently — the collection is returned without calendar.
             /// </summary>
             private async Task<(List<IWorklog> CalendarWorklogs, Dictionary<DateTime, List<BlockedCalendarEvent>> BlockedEventsByDay)>
-                GetCalendarWorklogsAsync(Query query, CancellationToken cancellationToken)
+                GetCalendarWorklogsAsync(Query query, User user, CancellationToken cancellationToken)
             {
                 var calendarWorklogs = new List<IWorklog>();
                 var blockedEventsByDay = new Dictionary<DateTime, List<BlockedCalendarEvent>>();
 
                 try
                 {
-                    var user = await _identityService.GetCurrentUserAsync();
                     for (var date = query.StartDate.Date; date <= query.EndDate.Date; date = date.AddDays(1))
                     {
                         var events = await _mediator.Send(

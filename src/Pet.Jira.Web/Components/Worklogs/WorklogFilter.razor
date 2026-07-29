@@ -23,9 +23,6 @@
                          SearchFunc="@SearchIssueStatuses" ToStringFunc="status => status?.Name" MaxItems="Int32.MaxValue"
                          ResetValueOnEmptyText="true" Dense="true" />
     </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-comment-time" RootClass="pet-full-width">
-        <MudTimePicker Label="Comment worklog duration" @bind-Time="_model.Filter.CommentWorklogTime" Editable="true" />
-    </MarkdownTooltip>
     <MarkdownTooltip Markdown="worklog-filter-lunch-time" RootClass="pet-full-width">
         <MudTimePicker Label="Lunch duration" @bind-Time="_model.Filter.LunchTime" Editable="true" />
     </MarkdownTooltip>

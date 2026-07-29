@@ -20,5 +20,14 @@ namespace Pet.Jira.Application.Extensions.Jira.Dto
             CommentEventsEnabled: false,
             CommentWorklogTime: TimeSpan.Zero,
             TesterEventsEnabled: false);
+
+        /// <summary>
+        /// Settings of a disconnected extension: no Jira events are loaded at all.
+        /// </summary>
+        public static JiraExtensionSettingsDto Disabled => new(
+            AssigneeEventsEnabled: false,
+            CommentEventsEnabled: false,
+            CommentWorklogTime: TimeSpan.Zero,
+            TesterEventsEnabled: false);
     }
 }
