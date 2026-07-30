@@ -40,6 +40,22 @@ namespace Pet.Jira.Infrastructure.Jira.Query
             return this;
         }
 
+        /// <summary>
+        /// Restricts the search to the issues commented by <paramref name="author"/>
+        /// between <paramref name="after"/> and <paramref name="before"/> via the
+        /// ScriptRunner "commented" issue function. See issue #259.
+        /// </summary>
+        public JiraQuery WhereCommented(JiraQueryMacros author, DateTime after, DateTime before)
+        {
+            _conditions.Add(new JiraQueryCommentedCondition
+            {
+                Author = author,
+                After = after,
+                Before = before
+            }.ToString());
+            return this;
+        }
+
         public JiraQuery OrderBy(string parameter, JiraQueryOrderType orderType = JiraQueryOrderType.Asc)
         {
             _orders.Add(new JiraQueryOrder
