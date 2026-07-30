@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using Pet.Jira.Application.Authentication;
 using Pet.Jira.Application.Storage;
@@ -57,7 +58,9 @@ namespace Pet.Jira.UnitTests.Infrastructure.Jira
                 new JiraQueryFactory(),
                 _identityServiceMock.Object,
                 _timeProviderMock.Object,
-                _userProfileStorageMock.Object);
+                _userProfileStorageMock.Object,
+                Options.Create(new JiraConfiguration()),
+                Mock.Of<ILogger<JiraWorklogDataSource>>());
 
             _sut = new TempoWorklogDataSource(
                 _jiraServiceMock.Object,
