@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 namespace Pet.Jira.Application.Worklogs.Queries
 {
     /// <summary>
-    /// Estimated worklogs derived from the current user's comments on issues they watch
-    /// but are not assigned to. Split out from the former GetRawIssueWorklogs so its
-    /// performance can be measured independently. See issue #258.
+    /// Estimated worklogs derived from the current user's comments on issues they are not
+    /// assigned to. Split out from the former GetRawIssueWorklogs so its performance can
+    /// be measured independently. See issue #258.
     /// </summary>
     public class GetCommentJiraEvents
     {

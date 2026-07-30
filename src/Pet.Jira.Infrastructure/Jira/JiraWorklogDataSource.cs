@@ -1,4 +1,6 @@
 ﻿using Atlassian.Jira;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Pet.Jira.Application.Authentication;
 using Pet.Jira.Application.Storage;
 using Pet.Jira.Application.Time;
@@ -6,6 +8,7 @@ using Pet.Jira.Application.Worklogs;
 using Pet.Jira.Application.Worklogs.Queries;
 using Pet.Jira.Domain.Models.Users;
 using Pet.Jira.Domain.Models.Worklogs;
+using Pet.Jira.Infrastructure.Jira.Dto;
 using Pet.Jira.Infrastructure.Jira.Query;
 using System;
 using System.Collections.Generic;
@@ -22,19 +25,25 @@ namespace Pet.Jira.Infrastructure.Jira
 		private readonly IIdentityService _identityService;
 		private readonly ITimeProvider _timeProvider;
 		private readonly IStorage<string, UserProfile> _userProfileStorage;
+		private readonly IJiraConfiguration _configuration;
+		private readonly ILogger<JiraWorklogDataSource> _logger;
 
 		public JiraWorklogDataSource(
 			IJiraService jiraService,
 			IJiraQueryFactory queryFactory,
 			IIdentityService identityService,
 			ITimeProvider timeProvider,
-			IStorage<string, UserProfile> userProfileStorage)
+			IStorage<string, UserProfile> userProfileStorage,
+			IOptions<JiraConfiguration> configuration,
+			ILogger<JiraWorklogDataSource> logger)
 		{
 			_jiraService = jiraService;
 			_queryFactory = queryFactory;
 			_identityService = identityService;
 			_timeProvider = timeProvider;
 			_userProfileStorage = userProfileStorage;
+			_configuration = configuration.Value;
+			_logger = logger;
 		}
 
 		/// <summary>
@@ -128,22 +137,14 @@ namespace Pet.Jira.Infrastructure.Jira
 		}
 
 		/// <summary>
-		/// Get estimated worklogs from the current user's comments on watched issues
-		/// they are not assigned to. See issue #258.
+		/// Get estimated worklogs from the current user's comments on issues they are
+		/// not assigned to. See issue #258.
 		/// </summary>
 		public async Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(
 			GetCommentJiraEvents.Query query,
 			CancellationToken cancellationToken = default)
 		{
-			var issueQuery = _queryFactory.Create()
-				.Where("updatedDate", JiraQueryComparisonType.GreaterOrEqual, query.StartDate)
-				.Where("watcher", JiraQueryComparisonType.Equal, JiraQueryMacros.CurrentUser)
-				.Where("assignee", JiraQueryComparisonType.NotEqual, JiraQueryMacros.CurrentUser)
-				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
-				.ToString();
-			var issueSearchOptions = CreateEventSearchOptions(issueQuery);
-
-			var issues = await _jiraService.GetIssuesAsync(issueSearchOptions, cancellationToken);
+			var issues = await GetCommentedIssuesAsync(query, cancellationToken);
 
 			var user = await _identityService.GetCurrentUserAsync();
 			var userProfile = await _userProfileStorage.GetValueAsync(user.Key, cancellationToken);
@@ -169,6 +170,62 @@ namespace Pet.Jira.Infrastructure.Jira
 
 			return result.Where(item => item.Author == userProfile.Username);
 		}
+
+		/// <summary>
+		/// Find the issues the current user commented on during the requested period.
+		/// The ScriptRunner "commented" issue function filters by comment author and
+		/// period on the Jira side; without the addon installed the search fails, so the
+		/// plain query is used instead. See issue #259.
+		/// </summary>
+		private async Task<IEnumerable<IssueDto>> GetCommentedIssuesAsync(
+			GetCommentJiraEvents.Query query,
+			CancellationToken cancellationToken)
+		{
+			if (_configuration.ScriptRunner.Enabled)
+			{
+				try
+				{
+					return await _jiraService.GetIssuesAsync(
+						CreateEventSearchOptions(CreateCommentedIssueQuery(query)),
+						cancellationToken);
+				}
+				catch (Exception exception)
+				{
+					_logger.LogWarning(exception,
+						"The ScriptRunner commented search failed; falling back to the plain comment query.");
+				}
+			}
+
+			return await _jiraService.GetIssuesAsync(
+				CreateEventSearchOptions(CreateUpdatedIssueQuery(query)),
+				cancellationToken);
+		}
+
+		/// <summary>
+		/// The "commented" bounds are exclusive midnights, so the upper one is shifted a
+		/// day forward to keep the last day of the period; the exact interval is still
+		/// applied to the comments themselves further down. Watching is not required —
+		/// authoring the comment is what the function already matches on. See issue #259.
+		/// </summary>
+		private string CreateCommentedIssueQuery(GetCommentJiraEvents.Query query) =>
+			_queryFactory.Create()
+				.WhereCommented(JiraQueryMacros.CurrentUser, query.StartDate, query.EndDate.AddDays(1))
+				.Where("assignee", JiraQueryComparisonType.NotEqual, JiraQueryMacros.CurrentUser)
+				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
+				.ToString();
+
+		/// <summary>
+		/// The pre-ScriptRunner query: plain JQL cannot filter by comment author, so every
+		/// issue updated since the start of the period has to be scanned. The watcher
+		/// condition is what keeps that scan bounded here, so it stays. See issue #259.
+		/// </summary>
+		private string CreateUpdatedIssueQuery(GetCommentJiraEvents.Query query) =>
+			_queryFactory.Create()
+				.Where("updatedDate", JiraQueryComparisonType.GreaterOrEqual, query.StartDate)
+				.Where("watcher", JiraQueryComparisonType.Equal, JiraQueryMacros.CurrentUser)
+				.Where("assignee", JiraQueryComparisonType.NotEqual, JiraQueryMacros.CurrentUser)
+				.OrderBy("updatedDate", JiraQueryOrderType.Desc)
+				.ToString();
 
 		/// <summary>
 		/// Get estimated worklogs from the "In Testing" status changes of issues where
