@@ -1,0 +1,72 @@
+<svg viewBox="0 0 720 366" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect x="8" y="8" width="704" height="350" rx="16" fill="#F7F8FA" stroke="#E4E7EE" stroke-width="1.5"/>
+
+  <text x="28" y="40" font-size="17" font-weight="700" fill="#1F2430">Какие задачи Jira возвращает для событий по комментариям</text>
+
+  <line x1="360" y1="58" x2="360" y2="300" stroke="#E4E7EE" stroke-width="1.5"/>
+
+  <!-- Before -->
+  <text x="28" y="80" font-size="14" font-weight="700" fill="#8A93A6">Было</text>
+  <text x="28" y="102" font-size="12" fill="#8A93A6">Все задачи, обновлённые с начала периода,</text>
+  <text x="28" y="118" font-size="12" fill="#8A93A6">на которые вы подписаны</text>
+
+  <g fill="#D3D8E3">
+    <rect x="28" y="134" width="20" height="20" rx="4"/>
+    <rect x="54" y="134" width="20" height="20" rx="4"/>
+    <rect x="80" y="134" width="20" height="20" rx="4"/>
+    <rect x="106" y="134" width="20" height="20" rx="4"/>
+    <rect x="132" y="134" width="20" height="20" rx="4"/>
+    <rect x="184" y="134" width="20" height="20" rx="4"/>
+    <rect x="210" y="134" width="20" height="20" rx="4"/>
+    <rect x="28" y="160" width="20" height="20" rx="4"/>
+    <rect x="54" y="160" width="20" height="20" rx="4"/>
+    <rect x="80" y="160" width="20" height="20" rx="4"/>
+    <rect x="106" y="160" width="20" height="20" rx="4"/>
+    <rect x="158" y="160" width="20" height="20" rx="4"/>
+    <rect x="184" y="160" width="20" height="20" rx="4"/>
+    <rect x="210" y="160" width="20" height="20" rx="4"/>
+    <rect x="28" y="186" width="20" height="20" rx="4"/>
+    <rect x="54" y="186" width="20" height="20" rx="4"/>
+    <rect x="80" y="186" width="20" height="20" rx="4"/>
+    <rect x="106" y="186" width="20" height="20" rx="4"/>
+    <rect x="132" y="186" width="20" height="20" rx="4"/>
+    <rect x="158" y="186" width="20" height="20" rx="4"/>
+    <rect x="184" y="186" width="20" height="20" rx="4"/>
+    <rect x="210" y="186" width="20" height="20" rx="4"/>
+    <rect x="28" y="212" width="20" height="20" rx="4"/>
+    <rect x="54" y="212" width="20" height="20" rx="4"/>
+    <rect x="80" y="212" width="20" height="20" rx="4"/>
+    <rect x="132" y="212" width="20" height="20" rx="4"/>
+    <rect x="158" y="212" width="20" height="20" rx="4"/>
+    <rect x="184" y="212" width="20" height="20" rx="4"/>
+    <rect x="210" y="212" width="20" height="20" rx="4"/>
+  </g>
+  <g fill="#8260E5">
+    <rect x="158" y="134" width="20" height="20" rx="4"/>
+    <rect x="132" y="160" width="20" height="20" rx="4"/>
+    <rect x="106" y="212" width="20" height="20" rx="4"/>
+  </g>
+
+  <text x="28" y="258" font-size="12" fill="#1F2430">Комментарии запрашиваются по каждой задаче —</text>
+  <text x="28" y="274" font-size="12" font-weight="600" fill="#1F2430">32 обращения к Jira</text>
+
+  <!-- After -->
+  <text x="392" y="80" font-size="14" font-weight="700" fill="#0E9E82">Стало</text>
+  <text x="392" y="102" font-size="12" fill="#8A93A6">Только задачи, где есть ваш комментарий</text>
+  <text x="392" y="118" font-size="12" fill="#8A93A6">за период — подписка не нужна</text>
+
+  <g fill="#8260E5">
+    <rect x="392" y="134" width="20" height="20" rx="4"/>
+    <rect x="418" y="134" width="20" height="20" rx="4"/>
+    <rect x="444" y="134" width="20" height="20" rx="4"/>
+  </g>
+
+  <text x="392" y="258" font-size="12" fill="#1F2430">Комментарии запрашиваются по каждой задаче —</text>
+  <text x="392" y="274" font-size="12" font-weight="600" fill="#1F2430">3 обращения к Jira</text>
+
+  <!-- Legend -->
+  <rect x="28" y="304" width="20" height="14" rx="4" fill="#8260E5"/>
+  <text x="56" y="316" font-size="12" fill="#8A93A6">есть ваш комментарий за период</text>
+  <rect x="286" y="304" width="20" height="14" rx="4" fill="#D3D8E3"/>
+  <text x="314" y="316" font-size="12" fill="#8A93A6">комментария нет — задача найдена зря</text>
+</svg>
