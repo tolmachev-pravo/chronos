@@ -11,6 +11,11 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
+    env:
+      # Named once: the packaging step and the upload step must never disagree, and the
+      # deploy workflow downloads the asset by exactly this name.
+      ARTIFACT: chronos-${{ github.ref_name }}.zip
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -47,13 +52,13 @@ jobs:
     - name: Package artifact
       run: |
         mkdir -p artifact
-        (cd publish && zip -qr "../artifact/pet-jira-copilot-${GITHUB_REF_NAME}.zip" .)
+        (cd publish && zip -qr "../artifact/${ARTIFACT}" .)
 
     - name: Create draft release with the artifact
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        asset="artifact/pet-jira-copilot-${GITHUB_REF_NAME}.zip"
+        asset="artifact/${ARTIFACT}"
         if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
           echo "Release $GITHUB_REF_NAME already exists — replacing its artifact, notes are left untouched."
           gh release upload "$GITHUB_REF_NAME" "$asset" --clobber

@@ -38,16 +38,32 @@ jobs:
       run: |
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-        $asset = "pet-jira-copilot-$env:RELEASE_TAG.zip"
-        $url = "https://github.com/${{ github.repository }}/releases/download/$env:RELEASE_TAG/$asset"
-        $archive = Join-Path $env:RUNNER_TEMP $asset
+        # Two names are tried in turn. The rename to Chronos (issue #226) changed the asset
+        # name, but releases published before it keep the old one forever, so deploying or
+        # rolling back to an older tag has to still find its archive.
+        $candidates = @(
+            "chronos-$env:RELEASE_TAG.zip",
+            "pet-jira-copilot-$env:RELEASE_TAG.zip"
+        )
         $unpacked = Join-Path $env:RUNNER_TEMP "release"
+        $archive = $null
 
-        Write-Host "Downloading $url"
-        try {
-            Invoke-WebRequest -Uri $url -OutFile $archive -UseBasicParsing
-        } catch {
-            throw "Cannot download $asset. The release has to be published and built by the Release workflow: a draft keeps its asset private and older releases carry none. $($_.Exception.Message)"
+        foreach ($asset in $candidates) {
+            $url = "https://github.com/${{ github.repository }}/releases/download/$env:RELEASE_TAG/$asset"
+            $target = Join-Path $env:RUNNER_TEMP $asset
+            Write-Host "Trying $url"
+            try {
+                Invoke-WebRequest -Uri $url -OutFile $target -UseBasicParsing
+                $archive = $target
+                Write-Host "Downloaded $asset"
+                break
+            } catch {
+                Write-Host "Not available under this name: $($_.Exception.Message)"
+            }
+        }
+
+        if (-not $archive) {
+            throw "Cannot download the release archive for $env:RELEASE_TAG under any known asset name. The release has to be published and built by the Release workflow: a draft keeps its asset private and older releases carry none."
         }
 
         if (Test-Path $unpacked) { Remove-Item $unpacked -Recurse -Force }
