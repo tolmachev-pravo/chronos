@@ -71,6 +71,11 @@ namespace Chronos.Infrastructure
             services.AddSingleton<ILoginMemoryCache, LoginMemoryCache>();
             services.AddTransient<IMemoryCache<string, Issue>, IssueMemoryCache>();
 
+			// The file name predates the rename to Chronos (issue #226) and stays as it is on
+			// purpose. The path is relative, so on the server it resolves inside the deployed
+			// site folder. Renaming it here without renaming the file on the server first, with
+			// the AppPool stopped, silently creates an empty database and hides every existing
+			// user, their extensions and their encrypted secrets.
 			services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite("Data Source = JiraCopilot.sqlite3"));
 
