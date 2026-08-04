@@ -30,11 +30,8 @@
                 <circle cx="50" cy="50" r="5" fill="#E3A93B" />
             </svg>
             <MudText Typo="Typo.h6" Class="ml-2 pet-not-display-on-480">Chronos</MudText>
-            @* Points at the repository's actual name, matching GitHub:Releases:Repository in
-               appsettings.json. The namespace rename swept this URL along with the code, but the
-               repository itself has not been renamed yet, so Chronos would 404 here. Flip both
-               together once it is. *@
-            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/tolmachev-pravo/pet-jira-copilot" Target="_blank" />
+            @* Keep in step with GitHub:Releases:Repository in appsettings.json. *@
+            <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/tolmachev-pravo/chronos" Target="_blank" />
             <MudTooltip Text="@(_model.Theme.IsDarkMode ? "Dark mode" : "Light mode")">
                 <MudToggleIconButton Toggled="@_model.Theme.IsDarkMode"
                                      Icon="@Icons.Material.Filled.LightMode"

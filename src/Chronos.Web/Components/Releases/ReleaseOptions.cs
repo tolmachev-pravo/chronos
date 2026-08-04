@@ -10,7 +10,7 @@ namespace Chronos.Web.Components.Releases
         /// <summary>
         /// Repository in <c>owner/name</c> form whose releases are displayed.
         /// </summary>
-        public string Repository { get; set; } = "tolmachev-pravo/pet-jira-copilot";
+        public string Repository { get; set; } = "tolmachev-pravo/chronos";
 
         /// <summary>
         /// Maximum number of releases to show.

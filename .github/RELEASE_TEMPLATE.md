@@ -35,7 +35,7 @@ Pre-release (тег с дефисом, например `v1.6.0-rc.1`) на пр
 ### 🧰 Прочее
 - <Рефакторинг, документация, инфраструктура.>
 
-**Полный список изменений:** https://github.com/tolmachev-pravo/pet-jira-copilot/compare/vA.B.C...vX.Y.Z
+**Полный список изменений:** https://github.com/tolmachev-pravo/chronos/compare/vA.B.C...vX.Y.Z
 
 ---
 
