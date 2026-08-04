@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 210" role="img"
+     aria-label="Jira Copilot переименован в Chronos, буква O в названии стала циферблатом">
+    <rect x="0.5" y="0.5" width="719" height="209" rx="16" fill="#F7F8FA" stroke="#E4E7EE" />
+
+    <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" text-anchor="middle">
+        <text x="170" y="66" font-size="13" font-weight="600" letter-spacing="1.6" fill="#8A93A6">БЫЛО</text>
+        <text x="170" y="122" font-size="27" font-weight="600" fill="#8A93A6">Jira Copilot</text>
+
+        <text x="520" y="66" font-size="13" font-weight="600" letter-spacing="1.6" fill="#8A93A6">СТАЛО</text>
+    </g>
+
+    <!-- Arrow between the two names -->
+    <g stroke="#8260E5" stroke-width="2.5" fill="none">
+        <line x1="300" y1="112" x2="368" y2="112" stroke-linecap="round" />
+        <polyline points="358,104 368,112 358,120" stroke-linecap="round" stroke-linejoin="round" />
+    </g>
+
+    <!-- The wordmark: CHRON, then the clock standing in for the O, then S.
+         Laid out as three anchored pieces so it stays centred without measuring text. -->
+    <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="30"
+       font-weight="800" letter-spacing="3.4" fill="#1F2430">
+        <text x="503" y="122" text-anchor="end">CHRON</text>
+        <text x="541" y="122" text-anchor="start">S</text>
+    </g>
+
+    <!-- Clock drawn in the mark's own 100x100 space and scaled down, so the proportions
+         match images/favicon/favicon.svg exactly instead of being re-eyeballed here. -->
+    <g transform="translate(522,111) scale(0.31) translate(-50,-50)">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#8260E5" stroke-width="8" />
+        <line x1="50" y1="50" x2="50" y2="30" stroke="#8260E5" stroke-width="7"
+              stroke-linecap="round" transform="rotate(-60 50 50)" />
+        <line x1="50" y1="50" x2="50" y2="16" stroke="#E3A93B" stroke-width="7"
+              stroke-linecap="round" transform="rotate(60 50 50)" />
+        <circle cx="50" cy="50" r="6" fill="#E3A93B" />
+    </g>
+
+    <g font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13"
+       text-anchor="middle" fill="#8A93A6">
+        <text x="360" y="176">Данные, настройки и расширения не затронуты</text>
+    </g>
+</svg>
