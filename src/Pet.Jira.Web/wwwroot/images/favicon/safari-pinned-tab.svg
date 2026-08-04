@@ -1,19 +1,15 @@
-<?xml version="1.0" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 20010904//EN"
- "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd">
-<svg version="1.0" xmlns="http://www.w3.org/2000/svg"
- width="260.000000pt" height="260.000000pt" viewBox="0 0 260.000000 260.000000"
- preserveAspectRatio="xMidYMid meet">
-<metadata>
-Created by potrace 1.14, written by Peter Selinger 2001-2017
-</metadata>
-<g transform="translate(0.000000,260.000000) scale(0.100000,-0.100000)"
-fill="#000000" stroke="none">
-<path d="M541 2246 c-50 -28 -50 -33 -51 -458 0 -287 3 -404 12 -423 23 -51
-46 -55 308 -55 l240 0 0 -95 0 -95 -140 0 c-155 0 -187 -9 -208 -55 -8 -18
--12 -116 -12 -331 0 -331 3 -348 55 -372 36 -17 977 -17 1008 0 52 28 52 24
-55 300 l3 258 185 0 c202 0 230 6 252 55 9 19 12 128 12 388 0 328 -2 364 -18
-383 -34 43 -47 44 -396 44 l-336 0 0 195 c0 213 -6 241 -55 263 -39 18 -881
-16 -914 -2z"/>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="260" height="260" role="img" aria-label="Chronos">
+    <!--
+        Safari pinned-tab mask icon (issue #226). Safari takes only the silhouette and recolours it,
+        so this variant is a single flat black layer on a transparent background — no gold accent
+        and no background plate, both of which would be discarded anyway.
+
+        Geometry matches images/favicon/favicon.svg; keep the two in step.
+    -->
+    <circle cx="50" cy="50" r="33" fill="none" stroke="#000000" stroke-width="8" />
+    <line x1="50" y1="50" x2="50" y2="34" stroke="#000000" stroke-width="8" stroke-linecap="round"
+          transform="rotate(-60 50 50)" />
+    <line x1="50" y1="50" x2="50" y2="24" stroke="#000000" stroke-width="8" stroke-linecap="round"
+          transform="rotate(60 50 50)" />
+    <circle cx="50" cy="50" r="5" fill="#000000" />
 </svg>

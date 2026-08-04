@@ -1,6 +1,6 @@
-# Jira Copilot
+# Chronos
 
-Jira Copilot is an application designed to simplify and automate the process of filling out Jira worklogs. It allows users to log their work time more efficiently and effortlessly.
+Chronos is an application designed to simplify and automate the process of filling out Jira worklogs. It allows users to log their work time more efficiently and effortlessly.
 
 ![image](https://github.com/tolmachev-pravo/pet-jira-copilot/assets/62241382/009697f2-8e71-4473-87a2-0a82c72f6761)
 
@@ -11,7 +11,7 @@ Jira Copilot is an application designed to simplify and automate the process of 
 * Different color codes for easy identification of suggested worklogs
 
 # Getting Started
-To use Jira Copilot, you need to have a Jira account. Once you have an account, follow these steps:
+To use Chronos, you need to have a Jira account. Once you have an account, follow these steps:
 
 1. Clone the repository to your local machine.
 2. Configure the application settings in the appsettings.json file:
@@ -29,7 +29,7 @@ To use Jira Copilot, you need to have a Jira account. Once you have an account, 
 
 # Worklog Suggestions
 
-Jira Copilot provides a list of suggested worklogs categorized by days. Here's how to interpret the color codes:
+Chronos provides a list of suggested worklogs categorized by days. Here's how to interpret the color codes:
 
 * Purple: Suggested worklogs for tasks where you are the assignee.
 * Green: Worklogs that are already logged in Jira. If no time is specified, they are associated with the suggested worklog above. If time is specified, they are independent worklogs.

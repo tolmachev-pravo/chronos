@@ -19,7 +19,17 @@
     <MudLayout>
         <MudAppBar Elevation="1">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" OnClick="@ToggleDrawer" />
-            <MudText Typo="Typo.h6" Class="ml-3 pet-not-display-on-480">Jira Copilot</MudText>
+            @* Chronos mark — the same clock that stands in for the O of the wordmark in
+               Components/Common/Stub.razor and in images/favicon/favicon.svg. Kept inline so
+               currentColor picks up the AppBar's text colour, and kept visible below 480px
+               where pet-not-display-on-480 hides the name. *@
+            <svg class="pet-brand-mark ml-3" viewBox="0 0 100 100" aria-hidden="true">
+                <circle cx="50" cy="50" r="33" fill="none" stroke="currentColor" stroke-width="8" />
+                <line x1="50" y1="50" x2="50" y2="34" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-60 50 50)" />
+                <line x1="50" y1="50" x2="50" y2="24" stroke="#E3A93B" stroke-width="8" stroke-linecap="round" transform="rotate(60 50 50)" />
+                <circle cx="50" cy="50" r="5" fill="#E3A93B" />
+            </svg>
+            <MudText Typo="Typo.h6" Class="ml-2 pet-not-display-on-480">Chronos</MudText>
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/tolmachev-pravo/Pet.Jira" Target="_blank" />
             <MudTooltip Text="@(_model.Theme.IsDarkMode ? "Dark mode" : "Light mode")">
                 <MudToggleIconButton Toggled="@_model.Theme.IsDarkMode"

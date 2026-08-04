@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img" aria-label="Chronos">
+    <!--
+        Chronos app icon (issue #226). Source of truth for the whole favicon set: the PNG and
+        ICO variants next to this file are rasterised from it, so regenerate them together.
+
+        The mark is the clock that stands in for the O of the CHRONOS wordmark in
+        Components/Common/Stub.razor — same ring, same gold minute hand, same centre pin.
+        Hands sit at 10:10 so they read as a clock rather than as a single stroke.
+
+        Colours are literal on purpose: an icon is rendered outside the MudBlazor theme, where
+        the mud-palette-primary custom property does not resolve. #594AE2 is the MudBlazor
+        default primary the app runs on, #E3A93B is the gold from the wordmark.
+
+        Note for editors: this is XML, so a comment may not contain a double hyphen. Write CSS
+        custom property names without their leading dashes or the whole file fails to parse.
+    -->
+    <rect width="100" height="100" rx="22" fill="#594AE2" />
+    <circle cx="50" cy="50" r="33" fill="none" stroke="#FFFFFF" stroke-width="8" />
+    <line x1="50" y1="50" x2="50" y2="34" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"
+          transform="rotate(-60 50 50)" />
+    <line x1="50" y1="50" x2="50" y2="24" stroke="#E3A93B" stroke-width="8" stroke-linecap="round"
+          transform="rotate(60 50 50)" />
+    <circle cx="50" cy="50" r="5" fill="#E3A93B" />
+</svg>

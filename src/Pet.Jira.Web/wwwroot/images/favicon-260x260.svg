@@ -1,25 +1,23 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="260px" height="260px" viewBox="0 0 260 260" enable-background="new 0 0 260 260" xml:space="preserve">  <image id="image0" width="260" height="260" x="0" y="0"
-    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAAEECAMAAAD51ro4AAAABGdBTUEAALGPC/xhBQAAACBjSFJN
-AAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAtFBMVEUAAACCYOWCYOWCYOWC
-YOWCYOWCYOWCYOWCYOXiZofiZofiZofiZofiZofiZofiZofiZoeCYOWCYOWCYOWCYOWCYOVgpf9g
-pf9gpf9gpf9gpf9gpf9gpf9gpf/iZofiZofiZofiZofiZodgpf9gpf9gpf9gpf9gpf+CYOWFYOKk
-YsPCZKXVZZLiZoehYcbXZZGDYOO5Y65gpf9wne+KkNezfLLdZ4punvG3eq6XiszfZoj///+eF/vE
-AAAAKHRSTlMACFyr31TjBJPfq1wI41STBK9g51ibCFyr31TjBJOvYOdYm69g51ib8F24RAAAAAFi
-S0dEOzkO9GwAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAHdElNRQfmCwwJAAlHwl+9AAACrElEQVR4
-2u3c7U4TURSG0WnLN1YBtSCgIC1QwEEdQNT7vzBLGv6QYtuJs8+hrucO3pWcnfk1RSFJkiRJkiRJ
-kiRJkiRlXKvdWRo20FKn3Uq9bdaWV5oQGLeynHrdTK2uNUfw0Npq6oUz1LDBSCH1wuktN20wHGb/
-IloN3oPHVnK/ju3mDYbDduqVU+pEIHRSr5xSI98HT1tKvXJKEQbDYeqVECBAgAABAgQIECBAgAAB
-AgQIECBAgAABAgQIECBAgAABAgQIENIHAQIECP8M4eLy6ksZ0/rG5qssEa6/BgmM677OD+Hb91CC
-h95s5YYQbzBSyAzhOoFBWTbzIuoaXMTeg8e6jVzHugiXSQzKcjMnhKtECBs5IUR9HzxtPSeERAZl
-CQECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQXhBC3X9SLhTCNoSi2IFQFK23EIriHYRR
-7yEUxWothQVDGL2IGndh4RCK1s72vN8Li4dQIwgQIECAAAECBAgQIECAAAECBAgQIDxfb3fvQ9Vo
-N7d3P/JG2D9oVmDc/c+MEQ4/RhA89Ot3tghhBiOFXBH24wyqas4XEWXQC7kHj93Pdx2jEHYjDarq
-LkuEvViE2ywRGv4+eNpNlgixBlUFAcL8CF0IZfkJQlkeQSiPm/sz5ctB+BxlkDHCSZhBvggnW/89
-wnHcW8gUofvpKOwmJkEIHQcBAgQIECBAgAABAgQIECBAgAABAgQIECBAgAABAgQIECCkDwIECBAg
-QIAAAQIECBAgQIAAAUKNQv8cUFUHqfdOrB+L0E+9d2KDWIRB6r0T651GGpz2Uu+d3Fkkwlnqtc91
-Hmdwnnrrsx2GKZwfpt76l85C7sJptm9hXG/Qb/h74aA/yPQmSpIkSZIkSZIkSZIkSZqxP9MxNYcR
-onwAAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDIyLTExLTEyVDA4OjAwOjA5KzAxOjAw52gLlwAAACV0
-RVh0ZGF0ZTptb2RpZnkAMjAyMi0xMS0xMlQwODowMDowOSswMTowMJY1sysAAAAASUVORK5CYII=" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="260" height="260" role="img" aria-label="Chronos">
+    <!--
+        Chronos logo for the HealthChecks UI dashboard (issue #226). Wired up as the logoImageUrl
+        custom property in wwwroot/css/dotnet.css, which the health checks endpoint pulls in
+        from Startup.cs.
+
+        No background: the dashboard puts this on its purple aside (bgAside, #68217a), so the mark
+        is drawn in white. That is also why the colours are literal rather than currentColor — an
+        SVG referenced from a CSS url() is an isolated document and inherits nothing from the page.
+
+        Note for editors: this is XML, so a comment may not contain a double hyphen. Write CSS
+        custom property names without their leading dashes or the whole file fails to parse.
+
+        Geometry matches images/favicon/favicon.svg; keep the two in step. Replaces a 260x260 PNG
+        that used to be base64-embedded in an SVG wrapper, so this is now genuinely vector.
+    -->
+    <circle cx="50" cy="50" r="33" fill="none" stroke="#FFFFFF" stroke-width="8" />
+    <line x1="50" y1="50" x2="50" y2="34" stroke="#FFFFFF" stroke-width="8" stroke-linecap="round"
+          transform="rotate(-60 50 50)" />
+    <line x1="50" y1="50" x2="50" y2="24" stroke="#E3A93B" stroke-width="8" stroke-linecap="round"
+          transform="rotate(60 50 50)" />
+    <circle cx="50" cy="50" r="5" fill="#E3A93B" />
 </svg>
