@@ -32,34 +32,34 @@
         min-height: 32px;
     }
 
-    .pet-input-control {
+    .chr-input-control {
         margin-top: 0px
     }
 
-    .pet-button {
+    .chr-button {
         padding: 4px !important
     }
 
-    .pet-input-control > .mud-input-control-input-container > div.mud-input.mud-input-text {
+    .chr-input-control > .mud-input-control-input-container > div.mud-input.mud-input-text {
         margin-top: 0px !important;
     }
 
-    .pet-table-mud-badge-counter {
+    .chr-table-mud-badge-counter {
         margin-left: 0px
     }
 
-    .pet-paper {
+    .chr-paper {
         background-color: inherit;
     }
 
-    .pet-table-summary-tr td {
+    .chr-table-summary-tr td {
         padding: 0 !important;
     }
 </style>
 
 @if (Items.IsEmpty())
 {
-    <MudPaper Class="pa-4 pet-paper" Elevation="0">
+    <MudPaper Class="pa-4 chr-paper" Elevation="0">
         <LatestFeaturesViewer FallbackMessage="To display a list of actual and estimated worklogs, set the search options and click the 'Search' button" />
     </MudPaper>
 }

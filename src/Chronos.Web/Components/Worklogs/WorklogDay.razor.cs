@@ -27,10 +27,10 @@ namespace Chronos.Web.Components.Worklogs
         {
             get
             {
-                if (Entity.IsWeekend) return "pet-day-header pet-day-header-weekend";
-                if (Entity.Progress >= 100) return "pet-day-header pet-day-header-done";
-                if (Entity.Progress > 0) return "pet-day-header pet-day-header-progress";
-                return "pet-day-header";
+                if (Entity.IsWeekend) return "chr-day-header chr-day-header-weekend";
+                if (Entity.Progress >= 100) return "chr-day-header chr-day-header-done";
+                if (Entity.Progress > 0) return "chr-day-header chr-day-header-progress";
+                return "chr-day-header";
             }
         }
 

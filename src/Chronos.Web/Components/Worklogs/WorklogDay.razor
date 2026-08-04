@@ -1,21 +1,21 @@
 @using MudBlazor
 @using Chronos.Web.Common
 
-<tr class="pet-table-summary-tr">
+<tr class="chr-table-summary-tr">
     <td>
         <div class="@DayHeaderClass">
             <WorklogDayMenu Entity="@Entity" OnCreatedPressed="AddWorklogAsync" />
-            <div class="pet-day-date">
-                <div class="pet-day-date-main">@DayDateText</div>
-                <div class="pet-day-date-sub">@Entity.Date.Year</div>
+            <div class="chr-day-date">
+                <div class="chr-day-date-main">@DayDateText</div>
+                <div class="chr-day-date-sub">@Entity.Date.Year</div>
             </div>
-            <div class="pet-day-progress">
-                <div class="pet-day-bar-track">
-                    <div class="pet-day-bar-fill" style="width:@(Entity.Progress)%"></div>
+            <div class="chr-day-progress">
+                <div class="chr-day-bar-track">
+                    <div class="chr-day-bar-fill" style="width:@(Entity.Progress)%"></div>
                 </div>
-                <div class="pet-day-bar-label">
+                <div class="chr-day-bar-label">
                     <span>@FormatTime(Entity.ActualWorklogTimeSpent) / @FormatTime(Entity.WorklogTimeSpent)</span>
-                    <span class="pet-day-bar-pct">@ProgressPercent</span>
+                    <span class="chr-day-bar-pct">@ProgressPercent</span>
                 </div>
             </div>
         </div>

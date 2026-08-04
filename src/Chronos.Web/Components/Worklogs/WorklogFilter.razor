@@ -1,23 +1,23 @@
 ﻿@using Chronos.Web.Components.Markdown
 
 <style>
-    .pet-full-width {
+    .chr-full-width {
         width: 100% !important;
     }
 </style>
 
 <MudPaper Class="flex-none pa-4" Square="true" Outlined="true">
-    <MarkdownTooltip Markdown="worklog-filter-date-range" RootClass="pet-full-width">
+    <MarkdownTooltip Markdown="worklog-filter-date-range" RootClass="chr-full-width">
         <MudDateRangePicker Label="Date range" @bind-DateRange="_model.Filter.DateRange"
                             FirstDayOfWeek="DayOfWeek.Monday" />
     </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-daily-working-start-time" RootClass="pet-full-width">
+    <MarkdownTooltip Markdown="worklog-filter-daily-working-start-time" RootClass="chr-full-width">
         <MudTimePicker Label="Daily working start time" @bind-Time="_model.Filter.DailyWorkingStartTime" Editable="true" />
     </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-daily-working-end-time" RootClass="pet-full-width">
+    <MarkdownTooltip Markdown="worklog-filter-daily-working-end-time" RootClass="chr-full-width">
         <MudTimePicker Label="Daily working end time" @bind-Time="_model.Filter.DailyWorkingEndTime" Editable="true" />
     </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-lunch-time" RootClass="pet-full-width">
+    <MarkdownTooltip Markdown="worklog-filter-lunch-time" RootClass="chr-full-width">
         <MudTimePicker Label="Lunch duration" @bind-Time="_model.Filter.LunchTime" Editable="true" />
     </MarkdownTooltip>
 </MudPaper>
