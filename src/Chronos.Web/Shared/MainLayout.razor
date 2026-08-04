@@ -22,14 +22,14 @@
             @* Chronos mark — the same clock that stands in for the O of the wordmark in
                Components/Common/Stub.razor and in images/favicon/favicon.svg. Kept inline so
                currentColor picks up the AppBar's text colour, and kept visible below 480px
-               where pet-not-display-on-480 hides the name. *@
-            <svg class="pet-brand-mark ml-3" viewBox="0 0 100 100" aria-hidden="true">
+               where chr-not-display-on-480 hides the name. *@
+            <svg class="chr-brand-mark ml-3" viewBox="0 0 100 100" aria-hidden="true">
                 <circle cx="50" cy="50" r="33" fill="none" stroke="currentColor" stroke-width="8" />
                 <line x1="50" y1="50" x2="50" y2="34" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-60 50 50)" />
                 <line x1="50" y1="50" x2="50" y2="24" stroke="#E3A93B" stroke-width="8" stroke-linecap="round" transform="rotate(60 50 50)" />
                 <circle cx="50" cy="50" r="5" fill="#E3A93B" />
             </svg>
-            <MudText Typo="Typo.h6" Class="ml-2 pet-not-display-on-480">Chronos</MudText>
+            <MudText Typo="Typo.h6" Class="ml-2 chr-not-display-on-480">Chronos</MudText>
             @* Keep in step with GitHub:Releases:Repository in appsettings.json. *@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/tolmachev-pravo/chronos" Target="_blank" />
             <MudTooltip Text="@(_model.Theme.IsDarkMode ? "Dark mode" : "Light mode")">
@@ -64,10 +64,10 @@
         <MudDrawer @bind-Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
             <NavMenu />
         </MudDrawer>
-        <MudMainContent Style="height: 100vh" Class="pet-fill-height">
+        <MudMainContent Style="height: 100vh" Class="chr-fill-height">
             <AuthorizeView>
                 <Authorized>
-                    <MudElement Class="ma-4 pet-fill-height">
+                    <MudElement Class="ma-4 chr-fill-height">
                         @Body
                     </MudElement>
                 </Authorized>

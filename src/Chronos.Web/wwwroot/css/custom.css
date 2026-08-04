@@ -7,7 +7,7 @@
     width: 110px;
 }
 
-.pet-vertical-align-middle {
+.chr-vertical-align-middle {
     vertical-align: middle
 }
 
@@ -15,14 +15,14 @@
     font-size: 0.9rem !important;
 }
 
-.pet-horizontal-center {
+.chr-horizontal-center {
     display: block;
     margin-left: auto;
     margin-right: auto;
     text-align: center;
 }
 
-.pet-vertical-center {
+.chr-vertical-center {
     position: relative;
     top: 50%;
     transform: translateY(-50%);
@@ -35,14 +35,14 @@
  * by default (content-height, top-aligned); a page that wants to fill the
  * viewport opts in by adding `flex-grow-1` to its own root (see WorklogListPage).
  */
-.pet-fill-height {
+.chr-fill-height {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
 }
 
-.pet-white {
+.chr-white {
     color: white !important;
 }
 
@@ -50,30 +50,30 @@
     --mud-drawer-width-left: 180px !important;
 }
 
-.pet-not-display-on-600 {
+.chr-not-display-on-600 {
 }
 
-.pet-not-display-on-480 {
+.chr-not-display-on-480 {
 }
 
 /*
  * Chronos mark in the AppBar (issue #226). Inlined in MainLayout rather than loaded as an
  * <img> so `currentColor` resolves against the AppBar's own text colour — an SVG in an <img>
  * is an isolated document and would fall back to black. Deliberately NOT tagged with
- * pet-not-display-on-480: below 480px the name is hidden and the mark is all that carries
+ * chr-not-display-on-480: below 480px the name is hidden and the mark is all that carries
  * the brand, so it has to survive on its own.
  */
-.pet-brand-mark {
+.chr-brand-mark {
     width: 28px;
     height: 28px;
     flex: none;
 }
 
-.pet-worklog-day-chips-container {
+.chr-worklog-day-chips-container {
     width: 375px
 }
 
-.pet-worklog-day-item-dialog {
+.chr-worklog-day-item-dialog {
     width: 475px
 }
 
@@ -81,21 +81,21 @@
 }
 
 @media (max-width:480px) { /* smartphones, Android phones, landscape iPhone */
-    .pet-not-display-on-480 {
+    .chr-not-display-on-480 {
         display: none;
     }
 
-    .pet-worklog-day-chips-container {
+    .chr-worklog-day-chips-container {
         width: 300px
     }
 
-    .pet-worklog-day-item-dialog {
+    .chr-worklog-day-item-dialog {
         width: 300px
     }
 }
 
 @media (max-width:600px) { /* portrait tablets, portrait iPad, e-readers (Nook/Kindle), landscape 800x480 phones (Android) */
-    .pet-not-display-on-600 {
+    .chr-not-display-on-600 {
         display: none;
     }
 }
@@ -246,7 +246,7 @@
    Features section ("Новинки") — reuses the .extv-glow card
    language; only the feature-specific bits live here.
    ============================================================ */
-.pet-section-head {
+.chr-section-head {
     max-width: 720px;
 }
 .feat-card {
@@ -506,7 +506,7 @@
 
 /* Tooltip markdown (ComponentMarkdownViewer). Scoped to a custom class so it
    does not leak to other .mud-markdown-body content on the page. */
-.pet-component-markdown .mud-markdown-body p {
+.chr-component-markdown .mud-markdown-body p {
     margin-bottom: 0em !important;
     text-align: left !important;
     font-size: small !important;
@@ -636,7 +636,7 @@
     font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    animation: pet-rc-fade .2s ease both;
+    animation: chr-rc-fade .2s ease both;
 }
 /* body-scoped + !important to outrank MudBlazor's background-color:!important,
    so the overlay dims the page instead of filling it solid. */
@@ -657,7 +657,7 @@ body #components-reconnect-modal {
     pointer-events: none;
 }
 
-.pet-rc__dialog {
+.chr-rc__dialog {
     width: 100%;
     max-width: 380px;
     padding: 32px 28px;
@@ -667,28 +667,28 @@ body #components-reconnect-modal {
     color: var(--mud-palette-text-primary);
     border: 1px solid var(--mud-palette-lines-default);
     box-shadow: 0 24px 60px -18px rgba(0, 0, 0, .5);
-    animation: pet-rc-pop .25s cubic-bezier(.2,.7,.2,1) both;
+    animation: chr-rc-pop .25s cubic-bezier(.2,.7,.2,1) both;
 }
 
 /* Show only the block for the current class; 'failed' and 'rejected' share the
    reload block (both mean state is unrecoverable). */
-.pet-rc__state { display: none; }
-#components-reconnect-modal.components-reconnect-show .pet-rc__state--show { display: block; }
-#components-reconnect-modal.components-reconnect-failed .pet-rc__state--reload,
-#components-reconnect-modal.components-reconnect-rejected .pet-rc__state--reload { display: block; }
+.chr-rc__state { display: none; }
+#components-reconnect-modal.components-reconnect-show .chr-rc__state--show { display: block; }
+#components-reconnect-modal.components-reconnect-failed .chr-rc__state--reload,
+#components-reconnect-modal.components-reconnect-rejected .chr-rc__state--reload { display: block; }
 
-.pet-rc__title {
+.chr-rc__title {
     margin: 18px 0 8px;
     font-size: 1.15rem;
     font-weight: 600;
 }
-.pet-rc__text {
+.chr-rc__text {
     margin: 0;
     font-size: .9rem;
     line-height: 1.5;
     color: var(--mud-palette-text-secondary);
 }
-.pet-rc__attempt {
+.chr-rc__attempt {
     display: block;
     margin-top: 10px;
     font-size: .8rem;
@@ -696,17 +696,17 @@ body #components-reconnect-modal {
     opacity: .8;
 }
 
-.pet-rc__spinner {
+.chr-rc__spinner {
     width: 52px;
     height: 52px;
     margin: 0 auto;
     border-radius: 50%;
     border: 4px solid rgba(var(--mud-palette-primary-rgb), .18);
     border-top-color: var(--mud-palette-primary);
-    animation: pet-rc-spin .8s linear infinite;
+    animation: chr-rc-spin .8s linear infinite;
 }
 
-.pet-rc__icon {
+.chr-rc__icon {
     display: grid;
     place-items: center;
     width: 52px;
@@ -720,7 +720,7 @@ body #components-reconnect-modal {
 }
 
 /* id-scoped to beat MudBlazor's own button rule (uppercase + 40px auto margin). */
-#components-reconnect-modal .pet-rc__btn {
+#components-reconnect-modal .chr-rc__btn {
     display: block;
     margin: 22px auto 0 !important;
     padding: 10px 26px;
@@ -737,22 +737,22 @@ body #components-reconnect-modal {
     transition: background-color .2s ease, box-shadow .2s ease, transform .1s ease;
     box-shadow: 0 8px 20px -8px rgba(var(--mud-palette-primary-rgb), .8);
 }
-#components-reconnect-modal .pet-rc__btn:hover {
+#components-reconnect-modal .chr-rc__btn:hover {
     background: var(--mud-palette-primary-darken);
     box-shadow: 0 10px 26px -8px rgba(var(--mud-palette-primary-rgb), .9);
 }
-#components-reconnect-modal .pet-rc__btn:active { transform: translateY(1px); }
+#components-reconnect-modal .chr-rc__btn:active { transform: translateY(1px); }
 
-@keyframes pet-rc-spin { to { transform: rotate(360deg); } }
-@keyframes pet-rc-fade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes pet-rc-pop {
+@keyframes chr-rc-spin { to { transform: rotate(360deg); } }
+@keyframes chr-rc-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes chr-rc-pop {
     from { opacity: 0; transform: translateY(12px) scale(.97); }
     to   { opacity: 1; transform: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     #components-reconnect-modal,
-    .pet-rc__dialog { animation: none; }
-    .pet-rc__spinner { animation-duration: 2s; }
+    .chr-rc__dialog { animation: none; }
+    .chr-rc__spinner { animation-duration: 2s; }
 }
 

@@ -57,27 +57,27 @@
     @* Blazor toggles the components-reconnect-* classes on this element and fills
        the attempt counters; styling in css/custom.css keys off those classes. *@
     <div id="components-reconnect-modal">
-        <div class="pet-rc__dialog" role="alertdialog" aria-live="assertive">
-            <div class="pet-rc__state pet-rc__state--show">
-                <div class="pet-rc__spinner" aria-hidden="true"></div>
-                <h2 class="pet-rc__title">Соединение потеряно</h2>
-                <p class="pet-rc__text">
+        <div class="chr-rc__dialog" role="alertdialog" aria-live="assertive">
+            <div class="chr-rc__state chr-rc__state--show">
+                <div class="chr-rc__spinner" aria-hidden="true"></div>
+                <h2 class="chr-rc__title">Соединение потеряно</h2>
+                <p class="chr-rc__text">
                     Восстанавливаем связь с сервером…
-                    <span class="pet-rc__attempt">
+                    <span class="chr-rc__attempt">
                         Попытка <span id="components-reconnect-current-attempt">1</span>
                         из <span id="components-reconnect-max-retries"></span>
                     </span>
                 </p>
             </div>
             @* Terminal state for both 'failed' and 'rejected' — state is gone, reload is the only option. *@
-            <div class="pet-rc__state pet-rc__state--reload">
-                <div class="pet-rc__icon" aria-hidden="true">↻</div>
-                <h2 class="pet-rc__title">Не удалось восстановить соединение</h2>
-                <p class="pet-rc__text">
+            <div class="chr-rc__state chr-rc__state--reload">
+                <div class="chr-rc__icon" aria-hidden="true">↻</div>
+                <h2 class="chr-rc__title">Не удалось восстановить соединение</h2>
+                <p class="chr-rc__text">
                     Связь с сервером не восстановилась, а состояние страницы потеряно.
                     Перезагрузите страницу, чтобы продолжить работу.
                 </p>
-                <button type="button" class="pet-rc__btn" onclick="location.reload()">
+                <button type="button" class="chr-rc__btn" onclick="location.reload()">
                     Перезагрузить страницу
                 </button>
             </div>

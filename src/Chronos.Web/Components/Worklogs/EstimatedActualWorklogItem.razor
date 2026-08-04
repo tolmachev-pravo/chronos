@@ -1,8 +1,8 @@
 ﻿<MudElement Class="gap-2 d-flex flex-wrap border-none align-center"
-             Style="opacity:var(--pet-logged-opacity)">
+             Style="opacity:var(--chr-logged-opacity)">
     <MudElement Class="flex-auto d-flex gap-1 align-center" Style="width: 150px">
         <MudPaper Class="flex-none" Width="124px" Elevation="0" />
-        <MudElement Class="pl-2 pet-not-display-on-600">
+        <MudElement Class="pl-2 chr-not-display-on-600">
             <MudButton Href="@Entity.Issue.Link"
                        Size="Size.Small"
                        Target="_blank"
@@ -17,7 +17,7 @@
         <MudElement Class="static-time-spent-container flex-none d-flex justify-end align-center gap-2">
             <MudTextField @bind-Value="@Entity.RemainingTimeSpent"
                           Disabled="true"
-                          Class="pet-input-control"
+                          Class="chr-input-control"
                           Variant="Variant.Text"
                           IconSize="Size.Small" />
             <MudIconButton Size="Size.Small"

@@ -2,17 +2,17 @@
 @page "/worklogs"
 
 <style>
-    .pet-filter-container {
+    .chr-filter-container {
         width: 280px;
     }
 
     @@media (max-width:480px) { /* smartphones, Android phones, landscape iPhone */
-        .pet-filter-container {
+        .chr-filter-container {
             width: 100%;
         }
     }
 
-    .pet-backgorund-container {
+    .chr-background-container {
         background-color: inherit;
     }
 </style>
@@ -21,11 +21,11 @@
     <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
 </MudOverlay>
 
-<MudPaper Class="d-flex flex-wrap gap-4 border-none mb-4 pet-backgorund-container flex-grow-1" Outlined="true">
-    <MudElement Class="pet-filter-container">
+<MudPaper Class="d-flex flex-wrap gap-4 border-none mb-4 chr-background-container flex-grow-1" Outlined="true">
+    <MudElement Class="chr-filter-container">
         <WorklogFilter OnSearchPressed="SearchAsync" />
     </MudElement>
-    <MudPaper Class="flex-1 pet-horizontal-center" Outlined="true">
+    <MudPaper Class="flex-1 chr-horizontal-center" Outlined="true">
         <WorklogList Items="@Model.Items"></WorklogList>
     </MudPaper>
 </MudPaper>
