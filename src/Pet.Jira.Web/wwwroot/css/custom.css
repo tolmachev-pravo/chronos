@@ -56,6 +56,19 @@
 .pet-not-display-on-480 {
 }
 
+/*
+ * Chronos mark in the AppBar (issue #226). Inlined in MainLayout rather than loaded as an
+ * <img> so `currentColor` resolves against the AppBar's own text colour — an SVG in an <img>
+ * is an isolated document and would fall back to black. Deliberately NOT tagged with
+ * pet-not-display-on-480: below 480px the name is hidden and the mark is all that carries
+ * the brand, so it has to survive on its own.
+ */
+.pet-brand-mark {
+    width: 28px;
+    height: 28px;
+    flex: none;
+}
+
 .pet-worklog-day-chips-container {
     width: 375px
 }
