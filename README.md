@@ -2,7 +2,7 @@
 
 Chronos is an application designed to simplify and automate the process of filling out Jira worklogs. It allows users to log their work time more efficiently and effortlessly.
 
-![image](https://github.com/tolmachev-pravo/pet-jira-copilot/assets/62241382/009697f2-8e71-4473-87a2-0a82c72f6761)
+![image](https://github.com/tolmachev-pravo/chronos/assets/62241382/009697f2-8e71-4473-87a2-0a82c72f6761)
 
 # Features
 * Seamless integration with Jira for authentication

@@ -25,5 +25,5 @@ Sometimes Jira may require a captcha after a certain number of login errors. In 
 ##### Do you have any wishes, suggestions, comments, or questions?
 If you have any wishes, suggestions, comments, or questions, you can reach out to us through the following channels:
 
-GitHub Issues: https://github.com/tolmachev-pravo/pet-jira-copilot/issues
-GitHub Discussions: https://github.com/tolmachev-pravo/pet-jira-copilot/discussions
+GitHub Issues: https://github.com/tolmachev-pravo/chronos/issues
+GitHub Discussions: https://github.com/tolmachev-pravo/chronos/discussions

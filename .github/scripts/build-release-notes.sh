@@ -9,7 +9,7 @@
 set -euo pipefail
 
 tag="${1:?usage: build-release-notes.sh <tag>}"
-repository_url="https://github.com/tolmachev-pravo/pet-jira-copilot"
+repository_url="https://github.com/tolmachev-pravo/chronos"
 
 previous_tag="$(git describe --tags --abbrev=0 --match 'v*' "${tag}^" 2>/dev/null || true)"
 
