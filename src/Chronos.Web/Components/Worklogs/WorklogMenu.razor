@@ -1,0 +1,12 @@
+﻿@using Chronos.Web.Components.Markdown
+
+<MudMenu Icon="@Icon" Color="@Color" Size="Size.Small" Dense="true" Class="pet-vertical-align-middle"
+         AnchorOrigin=Origin.BottomLeft TransformOrigin=Origin.TopLeft Label="@Label">
+    <ChildContent>
+        <MudMenuItem OnClick="(async () => await CopyToClipboardInReviewAsync())">Copy as In review</MudMenuItem>
+        <MudMenuItem OnClick="(async () => await CopyToClipboardInProgressAsync())">Copy as In progress</MudMenuItem>
+        <MudMenuItem OnClick="(async () => await AddCustomWorklogAsync())">Add custom worklog</MudMenuItem>
+    </ChildContent>
+</MudMenu>
+
+@code {}

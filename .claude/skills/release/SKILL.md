@@ -1,6 +1,6 @@
 ---
 name: release
-description: Cut a Pet.Jira release — works out the next major/minor/patch version from the latest v* tag, drafts the Russian release notes from what was merged, shows them to the user for approval, and only then tags, pushes and fills in the GitHub release. Use when the user asks to release, cut a release, bump the version, or ship a major/minor/patch.
+description: Cut a Chronos release — works out the next major/minor/patch version from the latest v* tag, drafts the Russian release notes from what was merged, shows them to the user for approval, and only then tags, pushes and fills in the GitHub release. Use when the user asks to release, cut a release, bump the version, or ship a major/minor/patch.
 ---
 
 # Release
@@ -55,7 +55,7 @@ silently guess.
 ```bash
 prev=$(git describe --tags --abbrev=0 --match 'v*')
 git log --first-parent --pretty=format:'%s' "$prev..HEAD"          # what was merged
-git diff --name-only "$prev..HEAD" -- src/Pet.Jira.Web/wwwroot/documents/features/  # new feature docs
+git diff --name-only "$prev..HEAD" -- src/Chronos.Web/wwwroot/documents/features/  # new feature docs
 ```
 
 - Merge subjects carry PR numbers; commit subjects carry issue numbers like `(#245)`.

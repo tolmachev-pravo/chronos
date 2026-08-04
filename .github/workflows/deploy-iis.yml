@@ -54,8 +54,8 @@ jobs:
         Expand-Archive -Path $archive -DestinationPath $unpacked -Force
 
         # fail here, while the site is still untouched, rather than half way through the copy
-        if (-not (Test-Path (Join-Path $unpacked 'Pet.Jira.Web.dll'))) {
-            throw "The unpacked artifact contains no Pet.Jira.Web.dll, refusing to deploy."
+        if (-not (Test-Path (Join-Path $unpacked 'Chronos.Web.dll'))) {
+            throw "The unpacked artifact contains no Chronos.Web.dll, refusing to deploy."
         }
 
         Write-Host "Deploying $env:RELEASE_TAG to $env:SITE_PATH"

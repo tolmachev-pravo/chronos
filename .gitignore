@@ -374,7 +374,7 @@ docs/
 .superpowers/
 
 # Application "Releases" feature source — not build output; overrides the [Rr]eleases/ rule above
-!src/Pet.Jira.Web/Components/Releases/
+!src/Chronos.Web/Components/Releases/
 
 # Release skill — not build output; overrides the [Rr]elease/ rule above
 !.claude/skills/release/

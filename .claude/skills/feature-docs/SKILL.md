@@ -1,6 +1,6 @@
 ---
 name: feature-docs
-description: Generate self-documentation for a Pet.Jira feature — scaffolds wwwroot/documents/features/{id}/ with index.md (full description), preview.md (short blurb for preview cards), metadata.json and an images/ folder. Use when the user wants to document a feature, add a "what's new" entry, or create a feature description for the site's Features section / worklog random-feature widget.
+description: Generate self-documentation for a Chronos feature — scaffolds wwwroot/documents/features/{id}/ with index.md (full description), preview.md (short blurb for preview cards), metadata.json and an images/ folder. Use when the user wants to document a feature, add a "what's new" entry, or create a feature description for the site's Features section / worklog random-feature widget.
 ---
 
 # Feature documentation generator
@@ -20,7 +20,7 @@ the Features section.
 All feature docs live under:
 
 ```
-src/Pet.Jira.Web/wwwroot/documents/features/{feature-id}/
+src/Chronos.Web/wwwroot/documents/features/{feature-id}/
 ├── index.md          full description (rendered in the detail dialog)
 ├── preview.md        short blurb (rendered on cards and the worklog widget)
 ├── metadata.json     structured metadata (title, author, date, tags…)
@@ -39,7 +39,7 @@ src/Pet.Jira.Web/wwwroot/documents/features/{feature-id}/
      `tags` (optional), short summary, and the full description.
    - If documenting an existing feature, read the relevant code/components first so the
      description is accurate.
-2. **Create the folder** `src/Pet.Jira.Web/wwwroot/documents/features/{id}/` and an empty
+2. **Create the folder** `src/Chronos.Web/wwwroot/documents/features/{id}/` and an empty
    `images/` subfolder (add a `.gitkeep` if there are no images yet so the folder is tracked).
 3. **Write `metadata.json`** from `templates/metadata.json` — fill every field.
 4. **Write `preview.md`** from `templates/preview.md` following the rules below.

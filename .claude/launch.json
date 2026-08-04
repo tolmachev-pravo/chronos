@@ -4,13 +4,13 @@
     {
       "name": "app",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/Pet.Jira.Web", "--urls", "http://localhost:5050"],
+      "runtimeArgs": ["run", "--project", "src/Chronos.Web", "--urls", "http://localhost:5050"],
       "port": 5050
     },
     {
       "name": "web-mock",
       "runtimeExecutable": "dotnet",
-      "runtimeArgs": ["run", "--project", "src/Pet.Jira.Web", "--no-build", "--no-launch-profile", "--urls", "http://localhost:5050"],
+      "runtimeArgs": ["run", "--project", "src/Chronos.Web", "--no-build", "--no-launch-profile", "--urls", "http://localhost:5050"],
       "port": 5050,
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
