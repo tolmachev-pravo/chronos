@@ -1,0 +1,32 @@
+﻿@using Chronos.Domain.Models.Issues;
+@using Chronos.Infrastructure.Jira.Dto;
+@using Chronos.Web.Components.Markdown
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="_form">
+            <MudPaper Elevation="0" Class="pet-worklog-day-item-dialog">
+                <MudDatePicker Label="Date" @bind-Date="_model.Worklog.Date"
+                               FirstDayOfWeek="DayOfWeek.Monday"
+                               Required="true" RequiredError="Date is required" />
+                <MudTimePicker Label="Start time" @bind-Time="_model.Worklog.StartTime" Editable="true"
+                               Required="true" RequiredError="Start time is required" />
+                <MudTimePicker Label="Complete time" @bind-Time="_model.Worklog.CompleteTime" Editable="true"
+                               Required="true" RequiredError="Complete time is required" />
+                <MudAutocomplete T="Issue" Label="Issue" @bind-Value="_model.Worklog.Issue"
+                                 SearchFunc="@SearchIssuesAsync"
+                                 ToStringFunc="issue => issue?.Name"
+                                 MaxItems="Int32.MaxValue"
+                                 ResetValueOnEmptyText="true" Dense="true"
+                                 Required="true" RequiredError="Issue is required" />
+                <MudTextField Label="Comment" @bind-Value="_model.Worklog.Comment" />
+            </MudPaper>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" OnClick="SubmitAsync">Ok</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {}

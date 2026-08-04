@@ -1,0 +1,22 @@
+@using Chronos.Web.Components.Markdown
+
+<MudDialog>
+    <DialogContent>
+        <div class="feat-detail">
+            <div class="feat-detail__meta">
+                <MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" Size="Size.Small" Class="feat-detail__meta-icon" />
+                <span>@Detail.Metadata.Author</span>
+                <span class="feat-detail__dot">·</span>
+                <span>@Detail.Metadata.Date.ToString("dd.MM.yyyy")</span>
+            </div>
+
+            <MudDivider Class="my-3" />
+
+            <MudMarkdown Value="@Detail.IndexMarkdown" />
+        </div>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Close" Variant="Variant.Text" Color="Color.Primary">Закрыть</MudButton>
+    </DialogActions>
+</MudDialog>

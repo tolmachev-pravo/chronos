@@ -1,0 +1,43 @@
+@using Chronos.Web.Components.Common
+
+<div class="feat-page">
+    <div class="pet-section-head">
+        <MudText Typo="Typo.h5" Style="font-weight:700">Features</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
+            Свежие возможности приложения — что нового и как этим пользоваться.
+        </MudText>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="feat-catalog mt-5">
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="260px" Class="feat-page__skeleton" />
+            <div class="extv-glow__grid">
+                @for (var i = 0; i < 3; i++)
+                {
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="210px" Class="feat-page__skeleton" />
+                }
+            </div>
+        </div>
+    }
+    else if (_features.Count == 0)
+    {
+        <Stub Message="Новинок пока нет. Загляните позже!" />
+    }
+    else
+    {
+        <div class="feat-catalog mt-5">
+            <FeatureHero Feature="_features[0]" />
+
+            @if (_features.Count > 1)
+            {
+                <div class="extv-glow__grid">
+                    @for (var i = 1; i < _features.Count; i++)
+                    {
+                        <FeatureCard Feature="_features[i]" />
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
