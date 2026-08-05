@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 240" width="880" height="240"
+     role="img" aria-labelledby="chronos-banner-title">
+    <title id="chronos-banner-title">Chronos — подсказывает, сколько времени и на какие задачи списать в Jira</title>
+    <!--
+        README banner (issue #254). The wordmark is the one the app itself shows on empty states
+        and 404: CHRON, a live clock in place of the O, then S — see
+        src/Chronos.Web/Components/Common/Stub.razor. Same ring, same gold minute hand sweeping in
+        8s, same slow hour hand and gold centre pin as the app icon in
+        wwwroot/images/favicon/favicon.svg. Strokes are a touch heavier than in the app: the mark
+        is drawn far larger here, and the thin ring reads as weak next to 78px letters.
+
+        Two constraints shape this file, both coming from how GitHub renders it:
+
+        1. It is served as an image, so there is no page CSS and no MudBlazor theme. Colours are
+           literal, and the purple panel makes the banner readable on both the light and the dark
+           GitHub theme without a prefers-color-scheme variant.
+        2. The viewer's font is unknown — Roboto is not there to measure. So CHRON is anchored at
+           its end and S at its start against the fixed clock box: whatever the real letter widths
+           turn out to be, the letters always butt against the clock instead of overlapping it.
+           Only the outer edges of the word shift, which is invisible at this size.
+
+        Note for editors: this is XML, so a comment may not contain a double hyphen.
+    -->
+    <defs>
+        <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#6E5DF0" />
+            <stop offset="1" stop-color="#4433C9" />
+        </linearGradient>
+        <radialGradient id="glow" cx="0.18" cy="0.1" r="0.9">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.18" />
+            <stop offset="1" stop-color="#FFFFFF" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+
+    <style>
+        .wm {
+            font-family: "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            font-weight: 800;
+            font-size: 78px;
+            letter-spacing: 12px;
+            fill: #FFFFFF;
+        }
+        .tagline {
+            font-family: "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+            font-weight: 400;
+            font-size: 21px;
+            letter-spacing: 0.6px;
+            fill: #FFFFFF;
+            fill-opacity: 0.8;
+        }
+        .ring { fill: none; stroke: #FFFFFF; stroke-width: 10; }
+        .hand { stroke-width: 8.5; stroke-linecap: round; transform-origin: 50px 50px; }
+        .hour { stroke: #FFFFFF; animation: sweep 48s linear infinite; }
+        .min { stroke: #E3A93B; animation: sweep 8s linear infinite; }
+        .pin { fill: #E3A93B; }
+
+        @keyframes sweep { to { transform: rotate(360deg); } }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hour, .min { animation: none; }
+        }
+    </style>
+
+    <rect width="880" height="240" rx="30" fill="url(#panel)" />
+    <rect width="880" height="240" rx="30" fill="url(#glow)" />
+
+    <text class="wm" x="540" y="116" text-anchor="end">CHRON</text>
+    <!--
+        80px box for the clock: that is 1.02em, the width the O clock has in the app's wordmark,
+        and it centres the ring on the cap height of the letters. Offsets on both sides are about
+        one tracking step, matching the gap CHRON's trailing letter-spacing leaves on the left.
+    -->
+    <g transform="translate(537.6 48.5) scale(0.8)">
+        <circle class="ring" cx="50" cy="50" r="42" />
+        <!--
+            Static 10:10 offsets live on wrapper groups, not on the hands themselves: a CSS
+            animation replaces an element's own transform, so an offset written on the line would
+            be dropped the moment the sweep starts. The offsets also keep the hands apart where
+            the animation never runs (prefers-reduced-motion), instead of stacking them into what
+            reads as a single stroke.
+        -->
+        <g transform="rotate(-60 50 50)">
+            <line class="hand hour" x1="50" y1="50" x2="50" y2="30" />
+        </g>
+        <g transform="rotate(60 50 50)">
+            <line class="hand min" x1="50" y1="50" x2="50" y2="16" />
+        </g>
+        <circle class="pin" cx="50" cy="50" r="7" />
+    </g>
+    <text class="wm" x="627" y="116" text-anchor="start">S</text>
+
+    <text class="tagline" x="440" y="173" text-anchor="middle">Подсказывает, сколько времени и на какие задачи списать в Jira</text>
+</svg>
