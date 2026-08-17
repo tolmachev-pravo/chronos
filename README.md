@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/images/banner.svg" alt="Chronos" width="880">
+  <img src=".github/images/banner.svg" alt="Chronos. It knows what you did last sprint" width="880">
 </p>
 
 <p align="center">

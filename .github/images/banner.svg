@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 240" width="880" height="240"
      role="img" aria-labelledby="chronos-banner-title">
-    <title id="chronos-banner-title">Chronos — подсказывает, сколько времени и на какие задачи списать в Jira</title>
+    <title id="chronos-banner-title">Chronos. It knows what you did last sprint — подсказывает, сколько времени и на какие задачи списать в Jira</title>
     <!--
         README banner (issue #254). The wordmark is the one the app itself shows on empty states
         and 404: CHRON, a live clock in place of the O, then S — see
@@ -43,8 +43,8 @@
         .tagline {
             font-family: "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
             font-weight: 400;
-            font-size: 21px;
-            letter-spacing: 0.6px;
+            font-size: 30px;
+            letter-spacing: 0.8px;
             fill: #FFFFFF;
             fill-opacity: 0.8;
         }
@@ -89,5 +89,11 @@
     </g>
     <text class="wm" x="627" y="116" text-anchor="start">S</text>
 
-    <text class="tagline" x="440" y="173" text-anchor="middle">Подсказывает, сколько времени и на какие задачи списать в Jira</text>
+    <!--
+        The tagline is centred, so an unknown viewer font widens it symmetrically and cannot
+        collide with anything: measured at 454px in this stack and 515px with a fallback as wide as
+        DejaVu Sans, against 880px of panel. Its baseline sits at 178 so the mark and the line together centre
+        on the panel: the wordmark caps start at about 55, this line's descenders end at about 184.
+    -->
+    <text class="tagline" x="440" y="178" text-anchor="middle">It knows what you did last sprint</text>
 </svg>
