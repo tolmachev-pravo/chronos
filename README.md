@@ -1,39 +1,201 @@
-# Chronos
+<p align="center">
+  <img src=".github/images/banner.svg" alt="Chronos. It knows what you did last sprint" width="880">
+</p>
 
-Chronos is an application designed to simplify and automate the process of filling out Jira worklogs. It allows users to log their work time more efficiently and effortlessly.
+<p align="center">
+  <a href="https://github.com/tolmachev-pravo/chronos/actions/workflows/dotnet.yml"><img src="https://github.com/tolmachev-pravo/chronos/actions/workflows/dotnet.yml/badge.svg" alt=".NET"></a>
+  <a href="https://github.com/tolmachev-pravo/chronos/releases"><img src="https://img.shields.io/github/v/release/tolmachev-pravo/chronos?sort=semver" alt="Release"></a>
+</p>
 
-![image](https://github.com/tolmachev-pravo/chronos/assets/62241382/009697f2-8e71-4473-87a2-0a82c72f6761)
+Chronos — веб-приложение, которое заполняет ворклоги в Jira за вас: собирает вашу активность за период
+и предлагает, сколько времени и на какие задачи списать. Остаётся проверить предложенное и подтвердить.
 
-# Features
-* Seamless integration with Jira for authentication
-* Automatic suggestions for creating worklogs based on your profile settings
-* Customizable profile settings for personalized time management
-* Different color codes for easy identification of suggested worklogs
+## Возможности
 
-# Getting Started
-To use Chronos, you need to have a Jira account. Once you have an account, follow these steps:
+* **День собирается сам.** Вы указываете период, рабочие часы и обед — Chronos разбирает вашу
+  активность в Jira и раскладывает её по дням. Работа над задачами растягивается пропорционально
+  свободному времени дня, а у комментариев и встреч берётся их собственная длительность.
+* **Четыре источника событий, любой можно отключить.** Переходы статусов в задачах, где вы
+  исполнитель; задачи, которые вы комментировали; задачи, которые вы тестировали; встречи из
+  календаря. Ненужный источник выключается в разделе Extensions — и приложение перестаёт его
+  спрашивать, поэтому поиск за период идёт быстрее.
+* **Списанное не предлагается второй раз.** Фактические ворклоги подтягиваются из Jira вместе с
+  предложениями: совпавшее предложение обнуляется, а списанное показывается под ним. Остальное
+  пересчитывается от того времени дня, которое ещё свободно.
+* **Видно, сколько по дню уже закрыто.** В заголовке дня — полоса и «списано / всего по дню» с
+  процентом; когда списано всё, что за день набралось, день становится зелёным.
+* **Правка перед отправкой.** Время и комментарий любого предложения меняются прямо в списке — в Jira
+  уходит то, что вы видите.
+* **Ворклог на любую задачу вручную.** Через меню дня — на случай, когда время ушло на то, чего в Jira
+  не видно.
+* **Встречи из Яндекс.Календаря становятся ворклогами.** Настраиваются правила сопоставления встреч с
+  задачами и фразы-исключения. Встречу без ключа задачи списать нельзя, но своё время в дне она
+  занимает — чтобы приложение не предложило вам больше часов, чем в дне было.
 
-1. Clone the repository to your local machine.
-2. Configure the application settings in the appsettings.json file:
-    * Set the Jira URL.
-    * Specify the list of cached issues (optional).
-    * Configure the Serilog settings (optional).
-3. Build and run the application.
-4. Customize your profile settings:
-    * Set the date range for searching issues to calculate worklogs.
-    * Specify your daily working start and end time.
-    * Define the issue status for when you start working on it.
-    * Set the default time for logging worklogs through comments.
-    * Specify the average lunch break duration.
+## Как это работает
 
+Chronos не ведёт централизованную базу списаний — он читает данные из Jira вашим доступом: войти можно
+логином и паролём или персональным токеном (PAT), который отзывается на стороне Jira в любой момент.
 
-# Worklog Suggestions
+Норма дня — это конец рабочего дня минус начало минус обед. Из нормы вычитается всё, что в дне уже
+занято, а остаток раздаётся предложениям. Каждый тип считается по-своему.
 
-Chronos provides a list of suggested worklogs categorized by days. Here's how to interpret the color codes:
+**Задачи, где вы исполнитель** (фиолетовый). Событие — время, которое задача провела в работе: от
+перехода в In Progress до выхода из него. Оно обрезается границами рабочего дня, а если работа шла
+несколько дней — режется по дням. В ворклог это время попадает не напрямую, а как вес: свободный
+остаток дня делится между такими событиями пропорционально их длительности. Час в работе против трёх
+дадут соотношение 1 : 3, а вместе они займут ровно столько, сколько в дне было свободно.
 
-* Purple: Suggested worklogs for tasks where you are the assignee.
-* Green: Worklogs that are already logged in Jira. If no time is specified, they are associated with the suggested worklog above. If time is specified, they are independent worklogs.
-* Blue: Suggested worklogs for tasks where you have left comments.
+**Задачи, которые вы тестировали** (розовый). То же самое, но событие — время в статусе тестирования, а
+берутся задачи, где тестировщик — вы. Попадает в тот же пропорциональный расчёт, что и работа
+исполнителя.
 
-# Contributing
-Contributions are welcome! If you have any suggestions, bug reports, or feature requests, please open an issue or submit a pull request.
+**Комментарии** (синий). Учитываются комментарии в задачах, где вы не исполнитель: разбор чужой
+задачи — тоже работа. Длительность здесь фиксированная, одна на комментарий, и задаётся в настройках
+расширения Jira. Она не масштабируется — сколько задано, столько и предложит.
+
+**Встречи из календаря** (бирюзовый). Берётся фактическая длительность встречи. Если в ней найден ключ
+задачи, встреча становится обычным предложением. Если ключа нет, списать её нельзя, но время дня она
+занимает — иначе приложение предложило бы вам больше часов, чем в дне оставалось.
+
+**Уже списанное** (бирюзовый, с галочкой). Фактические ворклоги подтягиваются из Jira и вычитаются из
+нормы дня. Совпавшее с ними предложение обнуляется и уходит под фактическую запись — списать одно и то
+же второй раз приложение не предложит.
+
+Порядок расчёта: из нормы дня сначала уходят уже списанное время, встречи и комментарии — у каждого из
+них своя длительность, — а всё, что осталось, делится между работой и тестированием. Итог округляется
+до минуты.
+
+Предложенное время — **совещательное**: расчёт приблизительный и опирается на время смены статусов,
+время комментариев и длительность встреч. Итоговое решение всегда за вами, а удалить ворклог можно
+через интерфейс Jira.
+
+### Легенда списка ворклогов
+
+Каждая строка дня — либо предложение, либо уже списанное время. Различать помогают цвет и иконка:
+
+| Вид | Цвет | Иконка | Что это |
+| --- | --- | --- | --- |
+| Предложение по задаче, где вы исполнитель | фиолетовый | задача | построено по переходам статусов |
+| Предложение по задаче, которую вы тестировали | розовый | жук | источник — события тестировщика |
+| Предложение по задаче, которую вы комментировали | синий | комментарий | длительность задаётся в настройках расширения Jira |
+| Событие календаря | бирюзовый | календарь | пришло из Яндекс.Календаря |
+| Фактический ворклог | бирюзовый | галочка | уже списано в Jira |
+
+Полоса прогресса в заголовке дня показывает, какая часть набранного за день времени — списанного плюс
+предложенного — уже ушла в Jira.
+
+## Запуск локально
+
+Нужен [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) и доступ к Jira.
+
+1. Клонируйте репозиторий.
+2. Проверьте `src/Chronos.Web/appsettings.json`:
+   * `Jira:Url` — адрес вашей Jira;
+   * `Jira:Tempo:Enabled` и `Jira:ScriptRunner:Enabled` — включены ли эти плагины в вашей Jira;
+   * `Jira:CachedIssues` — задачи, которые всегда под рукой в меню (необязательно);
+   * `GitHub:Releases` — репозиторий и параметры кеша для раздела Releases (необязательно);
+   * `Serilog` — логирование, по умолчанию в `logs/log-<дата>.txt` (необязательно).
+3. Запустите приложение:
+
+```bash
+dotnet run --project src/Chronos.Web
+```
+
+Миграции базы применяются при старте автоматически. Доступны также `/health` и `/healthchecks-ui`
+для проверки состояния и `/swagger` для API.
+
+### Режим без Jira
+
+Для разработки интерфейса есть мок-режим: данные генерируются, любой логин проходит, обращений к
+реальной Jira нет.
+
+```bash
+ASPNETCORE_IS_MOCK=true dotnet run --project src/Chronos.Web
+```
+
+В Windows PowerShell:
+
+```powershell
+$env:ASPNETCORE_IS_MOCK = "true"; dotnet run --project src/Chronos.Web
+```
+
+## Архитектура
+
+Clean Architecture, четыре проекта:
+
+| Проект | Назначение |
+| --- | --- |
+| [Chronos.Domain](src/Chronos.Domain) | сущности и модели предметной области, без зависимостей |
+| [Chronos.Application](src/Chronos.Application) | сценарии на MediatR, интерфейсы хранилищ, распределение времени по дням |
+| [Chronos.Infrastructure](src/Chronos.Infrastructure) | Jira (Atlassian.SDK, Tempo, ScriptRunner), CalDAV Яндекс.Календаря, EF Core + SQLite, шифрование секретов, мок-слой |
+| [Chronos.Web](src/Chronos.Web) | Blazor Server + MudBlazor, страницы, компоненты, авторизация по cookie |
+
+Хранилища трёхуровневые: `IMemoryCache` → `ILocalStorage` (браузер) → `IDataSource` (Jira), общая
+точка входа — `IStorage`. В локальной SQLite-базе лежат только пользователи и настройки расширений,
+причём секреты расширений шифруются через ASP.NET Core Data Protection; профиль, выбранная тема и
+фильтр поиска хранятся в localStorage браузера. Подробнее — в
+[development.readme.md](src/Chronos.Web/development.readme.md).
+
+## Разработка
+
+```bash
+dotnet build Chronos.sln
+dotnet test
+```
+
+Юнит-тесты — [tests/Chronos.UnitTests](tests/Chronos.UnitTests), запускаются в CI на каждый push и PR
+в `master` ([.NET](.github/workflows/dotnet.yml)).
+
+Миграции EF Core создаются из папки `src/Chronos.Infrastructure`:
+
+```bash
+dotnet ef migrations add Migration_Name --startup-project ../Chronos.Web --context ApplicationDbContext
+```
+
+## Релизы
+
+Версия приложения выводится из git-тегов через MinVer: на теге `v1.8.0` сборка получает версию
+`1.8.0`, между тегами — `1.8.1-alpha.0.N`. Push тега `v*` запускает
+[Release](.github/workflows/release.yml): сборка, тесты, проверка того, что MinVer выдал ровно версию
+тега, и затем **черновик** релиза с заметками и архивом `chronos-<тег>.zip`. Заметки собираются
+скриптом из того, что вошло в тег, — черновик остаётся вычитать и опубликовать руками. Тег с дефисом
+(`v1.9.0-rc.1`) помечается как pre-release. Текущая версия видна в левом меню приложения и ведёт в
+раздел Releases.
+
+Описания новых возможностей живут в
+[wwwroot/documents/features](src/Chronos.Web/wwwroot/documents/features) — по папке на функцию
+(`index.md`, `preview.md`, `metadata.json`) — и показываются в разделе Features и в виджете «Что
+нового» на странице ворклогов.
+
+## Deploy
+
+Прод — IIS на self-hosted раннере, деплоит [Deploy to IIS](.github/workflows/deploy-iis.yml). Запуск —
+публикация релиза: на сервер попадает ровно тот архив, который Release собрал и протестировал на теге,
+заново из репозитория ничего не собирается. Pre-release деплой пропускает — такие релизы публикуют для
+проверки, а не для прода.
+
+Что делает workflow:
+
+1. скачивает архив опубликованного релиза по тегу — для тегов, выпущенных до переименования,
+   пробуется прежнее имя `pet-jira-copilot-<тег>.zip`, чтобы откат на старый релиз находил свой архив;
+2. проверяет, что в архиве есть `Chronos.Web.dll`, — до того, как тронуть сайт;
+3. останавливает пул приложений, копирует файлы через robocopy и поднимает пул обратно; пул поднимется
+   даже если копирование упало;
+4. `appsettings.json` и `appsettings.*.json` из копирования исключены — конфигурация с реальными
+   адресами и секретами живёт на сервере и переживает деплой;
+5. если задана переменная репозитория `SITE_URL`, дёргает `<SITE_URL>/health` до десяти раз с
+   интервалом шесть секунд и падает, если сайт так и не ответил.
+
+Два деплоя никогда не идут одновременно: workflow стоит в `concurrency`-группе, которая ждёт, а не
+отменяет. Путь сайта и имя пула заданы в самом workflow — `F:\inetpub\sites\jira.copilot` и
+`_jira.copilot`, оба остались с прежнего имени приложения.
+
+Откат и повторный деплой — вручную, через `workflow_dispatch` с тегом уже опубликованного релиза: у
+черновика скачиваемого артефакта нет.
+
+## Обратная связь
+
+Пожелания, идеи и баги — в [Issues](https://github.com/tolmachev-pravo/chronos/issues) или
+[Discussions](https://github.com/tolmachev-pravo/chronos/discussions). Pull request'ы тоже
+приветствуются.
