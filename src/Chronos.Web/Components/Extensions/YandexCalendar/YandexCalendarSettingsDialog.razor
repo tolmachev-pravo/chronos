@@ -107,7 +107,18 @@
                                  title="@($"{mapping.Phrase} → {mapping.IssueKey}")">
                             <span class="ycd-map-phrase">@mapping.Phrase</span>
                             <span class="ycd-map-arrow">→</span>
-                            <span class="ycd-map-key">@mapping.IssueKey</span>
+                            @{
+                                var issueLink = IssueLink(mapping.IssueKey);
+                            }
+                            @if (issueLink is not null)
+                            {
+                                <a class="ycd-map-key" href="@issueLink" target="_blank" rel="noopener noreferrer"
+                                   @onclick:stopPropagation="true">@mapping.IssueKey</a>
+                            }
+                            else
+                            {
+                                <span class="ycd-map-key">@mapping.IssueKey</span>
+                            }
                         </MudChip>
                     }
                 </MudChipSet>
@@ -226,5 +237,14 @@
         color: var(--mud-palette-primary);
         font-weight: 600;
         flex-shrink: 0;
+    }
+
+    .ycd-map-chip a.ycd-map-key {
+        text-decoration: none;
+    }
+
+    .ycd-map-chip a.ycd-map-key:hover,
+    .ycd-map-chip a.ycd-map-key:focus-visible {
+        text-decoration: underline;
     }
 </style>

@@ -6,6 +6,7 @@ using Chronos.Application.Extensions.YandexCalendar;
 using Chronos.Application.Extensions.YandexCalendar.Commands;
 using Chronos.Application.Extensions.YandexCalendar.Dto;
 using Chronos.Application.Extensions.YandexCalendar.Queries;
+using Chronos.Infrastructure.Jira;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace Chronos.Web.Components.Extensions.YandexCalendar
 
         [Inject] private IMediator Mediator { get; set; } = default!;
         [Inject] private ISnackbar Snackbar { get; set; } = default!;
+        [Inject] private IJiraLinkGenerator JiraLinkGenerator { get; set; } = default!;
 
         private MudForm _form = default!;
         private string _login = string.Empty;
@@ -106,6 +108,9 @@ namespace Chronos.Web.Components.Extensions.YandexCalendar
         {
             if (e.Key == "Enter") AddMapping();
         }
+
+        private string? IssueLink(string? issueKey) =>
+            string.IsNullOrWhiteSpace(issueKey) ? null : JiraLinkGenerator.Generate(issueKey.Trim());
 
         private void OnMappingChipClose(MudChip<YandexCalendarIssueMapping> chip)
         {
