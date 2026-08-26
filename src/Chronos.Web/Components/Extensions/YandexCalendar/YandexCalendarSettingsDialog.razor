@@ -214,14 +214,15 @@
         max-width: 260px;
     }
 
+    /* Без overflow: hidden — кнопка закрытия выступает за content на 4px и обрезается. */
     .ycd-map-chip .mud-chip-content {
         display: flex;
         align-items: center;
         min-width: 0;
-        overflow: hidden;
     }
 
     .ycd-map-chip .ycd-map-phrase {
+        min-width: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
