@@ -1,3 +1,5 @@
+@using Chronos.Application.Extensions.YandexCalendar.Dto
+
 <MudDialog>
     <DialogContent>
 
@@ -69,13 +71,15 @@
 
         <MudText Typo="Typo.subtitle2" Class="mb-2">Маппинг задач</MudText>
         <MudText Typo="Typo.caption" Style="opacity:.55" Class="mb-3 d-block">
-            Событие с точным совпадением названия получит указанную задачу Jira автоматически.
+            Событие, название которого подходит под фразу, получит указанную задачу Jira автоматически.
+            Можно задать маску: <code>*</code>&nbsp;— любое число символов, <code>?</code>&nbsp;— один символ
+            (например, <code>Core Daily*</code>). Фраза без масок срабатывает только на точное совпадение.
         </MudText>
 
         <div class="d-flex gap-2 align-end">
             <MudTextField T="string" @bind-Value="_newMappingPhrase"
-                          Label="Название события"
-                          Placeholder="например: Core Daily Sync"
+                          Label="Название события или маска"
+                          Placeholder="например: Core Daily*"
                           @onkeydown="OnMappingKeyDown"
                           Immediate="true"
                           Style="flex:2" />
@@ -93,22 +97,31 @@
 
         @if (_issueMappings.Count > 0)
         {
-            <div class="mt-2">
-                @foreach (var mapping in _issueMappings)
-                {
-                    <div class="d-flex align-center gap-2 py-1">
-                        <MudText Typo="Typo.body2" Style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                            @mapping.Phrase
-                        </MudText>
-                        <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Style="opacity:.45;flex-shrink:0" />
-                        <MudText Typo="Typo.body2" Color="Color.Primary" Style="flex-shrink:0">
-                            @mapping.IssueKey
-                        </MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Close"
-                                       Size="Size.Small"
-                                       OnClick="@(() => RemoveMapping(mapping))" />
-                    </div>
-                }
+            <div class="ycd-map-list mt-2">
+                <MudChipSet T="YandexCalendarIssueMapping" AllClosable="true" OnClose="OnMappingChipClose" Class="ycd-chips">
+                    @foreach (var mapping in _issueMappings)
+                    {
+                        <MudChip T="YandexCalendarIssueMapping" Value="@mapping"
+                                 Size="Size.Small" Color="Color.Default"
+                                 Class="ycd-map-chip"
+                                 title="@($"{mapping.Phrase} → {mapping.IssueKey}")">
+                            <span class="ycd-map-phrase">@mapping.Phrase</span>
+                            <span class="ycd-map-arrow">→</span>
+                            @{
+                                var issueLink = IssueLink(mapping.IssueKey);
+                            }
+                            @if (issueLink is not null)
+                            {
+                                <a class="ycd-map-key" href="@issueLink" target="_blank" rel="noopener noreferrer"
+                                   @onclick:stopPropagation="true">@mapping.IssueKey</a>
+                            }
+                            else
+                            {
+                                <span class="ycd-map-key">@mapping.IssueKey</span>
+                            }
+                        </MudChip>
+                    }
+                </MudChipSet>
             </div>
         }
 
@@ -190,5 +203,48 @@
     .ycd-chips {
         flex-wrap: wrap;
         gap: 4px;
+    }
+
+    .ycd-map-list {
+        max-height: 168px;
+        overflow-y: auto;
+    }
+
+    .ycd-map-chip {
+        max-width: 260px;
+    }
+
+    .ycd-map-chip .mud-chip-content {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .ycd-map-chip .ycd-map-phrase {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ycd-map-chip .ycd-map-arrow {
+        opacity: .45;
+        margin: 0 4px;
+        flex-shrink: 0;
+    }
+
+    .ycd-map-chip .ycd-map-key {
+        color: var(--mud-palette-primary);
+        font-weight: 600;
+        flex-shrink: 0;
+    }
+
+    .ycd-map-chip a.ycd-map-key {
+        text-decoration: none;
+    }
+
+    .ycd-map-chip a.ycd-map-key:hover,
+    .ycd-map-chip a.ycd-map-key:focus-visible {
+        text-decoration: underline;
     }
 </style>

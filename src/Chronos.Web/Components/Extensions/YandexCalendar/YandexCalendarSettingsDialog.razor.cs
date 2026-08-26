@@ -2,9 +2,11 @@ using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
+using Chronos.Application.Extensions.YandexCalendar;
 using Chronos.Application.Extensions.YandexCalendar.Commands;
 using Chronos.Application.Extensions.YandexCalendar.Dto;
 using Chronos.Application.Extensions.YandexCalendar.Queries;
+using Chronos.Infrastructure.Jira;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +23,7 @@ namespace Chronos.Web.Components.Extensions.YandexCalendar
 
         [Inject] private IMediator Mediator { get; set; } = default!;
         [Inject] private ISnackbar Snackbar { get; set; } = default!;
+        [Inject] private IJiraLinkGenerator JiraLinkGenerator { get; set; } = default!;
 
         private MudForm _form = default!;
         private string _login = string.Empty;
@@ -89,11 +92,12 @@ namespace Chronos.Web.Components.Extensions.YandexCalendar
 
         private void AddMapping()
         {
-            var phrase = _newMappingPhrase.Trim();
+            var phrase = YandexCalendarIssueMappingMatcher.Normalize(_newMappingPhrase);
             var key = _newMappingIssueKey.Trim();
             if (string.IsNullOrEmpty(phrase) || string.IsNullOrEmpty(key))
                 return;
-            if (_issueMappings.Any(m => m.Phrase.Equals(phrase, StringComparison.OrdinalIgnoreCase)))
+            if (_issueMappings.Any(m => YandexCalendarIssueMappingMatcher.Normalize(m.Phrase)
+                    .Equals(phrase, StringComparison.OrdinalIgnoreCase)))
                 return;
             _issueMappings.Add(new YandexCalendarIssueMapping(phrase, key));
             _newMappingPhrase = string.Empty;
@@ -105,7 +109,14 @@ namespace Chronos.Web.Components.Extensions.YandexCalendar
             if (e.Key == "Enter") AddMapping();
         }
 
-        private void RemoveMapping(YandexCalendarIssueMapping mapping) => _issueMappings.Remove(mapping);
+        private string? IssueLink(string? issueKey) =>
+            string.IsNullOrWhiteSpace(issueKey) ? null : JiraLinkGenerator.Generate(issueKey.Trim());
+
+        private void OnMappingChipClose(MudChip<YandexCalendarIssueMapping> chip)
+        {
+            if (chip.Value is not null)
+                _issueMappings.Remove(chip.Value);
+        }
 
         private async Task Save()
         {
