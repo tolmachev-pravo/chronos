@@ -59,8 +59,8 @@ namespace Chronos.Application.Extensions.YandexCalendar.Queries
                         e.Summary.Contains(p, StringComparison.OrdinalIgnoreCase)))
                     .Select(e =>
                     {
-                        var mapping = settings.IssueMappings.FirstOrDefault(m =>
-                            string.Equals(e.Summary, m.Phrase, StringComparison.OrdinalIgnoreCase));
+                        var mapping = YandexCalendarIssueMappingMatcher.FindBestMatch(
+                            settings.IssueMappings, e.Summary);
                         return e with
                         {
                             JiraIssueKeyHint = mapping?.IssueKey ?? e.JiraIssueKeyHint,

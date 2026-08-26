@@ -138,6 +138,47 @@ namespace Chronos.UnitTests.Application.Extensions.YandexCalendar
         }
 
         [Test]
+        public async Task Handle_AppliesIssueMapping_WhenEventTitleMatchesMask()
+        {
+            _repoMock.Setup(r => r.GetAsync("alice", ExtensionType.YandexCalendar, CancellationToken.None))
+                     .ReturnsAsync(new UserExtension { IsEnabled = true });
+
+            var mappings = new List<YandexCalendarIssueMapping>
+            {
+                new("Core Daily*", "CASEM-73656"),
+                new("Core Daily Sync", "CASEM-11111"),
+            };
+            var dto = new YandexCalendarSettingsDto("user@yandex.ru", "pw", new List<string>(), mappings);
+            _settingsMock.Setup(s => s.GetSettingsAsync("alice", CancellationToken.None))
+                         .ReturnsAsync(dto);
+
+            var date = new DateOnly(2026, 6, 4);
+            var utcNow = new DateTime(2026, 6, 4, 10, 0, 0, DateTimeKind.Utc);
+            var events = new List<YandexCalendarEventDto>
+            {
+                new("Core Daily Sync (перенос)", utcNow, utcNow.AddHours(1), null),
+                new("Core Daily Sync",           utcNow.AddHours(2), utcNow.AddHours(3), null),
+                new("Retro",                     utcNow.AddHours(4), utcNow.AddHours(5), null),
+            };
+            _calMock.Setup(c => c.GetEventsAsync(
+                        It.IsAny<YandexCalendarCredentials>(),
+                        date,
+                        It.IsAny<TimeZoneInfo>(),
+                        CancellationToken.None))
+                    .ReturnsAsync(events);
+
+            var result = await CreateHandler().Handle(
+                new GetYandexCalendarEvents.Query("alice", date), CancellationToken.None);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(result[0].JiraIssueKeyHint, Is.EqualTo("CASEM-73656"), "Mask should cover the renamed event");
+                Assert.That(result[1].JiraIssueKeyHint, Is.EqualTo("CASEM-11111"), "Exact phrase wins over the mask");
+                Assert.That(result[2].JiraIssueKeyHint, Is.Null, "Unmapped event should have no hint");
+            });
+        }
+
+        [Test]
         public async Task Handle_ReturnsEmpty_WhenExtensionDisabled()
         {
             _repoMock.Setup(r => r.GetAsync("alice", ExtensionType.YandexCalendar, CancellationToken.None))
