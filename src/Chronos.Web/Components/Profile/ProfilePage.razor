@@ -1,142 +1,179 @@
 @using Chronos.Web.Components.Markdown
 
-<div class="chr-section-head">
-    <MudText Typo="Typo.h5" Style="font-weight:700">Профиль</MudText>
-    <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
-        Личные настройки приложения — задаются один раз и хранятся за вами, а не за браузером.
-    </MudText>
-</div>
-
-<div class="prf-hero mt-5">
-    <MudAvatar Size="Size.Large" Color="Color.Primary">
-        @if (!string.IsNullOrEmpty(_avatar))
-        {
-            <img src="@_avatar" alt="avatar" />
-        }
-        else
-        {
-            <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
-        }
-    </MudAvatar>
-    <div>
-        <MudText Typo="Typo.h6" Style="font-weight:700;line-height:1.2">
-            @(string.IsNullOrEmpty(_displayName) ? Username : _displayName)
+<div class="prf-page">
+    <div class="chr-section-head">
+        <MudText Typo="Typo.h5" Style="font-weight:700">Профиль</MudText>
+        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
+            Личные настройки приложения — задаются один раз и хранятся за вами, а не за браузером.
         </MudText>
-        <MudText Typo="Typo.caption" Style="opacity:.55">@Username · аккаунт Jira</MudText>
     </div>
-</div>
 
-<div class="prf-grid mt-5">
-    <MudPaper Elevation="0" Class="prf-card">
-        <div class="prf-card__head">
-            <div class="prf-card__icon">
-                <MudIcon Icon="@Icons.Material.Filled.Schedule" />
-            </div>
-            <div>
-                <MudText Typo="Typo.h6" Style="font-weight:600">Рабочий день</MudText>
-                <MudText Typo="Typo.caption" Style="opacity:.6">
-                    Рамка для предполагаемых ворклогов и норма времени на день
-                </MudText>
-            </div>
-        </div>
-
-        <div class="prf-pickers mt-4">
-            <MarkdownTooltip Markdown="profile-working-start-time" RootClass="prf-picker">
-                <MudTimePicker Label="Начало" @bind-Time="_workingStartTime" Editable="true" />
-            </MarkdownTooltip>
-            <MarkdownTooltip Markdown="profile-working-end-time" RootClass="prf-picker">
-                <MudTimePicker Label="Окончание" @bind-Time="_workingEndTime" Editable="true" />
-            </MarkdownTooltip>
-            <MarkdownTooltip Markdown="profile-lunch-time" RootClass="prf-picker">
-                <MudTimePicker Label="Обед" @bind-Time="_lunchTime" Editable="true" />
-            </MarkdownTooltip>
-        </div>
-
-        @if (ValidationError is null)
-        {
-            <MudText Typo="Typo.caption" Style="opacity:.65" Class="mt-4 d-block">
-                Рабочее время в день: <b>@WorkingTimeDisplay</b>
+    <MudPaper Elevation="0" Class="prf-card prf-hero mt-5">
+        <MudAvatar Class="prf-hero__avatar" Color="Color.Primary">
+            @if (!string.IsNullOrEmpty(_avatar))
+            {
+                <img src="@_avatar" alt="avatar" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" Style="font-size:2.5rem" />
+            }
+        </MudAvatar>
+        <div class="prf-hero__body">
+            <MudText Typo="Typo.h5" Style="font-weight:700;line-height:1.2">
+                @(string.IsNullOrEmpty(_displayName) ? Username : _displayName)
             </MudText>
-        }
-        else
+            <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
+                @Username@(string.IsNullOrEmpty(_email) ? null : $" · {_email}")
+            </MudText>
+        </div>
+        @if (!string.IsNullOrEmpty(JiraProfileUrl))
         {
-            <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-4">@ValidationError</MudAlert>
-        }
-
-        <div class="prf-card__foot">
-            <MudSpacer />
-            <MudButton OnClick="SaveWorkingDayAsync"
-                       Variant="Variant.Filled"
+            <MudButton Href="@JiraProfileUrl"
+                       Target="_blank"
+                       Variant="Variant.Outlined"
                        Color="Color.Primary"
-                       Disabled="@(ValidationError is not null)"
-                       StartIcon="@Icons.Material.Filled.Check">
-                Сохранить
+                       StartIcon="@Icons.Material.Filled.OpenInNew">
+                Профиль в Jira
             </MudButton>
-        </div>
+        }
     </MudPaper>
 
-    <MudPaper Elevation="0" Class="prf-card">
-        <div class="prf-card__head">
-            <div class="prf-card__icon">
-                <MudIcon Icon="@(IsDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" />
-            </div>
-            <div>
-                <MudText Typo="Typo.h6" Style="font-weight:600">Внешний вид</MudText>
-                <MudText Typo="Typo.caption" Style="opacity:.6">
-                    Оформление приложения на этом устройстве
-                </MudText>
-            </div>
-        </div>
+    <div class="prf-columns mt-5">
+        <div class="prf-col">
+            <MudPaper Elevation="0" Class="prf-card">
+                <div class="prf-card__head">
+                    <div class="prf-card__icon">
+                        <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h6" Style="font-weight:600">Рабочий день</MudText>
+                        <MudText Typo="Typo.caption" Style="opacity:.6">
+                            Рамка для предполагаемых ворклогов и норма времени на день
+                        </MudText>
+                    </div>
+                </div>
 
-        <div class="mt-4">
-            <MudSwitch T="bool" Value="IsDarkMode" ValueChanged="ToggleThemeAsync" Color="Color.Primary"
-                       Label="Тёмная тема" />
-            <MudText Typo="Typo.caption" Style="opacity:.65" Class="d-block">
-                Применяется сразу, отдельная кнопка сохранения не нужна.
-            </MudText>
-        </div>
-    </MudPaper>
+                <div class="prf-pickers mt-4">
+                    <MarkdownTooltip Markdown="profile-working-start-time" RootClass="prf-picker">
+                        <MudTimePicker Label="Начало" @bind-Time="_workingStartTime" Editable="true" />
+                    </MarkdownTooltip>
+                    <MarkdownTooltip Markdown="profile-working-end-time" RootClass="prf-picker">
+                        <MudTimePicker Label="Окончание" @bind-Time="_workingEndTime" Editable="true" />
+                    </MarkdownTooltip>
+                    <MarkdownTooltip Markdown="profile-lunch-time" RootClass="prf-picker">
+                        <MudTimePicker Label="Обед" @bind-Time="_lunchTime" Editable="true" />
+                    </MarkdownTooltip>
+                </div>
 
-    <MudPaper Elevation="0" Class="prf-card">
-        <div class="prf-card__head">
-            <div class="prf-card__icon">
-                <MudIcon Icon="@Icons.Material.Filled.Badge" />
-            </div>
-            <div>
-                <MudText Typo="Typo.h6" Style="font-weight:600">Учётная запись Jira</MudText>
-                <MudText Typo="Typo.caption" Style="opacity:.6">
-                    Приходит из Jira при входе — здесь только показывается
-                </MudText>
-            </div>
-        </div>
-
-        <dl class="prf-facts mt-4">
-            <dt>Логин</dt>
-            <dd>@Display(Username)</dd>
-
-            <dt>Имя</dt>
-            <dd>@Display(_displayName)</dd>
-
-            <dt>Email</dt>
-            <dd>@Display(_email)</dd>
-
-            <dt>Часовой пояс</dt>
-            <dd>@Display(TimeZoneDisplay)</dd>
-
-            <dt>Способ входа</dt>
-            <dd>@Display(SignInMethod)</dd>
-
-            <dt>Адрес Jira</dt>
-            <dd>
-                @if (!string.IsNullOrEmpty(JiraUrl))
+                @if (ValidationError is null)
                 {
-                    <MudLink Href="@JiraUrl" Target="_blank" Typo="Typo.body2">@JiraUrl</MudLink>
+                    <div class="prf-day mt-5">
+                        <div class="prf-day__norm">
+                            <MudText Typo="Typo.h4" Style="font-weight:700;line-height:1">@WorkingTimeDisplay</MudText>
+                            <MudText Typo="Typo.caption" Style="opacity:.6">норма на день</MudText>
+                        </div>
+                        <div class="prf-day__bar">
+                            <div class="prf-day__work" style="@($"width:{Percent(WorkingTime)}%")"></div>
+                            <div class="prf-day__lunch" style="@($"width:{Percent(_lunchTime.Value)}%")"></div>
+                        </div>
+                        <div class="prf-day__scale">
+                            <span>@Time(_workingStartTime.Value)</span>
+                            <span>@Time(_workingEndTime.Value)</span>
+                        </div>
+                        <div class="prf-day__legend">
+                            <span class="prf-day__key"><i class="prf-day__swatch prf-day__swatch--work"></i>работа</span>
+                            <span class="prf-day__key"><i class="prf-day__swatch prf-day__swatch--lunch"></i>обед @DurationDisplay</span>
+                        </div>
+                    </div>
                 }
                 else
                 {
-                    @Display(null)
+                    <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-4">@ValidationError</MudAlert>
                 }
-            </dd>
-        </dl>
-    </MudPaper>
+
+                <div class="prf-card__foot">
+                    @if (IsDirty && ValidationError is null)
+                    {
+                        <MudText Typo="Typo.caption" Style="opacity:.6">Есть несохранённые изменения</MudText>
+                    }
+                    <MudSpacer />
+                    <MudButton OnClick="SaveWorkingDayAsync"
+                               Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Disabled="@(!IsDirty || ValidationError is not null)"
+                               StartIcon="@Icons.Material.Filled.Check">
+                        Сохранить
+                    </MudButton>
+                </div>
+            </MudPaper>
+
+            <MudPaper Elevation="0" Class="prf-card">
+                <div class="prf-card__head">
+                    <div class="prf-card__icon">
+                        <MudIcon Icon="@(IsDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h6" Style="font-weight:600">Внешний вид</MudText>
+                        <MudText Typo="Typo.caption" Style="opacity:.6">
+                            Оформление приложения на этом устройстве
+                        </MudText>
+                    </div>
+                </div>
+
+                <div class="prf-switch mt-4">
+                    <MudSwitch T="bool" Value="IsDarkMode" ValueChanged="ToggleThemeAsync" Color="Color.Primary"
+                               Label="Тёмная тема" />
+                    <MudText Typo="Typo.caption" Style="opacity:.6">
+                        Применяется сразу, сохранять не нужно
+                    </MudText>
+                </div>
+            </MudPaper>
+        </div>
+
+        <aside class="prf-col">
+            <MudPaper Elevation="0" Class="prf-card">
+                <div class="prf-card__head">
+                    <div class="prf-card__icon">
+                        <MudIcon Icon="@Icons.Material.Filled.Badge" />
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h6" Style="font-weight:600">Учётная запись</MudText>
+                        <MudText Typo="Typo.caption" Style="opacity:.6">
+                            Приходит из Jira при входе — здесь только показывается
+                        </MudText>
+                    </div>
+                </div>
+
+                <dl class="prf-facts mt-4">
+                    <dt>Логин</dt>
+                    <dd>@Display(Username)</dd>
+
+                    <dt>Имя</dt>
+                    <dd>@Display(_displayName)</dd>
+
+                    <dt>Email</dt>
+                    <dd>@Display(_email)</dd>
+
+                    <dt>Часовой пояс</dt>
+                    <dd>@Display(TimeZoneDisplay)</dd>
+
+                    <dt>Способ входа</dt>
+                    <dd>@Display(SignInMethod)</dd>
+
+                    <dt>Адрес Jira</dt>
+                    <dd>
+                        @if (!string.IsNullOrEmpty(JiraUrl))
+                        {
+                            <MudLink Href="@JiraUrl" Target="_blank" Typo="Typo.body2">@JiraUrl</MudLink>
+                        }
+                        else
+                        {
+                            @Display(null)
+                        }
+                    </dd>
+                </dl>
+            </MudPaper>
+        </aside>
+    </div>
 </div>

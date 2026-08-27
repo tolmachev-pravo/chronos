@@ -11,6 +11,7 @@ using Chronos.Application.Users.Queries;
 using Chronos.Domain.Models.Users;
 using Chronos.Web.Shared;
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace Chronos.Web.Components.Profile
@@ -41,6 +42,7 @@ namespace Chronos.Web.Components.Profile
         private string _displayName;
         private string _email;
         private string _timeZoneId;
+        private UserSettingsDto _savedSettings = UserSettingsDto.Default;
         private bool _signedInWithToken;
 
         private TimeSpan? _workingStartTime;
@@ -138,6 +140,13 @@ namespace Chronos.Web.Components.Profile
 
         private string JiraUrl => JiraConfiguration?.Value?.Url;
 
+        /// <summary>
+        /// The user's own page in Jira — where everything on the account card is edited.
+        /// </summary>
+        private string JiraProfileUrl => string.IsNullOrEmpty(JiraUrl)
+            ? null
+            : $"{JiraUrl.TrimEnd('/')}/secure/ViewProfile.jspa";
+
         private static string Display(string value) =>
             string.IsNullOrWhiteSpace(value) ? "—" : value;
 
@@ -157,10 +166,20 @@ namespace Chronos.Web.Components.Profile
 
         private void ApplySettings(UserSettingsDto settings)
         {
+            _savedSettings = settings;
             _workingStartTime = settings.WorkingStartTime;
             _workingEndTime = settings.WorkingEndTime;
             _lunchTime = settings.LunchTime;
         }
+
+        /// <summary>
+        /// Whether the pickers hold something other than what is stored — the save button
+        /// stays quiet until there is a change to save.
+        /// </summary>
+        private bool IsDirty =>
+            _workingStartTime != _savedSettings.WorkingStartTime
+            || _workingEndTime != _savedSettings.WorkingEndTime
+            || _lunchTime != _savedSettings.LunchTime;
 
         /// <summary>
         /// Mirrors UpsertUserSettingsValidator so the page says what is wrong instead of
@@ -183,9 +202,27 @@ namespace Chronos.Web.Components.Profile
         private TimeSpan WorkingTime =>
             (_workingEndTime ?? TimeSpan.Zero) - (_workingStartTime ?? TimeSpan.Zero) - (_lunchTime ?? TimeSpan.Zero);
 
-        private string WorkingTimeDisplay => WorkingTime.Minutes == 0
-            ? $"{(int)WorkingTime.TotalHours} ч"
-            : $"{(int)WorkingTime.TotalHours} ч {WorkingTime.Minutes} мин";
+        private TimeSpan DayLength =>
+            (_workingEndTime ?? TimeSpan.Zero) - (_workingStartTime ?? TimeSpan.Zero);
+
+        private string WorkingTimeDisplay => Duration(WorkingTime);
+
+        private string DurationDisplay => Duration(_lunchTime ?? TimeSpan.Zero);
+
+        private static string Duration(TimeSpan value) => value.Minutes == 0
+            ? $"{(int)value.TotalHours} ч"
+            : value.TotalHours < 1
+                ? $"{value.Minutes} мин"
+                : $"{(int)value.TotalHours} ч {value.Minutes} мин";
+
+        private static string Time(TimeSpan value) => value.ToString(@"hh\:mm");
+
+        /// <summary>
+        /// Share of the day a segment takes, for the working day bar.
+        /// </summary>
+        private string Percent(TimeSpan part) => DayLength > TimeSpan.Zero
+            ? (part / DayLength * 100).ToString("0.##", CultureInfo.InvariantCulture)
+            : "0";
 
         private async Task SaveWorkingDayAsync()
         {
@@ -196,9 +233,10 @@ namespace Chronos.Web.Components.Profile
 
             try
             {
-                await Mediator.Send(new UpsertUserSettings.Command(
-                    Username,
-                    new UserSettingsDto(_workingStartTime.Value, _workingEndTime.Value, _lunchTime.Value)));
+                var settings = new UserSettingsDto(
+                    _workingStartTime.Value, _workingEndTime.Value, _lunchTime.Value);
+                await Mediator.Send(new UpsertUserSettings.Command(Username, settings));
+                _savedSettings = settings;
                 Snackbar.Add("Рабочий день сохранён", Severity.Success);
             }
             catch (Exception e)
