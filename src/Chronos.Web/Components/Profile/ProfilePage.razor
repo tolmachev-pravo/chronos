@@ -72,4 +72,26 @@
             </MudButton>
         </div>
     </MudPaper>
+
+    <MudPaper Elevation="0" Class="prf-card">
+        <div class="prf-card__head">
+            <div class="prf-card__icon">
+                <MudIcon Icon="@(IsDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" />
+            </div>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight:600">Внешний вид</MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.6">
+                    Оформление приложения на этом устройстве
+                </MudText>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <MudSwitch T="bool" Value="IsDarkMode" ValueChanged="ToggleThemeAsync" Color="Color.Primary"
+                       Label="Тёмная тема" />
+            <MudText Typo="Typo.caption" Style="opacity:.65" Class="d-block">
+                Применяется сразу, отдельная кнопка сохранения не нужна.
+            </MudText>
+        </div>
+    </MudPaper>
 </div>

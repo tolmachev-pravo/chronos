@@ -22,6 +22,12 @@ namespace Chronos.Web.Components.Profile
     {
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
+        /// <summary>
+        /// The theme provider is rendered by the layout, so the switch on this page asks
+        /// the layout to apply and store the change.
+        /// </summary>
+        [CascadingParameter] public MainLayout Layout { get; set; }
+
         [Inject] private IMediator Mediator { get; set; }
         [Inject] private IIdentityService IdentityService { get; set; }
         [Inject] private IStorage<string, UserProfile> UserProfileStorage { get; set; }
@@ -67,6 +73,20 @@ namespace Chronos.Web.Components.Profile
                     _avatar = profile.Avatar;
                     StateHasChanged();
                 }
+            }
+            catch (Exception e)
+            {
+                ErrorHandler.ProcessError(e);
+            }
+        }
+
+        private bool IsDarkMode => Layout?.IsDarkMode ?? false;
+
+        private async Task ToggleThemeAsync(bool value)
+        {
+            try
+            {
+                await Layout.ToggleThemeAsync(value);
             }
             catch (Exception e)
             {

@@ -25,9 +25,19 @@ namespace Chronos.Web.Shared
         [Inject] private IMediator _mediator { get; set; }
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
-        protected async Task ToggleThemeAsync(bool value)
+        /// <summary>
+        /// Whether the dark theme is on. Read by the profile page, which owns the switch.
+        /// </summary>
+        public bool IsDarkMode => _model?.Theme.IsDarkMode ?? false;
+
+        /// <summary>
+        /// Applies and stores the theme. Public because the switch lives on the profile
+        /// page (issue #241) while the theme provider is rendered here.
+        /// </summary>
+        public async Task ToggleThemeAsync(bool value)
         {
             _model.Theme.IsDarkMode = value;
+            StateHasChanged();
 
             var user = await _identityService.GetCurrentUserAsync();
             string key = user != null ? user.Key : default;

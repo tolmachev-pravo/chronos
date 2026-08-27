@@ -32,14 +32,8 @@
             <MudText Typo="Typo.h6" Class="ml-2 chr-not-display-on-480">Chronos</MudText>
             @* Keep in step with GitHub:Releases:Repository in appsettings.json. *@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/tolmachev-pravo/chronos" Target="_blank" />
-            <MudTooltip Text="@(_model.Theme.IsDarkMode ? "Dark mode" : "Light mode")">
-                <MudToggleIconButton Toggled="@_model.Theme.IsDarkMode"
-                                     Icon="@Icons.Material.Filled.LightMode"
-                                     Color="@Color.Inherit"
-                                     ToggledIcon="@Icons.Material.Filled.DarkMode"
-                                     ToggledColor="@Color.Inherit"
-                                     ToggledChanged="@ToggleThemeAsync"/>
-            </MudTooltip>
+            @* The theme switch lives in the profile now, with the rest of the personal
+               settings (issue #241). *@
             <MudSpacer></MudSpacer>
             <AuthorizeView>
                 <Authorized>
@@ -73,9 +67,13 @@
         <MudMainContent Style="height: 100vh" Class="chr-fill-height">
             <AuthorizeView>
                 <Authorized>
-                    <MudElement Class="ma-4 chr-fill-height">
-                        @Body
-                    </MudElement>
+                    @* The profile page switches the theme, and the provider that renders it
+                       lives here — so the layout cascades itself down to the page. *@
+                    <CascadingValue Value="this" IsFixed="true">
+                        <MudElement Class="ma-4 chr-fill-height">
+                            @Body
+                        </MudElement>
+                    </CascadingValue>
                 </Authorized>
                 <NotAuthorized>
                     <MudContainer Class="mt-3" MaxWidth="MaxWidth.Medium">
