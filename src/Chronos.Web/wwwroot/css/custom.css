@@ -149,6 +149,24 @@
     min-width: 130px;
 }
 
+/* Read-only account details: label on the left, value on the right, wrapping on narrow cards. */
+.prf-facts {
+    display: grid;
+    grid-template-columns: minmax(110px, auto) 1fr;
+    gap: 10px 18px;
+    margin: 0;
+    font-size: .875rem;
+}
+
+.prf-facts dt {
+    color: var(--mud-palette-text-secondary);
+}
+
+.prf-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
 .chr-worklog-day-chips-container {
     width: 375px
 }

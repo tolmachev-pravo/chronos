@@ -19,8 +19,10 @@
         }
     </MudAvatar>
     <div>
-        <MudText Typo="Typo.h6" Style="font-weight:700;line-height:1.2">@Username</MudText>
-        <MudText Typo="Typo.caption" Style="opacity:.55">Аккаунт Jira</MudText>
+        <MudText Typo="Typo.h6" Style="font-weight:700;line-height:1.2">
+            @(string.IsNullOrEmpty(_displayName) ? Username : _displayName)
+        </MudText>
+        <MudText Typo="Typo.caption" Style="opacity:.55">@Username · аккаунт Jira</MudText>
     </div>
 </div>
 
@@ -93,5 +95,48 @@
                 Применяется сразу, отдельная кнопка сохранения не нужна.
             </MudText>
         </div>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="prf-card">
+        <div class="prf-card__head">
+            <div class="prf-card__icon">
+                <MudIcon Icon="@Icons.Material.Filled.Badge" />
+            </div>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight:600">Учётная запись Jira</MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.6">
+                    Приходит из Jira при входе — здесь только показывается
+                </MudText>
+            </div>
+        </div>
+
+        <dl class="prf-facts mt-4">
+            <dt>Логин</dt>
+            <dd>@Display(Username)</dd>
+
+            <dt>Имя</dt>
+            <dd>@Display(_displayName)</dd>
+
+            <dt>Email</dt>
+            <dd>@Display(_email)</dd>
+
+            <dt>Часовой пояс</dt>
+            <dd>@Display(TimeZoneDisplay)</dd>
+
+            <dt>Способ входа</dt>
+            <dd>@Display(SignInMethod)</dd>
+
+            <dt>Адрес Jira</dt>
+            <dd>
+                @if (!string.IsNullOrEmpty(JiraUrl))
+                {
+                    <MudLink Href="@JiraUrl" Target="_blank" Typo="Typo.body2">@JiraUrl</MudLink>
+                }
+                else
+                {
+                    @Display(null)
+                }
+            </dd>
+        </dl>
     </MudPaper>
 </div>

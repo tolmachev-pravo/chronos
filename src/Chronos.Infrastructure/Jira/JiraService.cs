@@ -275,6 +275,8 @@ namespace Chronos.Infrastructure.Jira
             return new UserDto
             {
                 Username = myself.Username,
+                DisplayName = myself.DisplayName,
+                Email = myself.Email,
                 TimeZoneId = timeZoneId,
                 Avatar = urlData
             };

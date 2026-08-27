@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.Extensions.Options;
 using MudBlazor;
+using Chronos.Infrastructure.Jira;
 using Chronos.Application.Authentication;
 using Chronos.Application.Storage;
 using Chronos.Application.Users.Commands;
@@ -32,9 +34,14 @@ namespace Chronos.Web.Components.Profile
         [Inject] private IIdentityService IdentityService { get; set; }
         [Inject] private IStorage<string, UserProfile> UserProfileStorage { get; set; }
         [Inject] private ISnackbar Snackbar { get; set; }
+        [Inject] private IOptions<JiraConfiguration> JiraConfiguration { get; set; }
 
         private string Username { get; set; } = string.Empty;
         private string _avatar = string.Empty;
+        private string _displayName;
+        private string _email;
+        private string _timeZoneId;
+        private bool _signedInWithToken;
 
         private TimeSpan? _workingStartTime;
         private TimeSpan? _workingEndTime;
@@ -46,6 +53,7 @@ namespace Chronos.Web.Components.Profile
             {
                 var user = await IdentityService.GetCurrentUserAsync();
                 Username = user?.Username ?? string.Empty;
+                _signedInWithToken = !string.IsNullOrEmpty(user?.PersonalAccessToken);
                 ApplySettings(await Mediator.Send(new GetUserSettings.Query(Username)));
             }
             catch (Exception e)
@@ -55,8 +63,9 @@ namespace Chronos.Web.Components.Profile
         }
 
         /// <summary>
-        /// The avatar comes from local storage, which needs JS interop — available only
-        /// after the first render.
+        /// The Jira account details come from local storage, which needs JS interop —
+        /// available only after the first render. A profile cached before the name and the
+        /// email were stored is refreshed from Jira once, so old sessions fill in too.
         /// </summary>
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -68,17 +77,69 @@ namespace Chronos.Web.Components.Profile
             try
             {
                 var profile = await UserProfileStorage.GetValueAsync(Username);
-                if (profile != null)
+                if (profile != null && profile.DisplayName == null)
                 {
-                    _avatar = profile.Avatar;
-                    StateHasChanged();
+                    await UserProfileStorage.ForceInitAsync(Username);
+                    profile = await UserProfileStorage.GetValueAsync(Username);
                 }
+
+                ApplyProfile(profile);
+                StateHasChanged();
             }
             catch (Exception e)
             {
                 ErrorHandler.ProcessError(e);
             }
         }
+
+        private void ApplyProfile(UserProfile profile)
+        {
+            if (profile == null)
+            {
+                return;
+            }
+
+            _avatar = profile.Avatar;
+            _displayName = profile.DisplayName;
+            _email = profile.Email;
+            _timeZoneId = profile.TimeZoneId;
+        }
+
+        /// <summary>
+        /// Time zone as Jira reports it, with the offset it resolves to right now. An id the
+        /// runtime does not know is shown as it is rather than breaking the page.
+        /// </summary>
+        private string TimeZoneDisplay
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_timeZoneId))
+                {
+                    return null;
+                }
+
+                try
+                {
+                    var offset = TimeZoneConverter.TZConvert.GetTimeZoneInfo(_timeZoneId)
+                        .GetUtcOffset(DateTime.UtcNow);
+                    var sign = offset < TimeSpan.Zero ? "-" : "+";
+                    return $"{_timeZoneId} (UTC{sign}{offset.Duration():hh\\:mm})";
+                }
+                catch (Exception)
+                {
+                    return _timeZoneId;
+                }
+            }
+        }
+
+        private string SignInMethod => _signedInWithToken
+            ? "Персональный токен (PAT)"
+            : "Логин и пароль";
+
+        private string JiraUrl => JiraConfiguration?.Value?.Url;
+
+        private static string Display(string value) =>
+            string.IsNullOrWhiteSpace(value) ? "—" : value;
 
         private bool IsDarkMode => Layout?.IsDarkMode ?? false;
 
