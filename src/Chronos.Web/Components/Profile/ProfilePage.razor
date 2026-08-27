@@ -2,10 +2,7 @@
 
 <div class="prf-page">
     <div class="chr-section-head">
-        <MudText Typo="Typo.h5" Style="font-weight:700">Профиль</MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
-            Личные настройки приложения — задаются один раз и хранятся за вами, а не за браузером.
-        </MudText>
+        <MudText Typo="Typo.h5" Style="font-weight:700">Profile</MudText>
     </div>
 
     <MudPaper Elevation="0" Class="prf-card prf-hero mt-5">
@@ -46,12 +43,7 @@
                     <div class="prf-card__icon">
                         <MudIcon Icon="@Icons.Material.Filled.Schedule" />
                     </div>
-                    <div>
-                        <MudText Typo="Typo.h6" Style="font-weight:600">Рабочий день</MudText>
-                        <MudText Typo="Typo.caption" Style="opacity:.6">
-                            Рамка для предполагаемых ворклогов и норма времени на день
-                        </MudText>
-                    </div>
+                    <MudText Typo="Typo.h6" Style="font-weight:600">Рабочий день</MudText>
                 </div>
 
                 <div class="prf-pickers mt-4">
@@ -113,20 +105,12 @@
                     <div class="prf-card__icon">
                         <MudIcon Icon="@(IsDarkMode ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)" />
                     </div>
-                    <div>
-                        <MudText Typo="Typo.h6" Style="font-weight:600">Внешний вид</MudText>
-                        <MudText Typo="Typo.caption" Style="opacity:.6">
-                            Оформление приложения на этом устройстве
-                        </MudText>
-                    </div>
+                    <MudText Typo="Typo.h6" Style="font-weight:600">Внешний вид</MudText>
                 </div>
 
                 <div class="prf-switch mt-4">
                     <MudSwitch T="bool" Value="IsDarkMode" ValueChanged="ToggleThemeAsync" Color="Color.Primary"
                                Label="Тёмная тема" />
-                    <MudText Typo="Typo.caption" Style="opacity:.6">
-                        Применяется сразу, сохранять не нужно
-                    </MudText>
                 </div>
             </MudPaper>
         </div>
@@ -137,12 +121,7 @@
                     <div class="prf-card__icon">
                         <MudIcon Icon="@Icons.Material.Filled.Badge" />
                     </div>
-                    <div>
-                        <MudText Typo="Typo.h6" Style="font-weight:600">Учётная запись</MudText>
-                        <MudText Typo="Typo.caption" Style="opacity:.6">
-                            Приходит из Jira при входе — здесь только показывается
-                        </MudText>
-                    </div>
+                    <MudText Typo="Typo.h6" Style="font-weight:600">Учётная запись</MudText>
                 </div>
 
                 <dl class="prf-facts mt-4">

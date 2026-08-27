@@ -206,9 +206,10 @@
     border: 1px solid var(--mud-palette-lines-default);
 }
 
+/* The title sits alone next to the icon, so it is centred against it. */
 .prf-card__head {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 14px;
 }
 
