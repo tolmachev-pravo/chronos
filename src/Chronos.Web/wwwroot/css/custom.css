@@ -70,6 +70,19 @@
 }
 
 /*
+ * A plain <img> inside MudAvatar gets no sizing of its own: MudBlazor styles
+ * `.mud-avatar > .mud-image`, and that class comes from MudImage. Without this the Jira
+ * avatar sits in the circle at its natural size with the avatar background showing around
+ * it. `cover` keeps a non-square source from being squashed.
+ */
+.mud-avatar > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+/*
  * Avatar and name in the AppBar act as one link to the profile page (issue #241).
  * The hover pill has to look deliberate next to the 40px icon buttons: the spacing
  * around the name is padding and gap here, not margins on the name itself — with
@@ -131,9 +144,14 @@
     flex-wrap: wrap;
 }
 
+/*
+ * 64px and not larger on purpose: Jira's avatarUrls top out at 48px, and even with the
+ * enlarged rendering JiraService asks for, a smaller circle is the difference between a
+ * crisp photo and an upscaled one.
+ */
 .prf-hero .mud-avatar.prf-hero__avatar {
-    width: 76px;
-    height: 76px;
+    width: 64px;
+    height: 64px;
     flex: none;
 }
 

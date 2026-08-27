@@ -16,6 +16,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text.Json.Nodes;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -267,8 +268,7 @@ namespace Chronos.Infrastructure.Jira
             var myself = await _jiraClient.Users.GetMyselfAsync(cancellationToken);
             var userData = _jiraClient.RestClient.DownloadData(myself.Self);
             var timeZoneId = GetJsonParameterValue(userData, "timeZone");
-            var avatarUrl = myself.AvatarUrls.Large;
-            var avatar = _jiraClient.RestClient.DownloadData(avatarUrl);
+            var avatar = DownloadAvatar(myself.AvatarUrls.Large);
             string img64 = Convert.ToBase64String(avatar);
             string urlData = string.Format("data:image/jpg;base64, {0}", img64);
 
@@ -283,11 +283,57 @@ namespace Chronos.Infrastructure.Jira
         }
 
         /// <summary>
+        /// Downloads the user's avatar, asking Jira for a bigger rendering than the SDK
+        /// exposes: AvatarUrls tops out at 48px, which is blurry in the profile (issue #241).
+        /// The avatar servlet renders whatever size it is asked for; an instance that does
+        /// not know the parameter falls back to the URL as given.
+        /// </summary>
+        private byte[] DownloadAvatar(string avatarUrl)
+        {
+            var upsizedUrl = WithAvatarSize(avatarUrl, "xxlarge");
+            if (upsizedUrl != avatarUrl)
+            {
+                try
+                {
+                    return _jiraClient.RestClient.DownloadData(upsizedUrl);
+                }
+                catch (Exception exception)
+                {
+                    _logger.LogDebug(exception,
+                        "Jira did not serve the enlarged avatar {Url}; falling back to the default size",
+                        upsizedUrl);
+                }
+            }
+
+            return _jiraClient.RestClient.DownloadData(avatarUrl);
+        }
+
+        private static string WithAvatarSize(string avatarUrl, string size)
+        {
+            if (string.IsNullOrEmpty(avatarUrl))
+            {
+                return avatarUrl;
+            }
+
+            var sizeParameter = $"size={size}";
+            var existing = Regex.Match(avatarUrl, @"[?&]size=[^&]*");
+            if (existing.Success)
+            {
+                return avatarUrl.Remove(existing.Index + 1, existing.Length - 1)
+                    .Insert(existing.Index + 1, sizeParameter);
+            }
+
+            return avatarUrl.Contains('?')
+                ? $"{avatarUrl}&{sizeParameter}"
+                : $"{avatarUrl}?{sizeParameter}";
+        }
+
+        /// <summary>
         /// Add worklog
         /// </summary>
         /// <param name="worklogDto"></param>
         /// <param name="cancellationToken"></param>
-        /// <returns></returns>        
+        /// <returns></returns>
         public async Task AddWorklogAsync(
             AddedWorklogDto worklogDto,
             CancellationToken cancellationToken = default)
