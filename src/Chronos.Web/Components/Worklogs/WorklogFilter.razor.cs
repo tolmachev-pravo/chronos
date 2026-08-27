@@ -30,9 +30,6 @@ namespace Chronos.Web.Components.Worklogs
                 {
                     StartDate = _model.Filter.StartDate.Value,
                     EndDate = _model.Filter.EndDate.Value.AddDays(1).AddMinutes(-1),
-                    DailyWorkingStartTime = _model.Filter.DailyWorkingStartTime.Value,
-                    DailyWorkingEndTime = _model.Filter.DailyWorkingEndTime.Value,
-                    LunchTime = _model.Filter.LunchTime.Value,
                 });
             }
             catch (Exception e)
