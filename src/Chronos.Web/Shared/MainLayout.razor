@@ -43,10 +43,10 @@
             <MudSpacer></MudSpacer>
             <AuthorizeView>
                 <Authorized>
-                    @* The avatar opens the profile: it holds the working day settings that
-                       used to sit in the worklog filter (issue #241). *@
+                    @* The avatar leads to the profile: personal settings that used to sit in
+                       the worklog filter and in the AppBar live there (issue #241). *@
                     <MudTooltip Text="Профиль">
-                        <div class="chr-profile-button" @onclick="OpenProfileAsync">
+                        <a class="chr-profile-button" href="/profile">
                             <MudAvatar Size="Size.Small" Color="Color.Primary">
                                 @if (!string.IsNullOrEmpty(_model.Profile.Avatar))
                                 {
@@ -58,7 +58,7 @@
                                 }
                             </MudAvatar>
                             <MudElement Class="mr-2 ml-2">@context.User.Identity.Name</MudElement>
-                        </div>
+                        </a>
                     </MudTooltip>
                     <MudIconButton Icon="@Icons.Material.Filled.Logout" OnClick="Logout" Color="Color.Inherit" Href="/logout" Size="Size.Small" />
                 </Authorized>

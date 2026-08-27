@@ -70,7 +70,7 @@
 }
 
 /*
- * Avatar and name in the AppBar act as one button opening the profile dialog (issue #241).
+ * Avatar and name in the AppBar act as one link to the profile page (issue #241).
  */
 .chr-profile-button {
     display: flex;
@@ -78,10 +78,75 @@
     cursor: pointer;
     border-radius: 999px;
     padding: 2px;
+    color: inherit;
+    text-decoration: none;
 }
 
 .chr-profile-button:hover {
     background: rgba(255, 255, 255, .12);
+}
+
+/* ============================================================
+   PROFILE — personal settings (issue #241)
+   Colours come from the MudBlazor palette variables, so the page
+   follows the active light/dark theme.
+   ============================================================ */
+.prf-hero {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.prf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    align-items: start;
+}
+
+.prf-card {
+    display: flex;
+    flex-direction: column;
+    padding: 22px;
+    border-radius: 16px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+.prf-card__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+}
+
+.prf-card__icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 12px;
+    color: var(--mud-palette-primary);
+    background: rgba(var(--mud-palette-primary-rgb), .12);
+    border: 1px solid rgba(var(--mud-palette-primary-rgb), .25);
+}
+
+.prf-card__foot {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 18px;
+}
+
+.prf-pickers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.prf-picker {
+    flex: 1 1 130px;
+    min-width: 130px;
 }
 
 .chr-worklog-day-chips-container {

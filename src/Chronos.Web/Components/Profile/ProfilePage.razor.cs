@@ -1,0 +1,129 @@
+using MediatR;
+using Microsoft.AspNetCore.Components;
+using MudBlazor;
+using Chronos.Application.Authentication;
+using Chronos.Application.Storage;
+using Chronos.Application.Users.Commands;
+using Chronos.Application.Users.Dto;
+using Chronos.Application.Users.Queries;
+using Chronos.Domain.Models.Users;
+using Chronos.Web.Shared;
+using System;
+using System.Threading.Tasks;
+
+namespace Chronos.Web.Components.Profile
+{
+    /// <summary>
+    /// Personal settings of the signed-in user (issue #241). The working day used to be
+    /// asked for in the worklog filter on every search; here it is set once and stored
+    /// per user, next to the rest of the account.
+    /// </summary>
+    public partial class ProfilePage : ComponentBase
+    {
+        [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
+
+        [Inject] private IMediator Mediator { get; set; }
+        [Inject] private IIdentityService IdentityService { get; set; }
+        [Inject] private IStorage<string, UserProfile> UserProfileStorage { get; set; }
+        [Inject] private ISnackbar Snackbar { get; set; }
+
+        private string Username { get; set; } = string.Empty;
+        private string _avatar = string.Empty;
+
+        private TimeSpan? _workingStartTime;
+        private TimeSpan? _workingEndTime;
+        private TimeSpan? _lunchTime;
+
+        protected override async Task OnInitializedAsync()
+        {
+            try
+            {
+                var user = await IdentityService.GetCurrentUserAsync();
+                Username = user?.Username ?? string.Empty;
+                ApplySettings(await Mediator.Send(new GetUserSettings.Query(Username)));
+            }
+            catch (Exception e)
+            {
+                ErrorHandler.ProcessError(e);
+            }
+        }
+
+        /// <summary>
+        /// The avatar comes from local storage, which needs JS interop — available only
+        /// after the first render.
+        /// </summary>
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (!firstRender)
+            {
+                return;
+            }
+
+            try
+            {
+                var profile = await UserProfileStorage.GetValueAsync(Username);
+                if (profile != null)
+                {
+                    _avatar = profile.Avatar;
+                    StateHasChanged();
+                }
+            }
+            catch (Exception e)
+            {
+                ErrorHandler.ProcessError(e);
+            }
+        }
+
+        private void ApplySettings(UserSettingsDto settings)
+        {
+            _workingStartTime = settings.WorkingStartTime;
+            _workingEndTime = settings.WorkingEndTime;
+            _lunchTime = settings.LunchTime;
+        }
+
+        /// <summary>
+        /// Mirrors UpsertUserSettingsValidator so the page says what is wrong instead of
+        /// letting the command fail.
+        /// </summary>
+        private string ValidationError
+        {
+            get
+            {
+                if (_workingStartTime is null || _workingEndTime is null || _lunchTime is null)
+                    return "Заполните все три поля";
+                if (_workingEndTime <= _workingStartTime)
+                    return "Время окончания работы должно быть больше времени начала";
+                if (_lunchTime >= _workingEndTime - _workingStartTime)
+                    return "Обед должен быть короче рабочего дня";
+                return null;
+            }
+        }
+
+        private TimeSpan WorkingTime =>
+            (_workingEndTime ?? TimeSpan.Zero) - (_workingStartTime ?? TimeSpan.Zero) - (_lunchTime ?? TimeSpan.Zero);
+
+        private string WorkingTimeDisplay => WorkingTime.Minutes == 0
+            ? $"{(int)WorkingTime.TotalHours} ч"
+            : $"{(int)WorkingTime.TotalHours} ч {WorkingTime.Minutes} мин";
+
+        private async Task SaveWorkingDayAsync()
+        {
+            if (ValidationError is not null)
+            {
+                return;
+            }
+
+            try
+            {
+                await Mediator.Send(new UpsertUserSettings.Command(
+                    Username,
+                    new UserSettingsDto(_workingStartTime.Value, _workingEndTime.Value, _lunchTime.Value)));
+                Snackbar.Add("Рабочий день сохранён", Severity.Success);
+            }
+            catch (Exception e)
+            {
+                ErrorHandler.ProcessError(e);
+            }
+        }
+    }
+}

@@ -1,0 +1,75 @@
+@using Chronos.Web.Components.Markdown
+
+<div class="chr-section-head">
+    <MudText Typo="Typo.h5" Style="font-weight:700">Профиль</MudText>
+    <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
+        Личные настройки приложения — задаются один раз и хранятся за вами, а не за браузером.
+    </MudText>
+</div>
+
+<div class="prf-hero mt-5">
+    <MudAvatar Size="Size.Large" Color="Color.Primary">
+        @if (!string.IsNullOrEmpty(_avatar))
+        {
+            <img src="@_avatar" alt="avatar" />
+        }
+        else
+        {
+            <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
+        }
+    </MudAvatar>
+    <div>
+        <MudText Typo="Typo.h6" Style="font-weight:700;line-height:1.2">@Username</MudText>
+        <MudText Typo="Typo.caption" Style="opacity:.55">Аккаунт Jira</MudText>
+    </div>
+</div>
+
+<div class="prf-grid mt-5">
+    <MudPaper Elevation="0" Class="prf-card">
+        <div class="prf-card__head">
+            <div class="prf-card__icon">
+                <MudIcon Icon="@Icons.Material.Filled.Schedule" />
+            </div>
+            <div>
+                <MudText Typo="Typo.h6" Style="font-weight:600">Рабочий день</MudText>
+                <MudText Typo="Typo.caption" Style="opacity:.6">
+                    Рамка для предполагаемых ворклогов и норма времени на день
+                </MudText>
+            </div>
+        </div>
+
+        <div class="prf-pickers mt-4">
+            <MarkdownTooltip Markdown="profile-working-start-time" RootClass="prf-picker">
+                <MudTimePicker Label="Начало" @bind-Time="_workingStartTime" Editable="true" />
+            </MarkdownTooltip>
+            <MarkdownTooltip Markdown="profile-working-end-time" RootClass="prf-picker">
+                <MudTimePicker Label="Окончание" @bind-Time="_workingEndTime" Editable="true" />
+            </MarkdownTooltip>
+            <MarkdownTooltip Markdown="profile-lunch-time" RootClass="prf-picker">
+                <MudTimePicker Label="Обед" @bind-Time="_lunchTime" Editable="true" />
+            </MarkdownTooltip>
+        </div>
+
+        @if (ValidationError is null)
+        {
+            <MudText Typo="Typo.caption" Style="opacity:.65" Class="mt-4 d-block">
+                Рабочее время в день: <b>@WorkingTimeDisplay</b>
+            </MudText>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-4">@ValidationError</MudAlert>
+        }
+
+        <div class="prf-card__foot">
+            <MudSpacer />
+            <MudButton OnClick="SaveWorkingDayAsync"
+                       Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="@(ValidationError is not null)"
+                       StartIcon="@Icons.Material.Filled.Check">
+                Сохранить
+            </MudButton>
+        </div>
+    </MudPaper>
+</div>
