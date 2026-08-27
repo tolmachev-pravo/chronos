@@ -12,7 +12,12 @@
                             FirstDayOfWeek="DayOfWeek.Monday" />
     </MarkdownTooltip>
     @* The working day moved to the profile (issue #241): it is the same for every search,
-       so the panel only asks for the period. *@
+       so the panel only asks for the period. It is still shown here, where its effect on
+       the result is visible, with a way back to the profile. *@
+    <MudDivider Class="mt-4 mb-3" />
+    <MudText Typo="Typo.caption" Class="d-block" Style="opacity:.65">Рабочий день</MudText>
+    <MudText Typo="Typo.body2" Class="d-block">@WorkingDayDisplay</MudText>
+    <MudLink Href="/profile" Typo="Typo.caption" Class="d-block mt-1">Изменить в профиле</MudLink>
 </MudPaper>
 
 <MudButton OnClick="Search" Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send" Class="mt-2">Search</MudButton>
