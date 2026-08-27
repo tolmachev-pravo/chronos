@@ -21,7 +21,7 @@ namespace Chronos.Web.Components.Profile
     /// asked for in the worklog filter on every search; here it is set once and stored
     /// per user, next to the rest of the account.
     /// </summary>
-    public partial class ProfilePage : ComponentBase
+    public partial class ProfilePage : ComponentBase, IDisposable
     {
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
@@ -51,6 +51,12 @@ namespace Chronos.Web.Components.Profile
 
         protected override async Task OnInitializedAsync()
         {
+            // The AppBar carries the same theme switch, so follow it while the page is open.
+            if (Layout != null)
+            {
+                Layout.ThemeChanged += OnThemeChanged;
+            }
+
             try
             {
                 var user = await IdentityService.GetCurrentUserAsync();
@@ -147,6 +153,16 @@ namespace Chronos.Web.Components.Profile
             string.IsNullOrWhiteSpace(value) ? "—" : value;
 
         private bool IsDarkMode => Layout?.IsDarkMode ?? false;
+
+        private void OnThemeChanged() => InvokeAsync(StateHasChanged);
+
+        public void Dispose()
+        {
+            if (Layout != null)
+            {
+                Layout.ThemeChanged -= OnThemeChanged;
+            }
+        }
 
         private async Task ToggleThemeAsync(bool value)
         {

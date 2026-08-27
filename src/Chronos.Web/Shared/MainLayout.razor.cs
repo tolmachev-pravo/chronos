@@ -31,13 +31,20 @@ namespace Chronos.Web.Shared
         public bool IsDarkMode => _model?.Theme.IsDarkMode ?? false;
 
         /// <summary>
-        /// Applies and stores the theme. Public because the switch lives on the profile
-        /// page (issue #241) while the theme provider is rendered here.
+        /// Raised after the theme changes, so a page showing the same setting — the profile
+        /// (issue #241) — re-renders when it is switched from the AppBar.
+        /// </summary>
+        public event Action ThemeChanged;
+
+        /// <summary>
+        /// Applies and stores the theme. Public because the profile page carries the same
+        /// switch (issue #241) while the theme provider is rendered here.
         /// </summary>
         public async Task ToggleThemeAsync(bool value)
         {
             _model.Theme.IsDarkMode = value;
             StateHasChanged();
+            ThemeChanged?.Invoke();
 
             var user = await _identityService.GetCurrentUserAsync();
             string key = user != null ? user.Key : default;

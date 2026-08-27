@@ -32,28 +32,34 @@
             <MudText Typo="Typo.h6" Class="ml-2 chr-not-display-on-480">Chronos</MudText>
             @* Keep in step with GitHub:Releases:Repository in appsettings.json. *@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/tolmachev-pravo/chronos" Target="_blank" />
-            @* The theme switch lives in the profile now, with the rest of the personal
-               settings (issue #241). *@
+            @* The same setting as the switch in the profile (issue #241): kept here because
+               switching the theme is a one-click thing, and both write UserTheme. The hint is
+               a plain title attribute — a MudTooltip wrapper only adds a layout box here. *@
+            <MudToggleIconButton Toggled="@_model.Theme.IsDarkMode"
+                                 Icon="@Icons.Material.Filled.LightMode"
+                                 Color="@Color.Inherit"
+                                 ToggledIcon="@Icons.Material.Filled.DarkMode"
+                                 ToggledColor="@Color.Inherit"
+                                 ToggledChanged="@ToggleThemeAsync"
+                                 title="@(_model.Theme.IsDarkMode ? "Светлая тема" : "Тёмная тема")" />
             <MudSpacer></MudSpacer>
             <AuthorizeView>
                 <Authorized>
                     @* The avatar leads to the profile: personal settings that used to sit in
                        the worklog filter and in the AppBar live there (issue #241). *@
-                    <MudTooltip Text="Профиль">
-                        <a class="chr-profile-button" href="/profile">
-                            <MudAvatar Size="Size.Small" Color="Color.Primary">
-                                @if (!string.IsNullOrEmpty(_model.Profile.Avatar))
-                                {
-                                    <img src="@_model.Profile.Avatar" alt="avatar" />
-                                }
-                                else
-                                {
-                                    <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
-                                }
-                            </MudAvatar>
-                            <MudElement Class="chr-profile-button__name">@context.User.Identity.Name</MudElement>
-                        </a>
-                    </MudTooltip>
+                    <a class="chr-profile-button" href="/profile" title="Профиль">
+                        <MudAvatar Size="Size.Small" Color="Color.Primary">
+                            @if (!string.IsNullOrEmpty(_model.Profile.Avatar))
+                            {
+                                <img src="@_model.Profile.Avatar" alt="avatar" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
+                            }
+                        </MudAvatar>
+                        <MudElement Class="chr-profile-button__name">@context.User.Identity.Name</MudElement>
+                    </a>
                     <MudIconButton Icon="@Icons.Material.Filled.Logout" OnClick="Logout" Color="Color.Inherit" Href="/logout" Size="Size.Small" />
                 </Authorized>
                 <NotAuthorized>
