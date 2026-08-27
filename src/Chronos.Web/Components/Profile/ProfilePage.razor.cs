@@ -66,8 +66,10 @@ namespace Chronos.Web.Components.Profile
 
         /// <summary>
         /// The Jira account details come from local storage, which needs JS interop —
-        /// available only after the first render. A profile cached before the name and the
-        /// email were stored is refreshed from Jira once, so old sessions fill in too.
+        /// available only after the first render. This page is the one that shows them, so
+        /// it always refreshes from Jira first: a cached profile otherwise survives a rename
+        /// in Jira, a new photo, and any change to what we fetch, for as long as the browser
+        /// keeps it. One extra "myself" call per profile visit is a fair price.
         /// </summary>
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -78,14 +80,8 @@ namespace Chronos.Web.Components.Profile
 
             try
             {
-                var profile = await UserProfileStorage.GetValueAsync(Username);
-                if (profile != null && profile.DisplayName == null)
-                {
-                    await UserProfileStorage.ForceInitAsync(Username);
-                    profile = await UserProfileStorage.GetValueAsync(Username);
-                }
-
-                ApplyProfile(profile);
+                await UserProfileStorage.ForceInitAsync(Username);
+                ApplyProfile(await UserProfileStorage.GetValueAsync(Username));
                 StateHasChanged();
             }
             catch (Exception e)

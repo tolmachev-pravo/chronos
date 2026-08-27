@@ -145,13 +145,13 @@
 }
 
 /*
- * 64px and not larger on purpose: Jira's avatarUrls top out at 48px, and even with the
- * enlarged rendering JiraService asks for, a smaller circle is the difference between a
- * crisp photo and an upscaled one.
+ * 48px because that is what Jira actually gives us: avatarUrls tops out at 48, and any
+ * larger circle upscales the photo into mush. Raise this only together with proof that
+ * the enlarged rendering JiraService asks for is really coming back bigger.
  */
 .prf-hero .mud-avatar.prf-hero__avatar {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     flex: none;
 }
 
