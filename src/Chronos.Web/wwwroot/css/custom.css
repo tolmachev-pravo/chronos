@@ -96,10 +96,23 @@
     min-height: 36px;
     padding: 4px 14px 4px 4px;
     border-radius: 999px;
-    color: inherit;
-    text-decoration: none;
     cursor: pointer;
     transition: background-color .18s ease;
+}
+
+/*
+ * Every link state is pinned to the AppBar's own colour: bootstrap.min.css still ships with
+ * `a:hover{color:#0056b3;text-decoration:underline}`, which outranks a single class and
+ * turned the username Bootstrap-blue and underlined on hover.
+ */
+.chr-profile-button,
+.chr-profile-button:link,
+.chr-profile-button:visited,
+.chr-profile-button:hover,
+.chr-profile-button:focus,
+.chr-profile-button:active {
+    color: inherit;
+    text-decoration: none;
 }
 
 .chr-profile-button:hover {
