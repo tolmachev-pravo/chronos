@@ -43,17 +43,23 @@
             <MudSpacer></MudSpacer>
             <AuthorizeView>
                 <Authorized>
-                    <MudAvatar Size="Size.Small" Color="Color.Primary">
-                        @if (!string.IsNullOrEmpty(_model.Profile.Avatar))
-                        {
-                            <img src="@_model.Profile.Avatar" alt="avatar" />
-                        }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
-                        }
-                    </MudAvatar>
-                    <MudElement Class="mr-2 ml-2">@context.User.Identity.Name</MudElement>
+                    @* The avatar opens the profile: it holds the working day settings that
+                       used to sit in the worklog filter (issue #241). *@
+                    <MudTooltip Text="Профиль">
+                        <div class="chr-profile-button" @onclick="OpenProfileAsync">
+                            <MudAvatar Size="Size.Small" Color="Color.Primary">
+                                @if (!string.IsNullOrEmpty(_model.Profile.Avatar))
+                                {
+                                    <img src="@_model.Profile.Avatar" alt="avatar" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
+                                }
+                            </MudAvatar>
+                            <MudElement Class="mr-2 ml-2">@context.User.Identity.Name</MudElement>
+                        </div>
+                    </MudTooltip>
                     <MudIconButton Icon="@Icons.Material.Filled.Logout" OnClick="Logout" Color="Color.Inherit" Href="/logout" Size="Size.Small" />
                 </Authorized>
                 <NotAuthorized>

@@ -69,6 +69,21 @@
     flex: none;
 }
 
+/*
+ * Avatar and name in the AppBar act as one button opening the profile dialog (issue #241).
+ */
+.chr-profile-button {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 2px;
+}
+
+.chr-profile-button:hover {
+    background: rgba(255, 255, 255, .12);
+}
+
 .chr-worklog-day-chips-container {
     width: 375px
 }

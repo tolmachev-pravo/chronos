@@ -4,8 +4,11 @@ using Chronos.Application.Authentication;
 using Chronos.Application.Extensions.Jira.Commands;
 using Chronos.Application.Storage;
 using Chronos.Application.Users;
+using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Domain.Models.Users;
+using Chronos.Web.Components.Profile;
+using MudBlazor;
 using System;
 using System.Threading.Tasks;
 
@@ -21,6 +24,7 @@ namespace Chronos.Web.Shared
         [Inject] private IStorage<string, UserWorklogFilter> _userWorklogFilterStorage { get; set; }
         [Inject] private IIdentityService _identityService { get; set; }
         [Inject] private IMediator _mediator { get; set; }
+        [Inject] private IDialogService _dialogService { get; set; }
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
         protected async Task ToggleThemeAsync(bool value)
@@ -33,6 +37,34 @@ namespace Chronos.Web.Shared
             userTheme ??= UserTheme.Create();
             userTheme.IsDarkMode = _model.Theme.IsDarkMode;
             await _userThemeStorage.UpdateAsync(key, userTheme);
+        }
+
+        /// <summary>
+        /// Opens the profile with the user's working day settings (issue #241).
+        /// </summary>
+        protected async Task OpenProfileAsync()
+        {
+            try
+            {
+                var user = await _identityService.GetCurrentUserAsync();
+                if (user == null)
+                {
+                    return;
+                }
+
+                var settings = await _mediator.Send(new GetUserSettings.Query(user.Username));
+                var parameters = new DialogParameters
+                {
+                    { nameof(ProfileDialog.Username), user.Username },
+                    { nameof(ProfileDialog.Avatar), _model.Profile.Avatar },
+                    { nameof(ProfileDialog.Settings), settings }
+                };
+                await _dialogService.ShowAsync<ProfileDialog>("Профиль", parameters);
+            }
+            catch (Exception e)
+            {
+                ErrorHandler.ProcessError(e);
+            }
         }
 
         void ToggleDrawer()
