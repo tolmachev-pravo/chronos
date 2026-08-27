@@ -11,15 +11,8 @@
         <MudDateRangePicker Label="Date range" @bind-DateRange="_model.Filter.DateRange"
                             FirstDayOfWeek="DayOfWeek.Monday" />
     </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-daily-working-start-time" RootClass="chr-full-width">
-        <MudTimePicker Label="Daily working start time" @bind-Time="_model.Filter.DailyWorkingStartTime" Editable="true" />
-    </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-daily-working-end-time" RootClass="chr-full-width">
-        <MudTimePicker Label="Daily working end time" @bind-Time="_model.Filter.DailyWorkingEndTime" Editable="true" />
-    </MarkdownTooltip>
-    <MarkdownTooltip Markdown="worklog-filter-lunch-time" RootClass="chr-full-width">
-        <MudTimePicker Label="Lunch duration" @bind-Time="_model.Filter.LunchTime" Editable="true" />
-    </MarkdownTooltip>
+    @* The working day moved to the profile (issue #241): it is the same for every search,
+       so the panel only asks for the period. *@
 </MudPaper>
 
 <MudButton OnClick="Search" Variant="Variant.Filled" Color="Color.Primary" EndIcon="@Icons.Material.Filled.Send" Class="mt-2">Search</MudButton>
