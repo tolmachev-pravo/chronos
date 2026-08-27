@@ -5,6 +5,8 @@ using Chronos.Application.Extensions.Jira.Dto;
 using Chronos.Application.Extensions.Jira.Queries;
 using Chronos.Application.Extensions.YandexCalendar.Dto;
 using Chronos.Application.Extensions.YandexCalendar.Queries;
+using Chronos.Application.Users.Dto;
+using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Domain.Models.Issues;
 using Chronos.Domain.Models.Users;
@@ -19,13 +21,14 @@ namespace Chronos.Application.Worklogs.Queries
 {
     public class GetWorklogCollection
     {
+        /// <summary>
+        /// Only the period is asked for: the working day comes from the user's own settings
+        /// (issue #241), so every search uses the same frame.
+        /// </summary>
         public class Query : IRequest<Model>
         {
             public DateTime StartDate { get; set; }
             public DateTime EndDate { get; set; }
-            public TimeSpan DailyWorkingStartTime { get; set; }
-            public TimeSpan DailyWorkingEndTime { get; set; }
-            public TimeSpan LunchTime { get; set; }
         }
 
         public class Model
@@ -61,6 +64,11 @@ namespace Chronos.Application.Worklogs.Queries
                 CancellationToken cancellationToken)
             {
                 var user = await _identityService.GetCurrentUserAsync();
+
+                // The working day the user set in their profile (issue #241): it frames the
+                // estimated worklogs and gives every day its planned working time.
+                var userSettings = await _mediator.Send(
+                    new GetUserSettings.Query(user?.Username), cancellationToken);
 
                 // Which kinds of Jira events the user wants (issue #242). A disabled
                 // extension loads none of them; a disabled kind is not requested at all,
@@ -127,7 +135,7 @@ namespace Chronos.Application.Worklogs.Queries
 
                 var allRawWorklogs = rawIssueWorklogs.Concat(calendarWorklogs);
 
-                var days = CalculateDays(issueWorklogs, allRawWorklogs, query).ToList();
+                var days = CalculateDays(issueWorklogs, allRawWorklogs, query, userSettings).ToList();
                 foreach (var day in days)
                 {
                     day.BlockedCalendarEvents = blockedEventsByDay.GetValueOrDefault(day.Date) ?? new List<BlockedCalendarEvent>();
@@ -199,7 +207,8 @@ namespace Chronos.Application.Worklogs.Queries
             private static IEnumerable<WorkingDay> CalculateDays(
                 IEnumerable<IWorklog> issueWorklogs,
                 IEnumerable<IWorklog> rawIssueWorklogs,
-                Query query)
+                Query query,
+                UserSettingsDto userSettings)
             {
                 var day = query.EndDate.Date;
                 var splitedRawIssueWorklogs = rawIssueWorklogs.SplitByDays(
@@ -218,8 +227,8 @@ namespace Chronos.Application.Worklogs.Queries
                             WorkingDayWorklog.CreateEstimated(
                                 worklog: worklog,
                                 day: day,
-                                dailyWorkingStartTime: query.DailyWorkingStartTime,
-                                dailyWorkingEndTime: query.DailyWorkingEndTime));
+                                dailyWorkingStartTime: userSettings.WorkingStartTime,
+                                dailyWorkingEndTime: userSettings.WorkingEndTime));
 
                     var dailyWorklogs = dailyActualWorklogs.Union(dailyEstimatedWorklogs)
                             .OrderBy(record => record.StartDate)
@@ -229,9 +238,9 @@ namespace Chronos.Application.Worklogs.Queries
                     yield return new WorkingDay(
                         date: day,
                         settings: new WorkingDaySettings(
-                            workingStartTime: query.DailyWorkingStartTime,
-                            workingEndTime: query.DailyWorkingEndTime,
-                            lunchTime: query.LunchTime),
+                            workingStartTime: userSettings.WorkingStartTime,
+                            workingEndTime: userSettings.WorkingEndTime,
+                            lunchTime: userSettings.LunchTime),
                         worklogs: dailyWorklogs);
 
                     day = day.AddDays(-1);

@@ -4,6 +4,8 @@ using Chronos.Application.Authentication;
 using Chronos.Application.Extensions.Jira.Commands;
 using Chronos.Application.Storage;
 using Chronos.Application.Users;
+using Chronos.Application.Users.Commands;
+using Chronos.Application.Users.Dto;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Domain.Models.Users;
 using System;
@@ -23,9 +25,26 @@ namespace Chronos.Web.Shared
         [Inject] private IMediator _mediator { get; set; }
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
-        protected async Task ToggleThemeAsync(bool value)
+        /// <summary>
+        /// Whether the dark theme is on. Read by the profile page, which owns the switch.
+        /// </summary>
+        public bool IsDarkMode => _model?.Theme.IsDarkMode ?? false;
+
+        /// <summary>
+        /// Raised after the theme changes, so a page showing the same setting — the profile
+        /// (issue #241) — re-renders when it is switched from the AppBar.
+        /// </summary>
+        public event Action ThemeChanged;
+
+        /// <summary>
+        /// Applies and stores the theme. Public because the profile page carries the same
+        /// switch (issue #241) while the theme provider is rendered here.
+        /// </summary>
+        public async Task ToggleThemeAsync(bool value)
         {
             _model.Theme.IsDarkMode = value;
+            StateHasChanged();
+            ThemeChanged?.Invoke();
 
             var user = await _identityService.GetCurrentUserAsync();
             string key = user != null ? user.Key : default;
@@ -61,7 +80,7 @@ namespace Chronos.Web.Shared
             {
                 await RenderThemeAsync();
                 await RenderProfileAsync();
-                await EnsureJiraExtensionAsync();
+                await EnsureUserRecordsAsync();
                 _model.Initialize();
                 StateHasChanged();
             }
@@ -101,11 +120,13 @@ namespace Chronos.Web.Shared
         }
 
         /// <summary>
-        /// Connects the Jira extension for a user that has none yet (issue #242). Runs after
-        /// the first render because the legacy worklog filter lives in local storage and
-        /// needs JS interop; users who already have that filter keep their current behaviour.
+        /// Seeds the records a user needs before the first search: the Jira extension
+        /// (issue #242) and the working day settings (issue #241). Both used to be answered
+        /// in the worklog filter, so both are carried over from the filter that user still
+        /// has in local storage. Runs after the first render because local storage needs JS
+        /// interop; seeding never overwrites records that already exist.
         /// </summary>
-        private async Task EnsureJiraExtensionAsync()
+        private async Task EnsureUserRecordsAsync()
         {
             try
             {
@@ -116,15 +137,38 @@ namespace Chronos.Web.Shared
                 }
 
                 var legacyFilter = await _userWorklogFilterStorage.GetValueAsync(user.Key);
+
                 await _mediator.Send(new EnsureJiraExtension.Command(
                     user.Username,
                     HasLegacyFilter: legacyFilter != null,
                     LegacyCommentWorklogTime: legacyFilter?.CommentWorklogTime));
+
+                await _mediator.Send(new EnsureUserSettings.Command(
+                    user.Username,
+                    LegacySettings: ToUserSettings(legacyFilter)));
             }
             catch (Exception e)
             {
                 ErrorHandler.ProcessError(e);
             }
+        }
+
+        /// <summary>
+        /// Working day the user had answered in the legacy filter. A value the filter never
+        /// stored falls back to the default, so a half-filled filter still migrates.
+        /// </summary>
+        private static UserSettingsDto ToUserSettings(UserWorklogFilter legacyFilter)
+        {
+            if (legacyFilter == null)
+            {
+                return null;
+            }
+
+            var defaults = UserSettingsDto.Default;
+            return new UserSettingsDto(
+                WorkingStartTime: legacyFilter.DailyWorkingStartTime ?? defaults.WorkingStartTime,
+                WorkingEndTime: legacyFilter.DailyWorkingEndTime ?? defaults.WorkingEndTime,
+                LunchTime: legacyFilter.LunchTime ?? defaults.LunchTime);
         }
 
         protected async Task Logout()

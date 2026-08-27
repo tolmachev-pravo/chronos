@@ -24,6 +24,7 @@ namespace Chronos.Infrastructure.Data.Contexts
 		public DbSet<UserNotification> UserNotifications { get; set; }
 		public DbSet<Article> Articles { get; set; }
 		public DbSet<UserExtension> UserExtensions { get; set; }
+		public DbSet<UserSettings> UserSettings { get; set; }
 
 		public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
 		{

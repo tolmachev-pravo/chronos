@@ -1,39 +1,58 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using MediatR;
+using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Chronos.Application.Authentication;
-using Chronos.Application.Storage;
-using Chronos.Application.Worklogs.Dto;
+using Chronos.Application.Users.Dto;
+using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Queries;
 using Chronos.Web.Shared;
 using System;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Chronos.Web.Components.Worklogs
 {
+    /// <summary>
+    /// Asks for the period alone: the working day is a profile setting now (issue #241),
+    /// so there is nothing here left to remember between searches.
+    /// </summary>
     public partial class WorklogFilter : ComponentBase
     {
         private readonly ComponentModel _model = ComponentModel.Create();
 
         [Parameter] public EventCallback<GetWorklogCollection.Query> OnSearchPressed { get; set; }
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
-        [Inject] private IStorage<string, UserWorklogFilter> _filterStorage { get; set; }
-        [Inject] private IIdentityService _identityService { get; set; }
+        [Inject] private IMediator Mediator { get; set; }
+        [Inject] private IIdentityService IdentityService { get; set; }
 
-        protected async Task Search()
+        private UserSettingsDto _workingDay = UserSettingsDto.Default;
+
+        /// <summary>
+        /// The working day the search will use, shown next to the period so the numbers in
+        /// the result have a visible source (issue #241).
+        /// </summary>
+        private string WorkingDayDisplay =>
+            $"{Time(_workingDay.WorkingStartTime)}–{Time(_workingDay.WorkingEndTime)} · обед {Duration(_workingDay.LunchTime)}";
+
+        private static string Time(TimeSpan value) => value.ToString(@"hh\:mm");
+
+        private static string Duration(TimeSpan value)
+        {
+            if (value == TimeSpan.Zero)
+                return "нет";
+            if (value.Minutes == 0)
+                return $"{(int)value.TotalHours} ч";
+            if (value.TotalHours < 1)
+                return $"{value.Minutes} мин";
+            return $"{(int)value.TotalHours} ч {value.Minutes} мин";
+        }
+
+        protected override async Task OnInitializedAsync()
         {
             try
             {
-                await SaveFilterAsync();
-                await OnSearchPressed.InvokeAsync(new GetWorklogCollection.Query()
-                {
-                    StartDate = _model.Filter.StartDate.Value,
-                    EndDate = _model.Filter.EndDate.Value.AddDays(1).AddMinutes(-1),
-                    DailyWorkingStartTime = _model.Filter.DailyWorkingStartTime.Value,
-                    DailyWorkingEndTime = _model.Filter.DailyWorkingEndTime.Value,
-                    LunchTime = _model.Filter.LunchTime.Value,
-                });
+                var user = await IdentityService.GetCurrentUserAsync();
+                _workingDay = await Mediator.Send(new GetUserSettings.Query(user?.Username));
             }
             catch (Exception e)
             {
@@ -41,48 +60,20 @@ namespace Chronos.Web.Components.Worklogs
             }
         }
 
-        protected override async Task OnInitializedAsync()
+        protected async Task Search()
         {
-            var user = await _identityService.GetCurrentUserAsync();
-            if (user != null)
+            try
             {
-                var filter = await _filterStorage.GetValueAsync(user.Key);
-                _model.Filter.Initialize(filter);
+                await OnSearchPressed.InvokeAsync(new GetWorklogCollection.Query()
+                {
+                    StartDate = _model.Filter.StartDate.Value,
+                    EndDate = _model.Filter.EndDate.Value.AddDays(1).AddMinutes(-1),
+                });
             }
-        }
-
-        protected async override Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
+            catch (Exception e)
             {
-                await RenderFilterAsync();
-                StateHasChanged();
+                ErrorHandler.ProcessError(e);
             }
-            else
-            {
-                await SaveFilterAsync();
-            }
-            await base.OnAfterRenderAsync(firstRender);
-        }
-
-        private async Task RenderFilterAsync()
-        {
-            if (_model.Filter.IsInitialized)
-            {
-                return;
-            }
-            var user = await _identityService.GetCurrentUserAsync();
-            var filter = await _filterStorage.GetValueAsync(user?.Key);
-            _model.Filter.Initialize(filter);
-            await _filterStorage.UpdateAsync(user?.Key, filter);
-        }
-
-        private async Task SaveFilterAsync()
-        {
-            var user = await _identityService.GetCurrentUserAsync();
-            var filter = _model.Filter.Convert();
-            filter.Username = user?.Key;
-            await _filterStorage.UpdateAsync(user?.Key, filter);
         }
 
         public class ComponentModel
@@ -98,54 +89,13 @@ namespace Chronos.Web.Components.Worklogs
         public class FilterModel
         {
             [Required]
-            [JsonIgnore]
             public DateRange DateRange { get; set; } = new DateRange(DateTime.Now.AddDays(-7).Date, DateTime.Now.Date);
 
-            [Required] 
+            [Required]
             public DateTime? StartDate => DateRange.Start;
 
-            [Required] 
-            public DateTime? EndDate => DateRange.End;
-
-            [Required] 
-            public TimeSpan? DailyWorkingStartTime { get; set; } = TimeSpan.FromHours(10);
-
-            [Required] 
-            public TimeSpan? DailyWorkingEndTime { get; set; } = TimeSpan.FromHours(19);
-
-            /// <summary>
-            /// Legacy: the comment duration now lives in the Jira extension (issue #242).
-            /// The value is still round-tripped through local storage so that
-            /// EnsureJiraExtension can migrate it for users who set it before the move.
-            /// </summary>
-            public TimeSpan? CommentWorklogTime { get; set; } = TimeSpan.Zero;
-
             [Required]
-            public TimeSpan? LunchTime { get; set; } = TimeSpan.FromHours(1);
-
-            public bool IsInitialized { get; set; }
-
-            public void Initialize(UserWorklogFilter filter)
-            {
-                if (filter != null)
-                {
-                    DailyWorkingStartTime = filter.DailyWorkingStartTime;
-                    DailyWorkingEndTime = filter.DailyWorkingEndTime;
-                    CommentWorklogTime = filter.CommentWorklogTime;
-                    LunchTime = filter.LunchTime;
-                }
-            }
-
-            public UserWorklogFilter Convert()
-            {
-                return new UserWorklogFilter
-                {
-                    DailyWorkingStartTime = DailyWorkingStartTime,
-                    DailyWorkingEndTime = DailyWorkingEndTime,
-                    CommentWorklogTime = CommentWorklogTime,
-                    LunchTime = LunchTime
-                };
-            }
+            public DateTime? EndDate => DateRange.End;
         }
     }
 }

@@ -32,28 +32,34 @@
             <MudText Typo="Typo.h6" Class="ml-2 chr-not-display-on-480">Chronos</MudText>
             @* Keep in step with GitHub:Releases:Repository in appsettings.json. *@
             <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/tolmachev-pravo/chronos" Target="_blank" />
-            <MudTooltip Text="@(_model.Theme.IsDarkMode ? "Dark mode" : "Light mode")">
-                <MudToggleIconButton Toggled="@_model.Theme.IsDarkMode"
-                                     Icon="@Icons.Material.Filled.LightMode"
-                                     Color="@Color.Inherit"
-                                     ToggledIcon="@Icons.Material.Filled.DarkMode"
-                                     ToggledColor="@Color.Inherit"
-                                     ToggledChanged="@ToggleThemeAsync"/>
-            </MudTooltip>
+            @* The same setting as the switch in the profile (issue #241): kept here because
+               switching the theme is a one-click thing, and both write UserTheme. The hint is
+               a plain title attribute — a MudTooltip wrapper only adds a layout box here. *@
+            <MudToggleIconButton Toggled="@_model.Theme.IsDarkMode"
+                                 Icon="@Icons.Material.Filled.LightMode"
+                                 Color="@Color.Inherit"
+                                 ToggledIcon="@Icons.Material.Filled.DarkMode"
+                                 ToggledColor="@Color.Inherit"
+                                 ToggledChanged="@ToggleThemeAsync"
+                                 title="@(_model.Theme.IsDarkMode ? "Светлая тема" : "Тёмная тема")" />
             <MudSpacer></MudSpacer>
             <AuthorizeView>
                 <Authorized>
-                    <MudAvatar Size="Size.Small" Color="Color.Primary">
-                        @if (!string.IsNullOrEmpty(_model.Profile.Avatar))
-                        {
-                            <img src="@_model.Profile.Avatar" alt="avatar" />
-                        }
-                        else
-                        {
-                            <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
-                        }
-                    </MudAvatar>
-                    <MudElement Class="mr-2 ml-2">@context.User.Identity.Name</MudElement>
+                    @* The avatar leads to the profile: personal settings that used to sit in
+                       the worklog filter and in the AppBar live there (issue #241). *@
+                    <a class="chr-profile-button" href="/profile" title="Profile">
+                        <MudAvatar Size="Size.Small" Color="Color.Primary">
+                            @if (!string.IsNullOrEmpty(_model.Profile.Avatar))
+                            {
+                                <img src="@_model.Profile.Avatar" alt="avatar" />
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Rounded.AccountCircle" />
+                            }
+                        </MudAvatar>
+                        <MudElement Class="chr-profile-button__name">@context.User.Identity.Name</MudElement>
+                    </a>
                     <MudIconButton Icon="@Icons.Material.Filled.Logout" OnClick="Logout" Color="Color.Inherit" Href="/logout" Size="Size.Small" />
                 </Authorized>
                 <NotAuthorized>
@@ -67,9 +73,13 @@
         <MudMainContent Style="height: 100vh" Class="chr-fill-height">
             <AuthorizeView>
                 <Authorized>
-                    <MudElement Class="ma-4 chr-fill-height">
-                        @Body
-                    </MudElement>
+                    @* The profile page switches the theme, and the provider that renders it
+                       lives here — so the layout cascades itself down to the page. *@
+                    <CascadingValue Value="this" IsFixed="true">
+                        <MudElement Class="ma-4 chr-fill-height">
+                            @Body
+                        </MudElement>
+                    </CascadingValue>
                 </Authorized>
                 <NotAuthorized>
                     <MudContainer Class="mt-3" MaxWidth="MaxWidth.Medium">

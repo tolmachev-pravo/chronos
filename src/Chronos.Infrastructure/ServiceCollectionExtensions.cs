@@ -83,6 +83,7 @@ namespace Chronos.Infrastructure
 			services.AddTransient<IArticleDataSource, ArticleDataSource>();
 
 			services.AddTransient<IUserRepository, UserRepository>();
+			services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
 
 			services.AddDataProtection()
 				.PersistKeysToFileSystem(new System.IO.DirectoryInfo(

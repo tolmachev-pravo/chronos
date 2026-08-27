@@ -69,6 +69,276 @@
     flex: none;
 }
 
+/*
+ * A plain <img> inside MudAvatar gets no sizing of its own: MudBlazor styles
+ * `.mud-avatar > .mud-image`, and that class comes from MudImage. Without this the Jira
+ * avatar sits in the circle at its natural size with the avatar background showing around
+ * it. `cover` keeps a non-square source from being squashed.
+ */
+.mud-avatar > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+}
+
+/*
+ * Avatar and name in the AppBar act as one link to the profile page (issue #241).
+ * The hover pill has to look deliberate next to the 40px icon buttons: the spacing
+ * around the name is padding and gap here, not margins on the name itself — with
+ * margins the highlight ran 8px past the text on one side and hugged the avatar on
+ * the other. White overlays because the AppBar is a coloured surface in both themes.
+ */
+.chr-profile-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    padding: 4px 14px 4px 4px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background-color .18s ease;
+}
+
+/*
+ * Every link state is pinned to the AppBar's own colour: bootstrap.min.css still ships with
+ * `a:hover{color:#0056b3;text-decoration:underline}`, which outranks a single class and
+ * turned the username Bootstrap-blue and underlined on hover.
+ */
+.chr-profile-button,
+.chr-profile-button:link,
+.chr-profile-button:visited,
+.chr-profile-button:hover,
+.chr-profile-button:focus,
+.chr-profile-button:active {
+    color: inherit;
+    text-decoration: none;
+}
+
+.chr-profile-button:hover {
+    background: rgba(255, 255, 255, .14);
+}
+
+.chr-profile-button:active {
+    background: rgba(255, 255, 255, .22);
+}
+
+.chr-profile-button:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, .7);
+    outline-offset: 2px;
+}
+
+.chr-profile-button__name {
+    max-width: 180px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================
+   PROFILE — personal settings (issue #241)
+   Colours come from the MudBlazor palette variables, so the page
+   follows the active light/dark theme.
+   ============================================================ */
+/*
+ * A settings page has a natural reading width: stretched across a 1920px screen the cards
+ * turn into a ragged strip with a hole where the fourth column would be.
+ */
+.prf-page {
+    max-width: 1100px;
+}
+
+/* Both selectors are doubled up on purpose: .prf-card below stacks its children in a
+   column, and .mud-avatar sizes itself — the hero has to outrank both. */
+.prf-card.prf-hero {
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/*
+ * 48px because that is what Jira actually gives us: avatarUrls tops out at 48, and any
+ * larger circle upscales the photo into mush. Raise this only together with proof that
+ * the enlarged rendering JiraService asks for is really coming back bigger.
+ */
+.prf-hero .mud-avatar.prf-hero__avatar {
+    width: 48px;
+    height: 48px;
+    flex: none;
+}
+
+.prf-hero__body {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+/*
+ * Two columns, not an auto-fill grid: what is edited on the left, what only informs on
+ * the right. Card count no longer decides the layout.
+ */
+.prf-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+}
+
+.prf-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+@media (max-width: 960px) {
+    .prf-columns {
+        grid-template-columns: 1fr;
+    }
+}
+
+.prf-card {
+    display: flex;
+    flex-direction: column;
+    padding: 22px;
+    border-radius: 16px;
+    background: var(--mud-palette-surface);
+    border: 1px solid var(--mud-palette-lines-default);
+}
+
+/* The title sits alone next to the icon, so it is centred against it. */
+.prf-card__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.prf-card__icon {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border-radius: 12px;
+    color: var(--mud-palette-primary);
+    background: rgba(var(--mud-palette-primary-rgb), .12);
+    border: 1px solid rgba(var(--mud-palette-primary-rgb), .25);
+}
+
+.prf-card__foot {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 18px;
+}
+
+.prf-pickers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.prf-picker {
+    flex: 1 1 130px;
+    min-width: 130px;
+    max-width: 200px;
+}
+
+.prf-switch {
+    display: flex;
+    flex-direction: column;
+}
+
+/*
+ * The working day as a bar: the norm is what is left of the day once lunch is cut out,
+ * which is easier to see than to read off three pickers.
+ */
+.prf-day__norm {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.prf-day__bar {
+    display: flex;
+    height: 12px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--mud-palette-lines-default);
+}
+
+.prf-day__work {
+    background: var(--mud-palette-primary);
+}
+
+.prf-day__lunch {
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(var(--mud-palette-primary-rgb), .35) 0 4px,
+        rgba(var(--mud-palette-primary-rgb), .12) 4px 8px
+    );
+}
+
+.prf-day__scale {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: .75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.prf-day__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 10px;
+    font-size: .75rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.prf-day__key {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.prf-day__swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 4px;
+}
+
+.prf-day__swatch--work {
+    background: var(--mud-palette-primary);
+}
+
+.prf-day__swatch--lunch {
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(var(--mud-palette-primary-rgb), .35) 0 3px,
+        rgba(var(--mud-palette-primary-rgb), .12) 3px 6px
+    );
+}
+
+/* Read-only account details: label on the left, value on the right, wrapping on narrow cards. */
+.prf-facts {
+    display: grid;
+    grid-template-columns: minmax(110px, auto) 1fr;
+    gap: 10px 18px;
+    margin: 0;
+    font-size: .875rem;
+}
+
+.prf-facts dt {
+    color: var(--mud-palette-text-secondary);
+}
+
+.prf-facts dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
 .chr-worklog-day-chips-container {
     width: 375px
 }

@@ -6,6 +6,8 @@ using Chronos.Application.Extensions.Jira.Dto;
 using Chronos.Application.Extensions.Jira.Queries;
 using Chronos.Application.Extensions.YandexCalendar.Dto;
 using Chronos.Application.Extensions.YandexCalendar.Queries;
+using Chronos.Application.Users.Dto;
+using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Queries;
 using Chronos.Domain.Models.Users;
 using Chronos.Domain.Models.Worklogs;
@@ -48,6 +50,7 @@ namespace Chronos.UnitTests.Application.Worklogs.Queries
             _mediatorMock
                 .Setup(x => x.Send(It.IsAny<GetYandexCalendarEvents.Query>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync((IReadOnlyList<YandexCalendarEventDto>)new List<YandexCalendarEventDto>());
+            SetupUserSettings(UserSettingsDto.Default);
             SetupJiraExtension(new JiraExtensionSettingsDto(
                 AssigneeEventsEnabled: true,
                 CommentEventsEnabled: true,
@@ -62,11 +65,13 @@ namespace Chronos.UnitTests.Application.Worklogs.Queries
         private static GetWorklogCollection.Query SingleDayQuery() => new()
         {
             StartDate = new DateTime(2026, 6, 1),
-            EndDate = new DateTime(2026, 6, 1),
-            DailyWorkingStartTime = TimeSpan.FromHours(10),
-            DailyWorkingEndTime = TimeSpan.FromHours(19),
-            LunchTime = TimeSpan.FromHours(1)
+            EndDate = new DateTime(2026, 6, 1)
         };
+
+        private void SetupUserSettings(UserSettingsDto settings) =>
+            _mediatorMock
+                .Setup(x => x.Send(It.IsAny<GetUserSettings.Query>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(settings);
 
         private void SetupJiraExtension(JiraExtensionSettingsDto settings, bool isEnabled = true) =>
             _mediatorMock
@@ -203,6 +208,26 @@ namespace Chronos.UnitTests.Application.Worklogs.Queries
                     It.Is<GetCommentJiraEvents.Query>(q => q.CommentWorklogTime == TimeSpan.FromMinutes(45)),
                     It.IsAny<CancellationToken>()),
                 Times.Once);
+        }
+
+        [Test]
+        public async Task Handle_TakesTheWorkingDayFromTheUserSettings()
+        {
+            SetupUserSettings(new UserSettingsDto(
+                WorkingStartTime: TimeSpan.FromHours(9),
+                WorkingEndTime: TimeSpan.FromHours(18),
+                LunchTime: TimeSpan.FromMinutes(30)));
+
+            var result = await _sut.Handle(SingleDayQuery());
+
+            var day = result.WorkingDays.Single();
+            Assert.Multiple(() =>
+            {
+                Assert.That(day.Settings.WorkingStartTime, Is.EqualTo(TimeSpan.FromHours(9)));
+                Assert.That(day.Settings.WorkingEndTime, Is.EqualTo(TimeSpan.FromHours(18)));
+                Assert.That(day.Settings.LunchTime, Is.EqualTo(TimeSpan.FromMinutes(30)));
+                Assert.That(day.Settings.WorkingTime, Is.EqualTo(TimeSpan.FromHours(8.5)));
+            });
         }
 
         [Test]
