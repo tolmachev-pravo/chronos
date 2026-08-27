@@ -1,6 +1,6 @@
 {
-  "id": "profile-working-day",
-  "title": "Рабочий день в профиле",
+  "id": "user-profile",
+  "title": "Профиль пользователя",
   "author": "tolmachev-pravo",
   "date": "2026-08-27",
   "tags": ["profile", "worklogs"],

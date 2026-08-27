@@ -121,9 +121,9 @@ Clean Architecture, четыре проекта:
 | [Chronos.Web](src/Chronos.Web) | Blazor Server + MudBlazor, страницы, компоненты, авторизация по cookie |
 
 Хранилища трёхуровневые: `IMemoryCache` → `ILocalStorage` (браузер) → `IDataSource` (Jira), общая
-точка входа — `IStorage`. В локальной SQLite-базе лежат только пользователи и настройки расширений,
-причём секреты расширений шифруются через ASP.NET Core Data Protection; профиль, выбранная тема и
-фильтр поиска хранятся в localStorage браузера. Подробнее — в
+точка входа — `IStorage`. В локальной SQLite-базе лежат пользователи, их рабочий день и настройки
+расширений, причём секреты расширений шифруются через ASP.NET Core Data Protection; профиль из Jira
+и выбранная тема кешируются в localStorage браузера. Подробнее — в
 [development.readme.md](src/Chronos.Web/development.readme.md).
 
 ## Разработка
