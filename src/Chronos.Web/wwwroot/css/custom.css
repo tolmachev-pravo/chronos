@@ -522,12 +522,38 @@
 .feat-card {
     cursor: pointer;
 }
+/* Two lines of title at most: together with the clamped preview it makes a card's
+   height predictable, which is what the carousel track height is derived from. */
+.feat-card__title {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+}
+.extv-glow__card--hero .feat-card__title {
+    display: block;
+}
+/* Previews come from preview.md and differ in length; clamp them to a fixed
+   number of lines so every card in a grid row has the same text block. */
 .feat-card__preview {
     color: var(--mud-palette-text-secondary);
     font-size: .9rem;
     line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--feat-preview-lines, 4);
+    line-clamp: var(--feat-preview-lines, 4);
+    overflow: hidden;
 }
-.feat-card__preview .mud-markdown-body p { margin-bottom: 0; }
+/* MudMarkdown renders paragraphs as MudText body1 (16px/24px), which ignored the
+   size set above; inherit it, so the preview is really .9rem and a line is really
+   21.6px — the number the carousel track height is derived from. */
+.feat-card__preview .mud-markdown-body p {
+    margin-bottom: 0;
+    font-size: inherit;
+    line-height: inherit;
+}
 .feat-card__date {
     display: inline-flex;
     align-items: center;
@@ -599,9 +625,10 @@
     .feat-promo__bento[data-count="2"] {
         grid-template-columns: 1.55fr 1fr;
     }
-    /* Hero cell stretches; make the card fill its full height. */
-    .feat-promo__bento .extv-glow__outer--hero,
-    .feat-promo__bento .extv-glow__outer--hero .extv-glow__card {
+    /* Bento cells stretch to their rows; make the cards fill them, so the two
+       stacked cards end where the hero panel does. */
+    .feat-promo__bento > .extv-glow__outer,
+    .feat-promo__bento > .extv-glow__outer > .extv-glow__card {
         height: 100%;
     }
 }
@@ -621,6 +648,8 @@
 .extv-glow__card--hero .feat-card__preview {
     font-size: .95rem;
     max-width: 46ch;
+    /* The hero panel stands alone in its column — no row to line up with. */
+    display: block;
 }
 .extv-glow__ghost {
     position: absolute;
@@ -669,6 +698,54 @@
     gap: 22px;
 }
 
+/* ------------------------------------------------------------
+   Carousel over the secondary cards (MudCarousel). One slide is
+   one row of cards: the page hands its column count down in
+   --feat-cols and slices the list by the same number, so a slide
+   can never wrap onto a second row. The track height comes from
+   the page too — MudCarousel positions its slides absolutely.
+   ------------------------------------------------------------ */
+.feat-carousel {
+    background: transparent;
+}
+.feat-carousel__page {
+    /* Explicit columns instead of auto-fill: the count has to match the slice. */
+    grid-template-columns: repeat(var(--feat-cols, 1), minmax(0, 1fr));
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    box-sizing: border-box;
+    /* Side room for the arrows and bottom room for the bullets — both only when they
+       are shown. The vertical padding also keeps the card hover lift and its glow
+       away from the clipped edges of .mud-carousel. */
+    padding: 6px var(--feat-side-pad, 10px) var(--feat-bottom-pad, 12px);
+}
+/* A flex cell stretches the card to the full row height, so the footers line up
+   whatever the preview length: .extv-glow__foot is already pushed down by margin-top. */
+.feat-carousel__page > .feat-card {
+    display: flex;
+}
+/* A single card per slide has nothing to line up with: it keeps its own height,
+   so the slack shows up below the card instead of inside it. */
+.feat-carousel__page--single {
+    align-items: start;
+}
+
+/* One card per slide would mean a bullet per article — a dozen dots on a phone.
+   A counter under the track says the same thing and does not grow with the catalog. */
+.feat-carousel__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.feat-carousel__counter {
+    min-width: 56px;
+    text-align: center;
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--mud-palette-text-secondary);
+}
+
 .feat-hero {
     position: relative;
     display: grid;
@@ -698,7 +775,8 @@
 }
 .feat-hero__badge { margin-bottom: 14px; }
 .feat-hero__title { line-height: 1.15; }
-.feat-hero__preview { font-size: 1rem; max-width: 62ch; }
+/* Full-width banner: no neighbours to match, so the preview stays unclamped. */
+.feat-hero__preview { font-size: 1rem; max-width: 62ch; display: block; }
 .feat-hero__foot {
     display: flex;
     align-items: center;
