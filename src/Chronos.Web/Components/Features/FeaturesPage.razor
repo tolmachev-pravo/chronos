@@ -15,28 +15,60 @@
             <div class="extv-glow__grid">
                 @for (var i = 0; i < 3; i++)
                 {
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="210px" Class="feat-page__skeleton" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="330px" Class="feat-page__skeleton" />
                 }
             </div>
         </div>
     }
-    else if (_features.Count == 0)
+    else if (_hero is null)
     {
         <Stub Message="Новинок пока нет. Загляните позже!" />
     }
     else
     {
         <div class="feat-catalog mt-5">
-            <FeatureHero Feature="_features[0]" />
+            <FeatureHero Feature="_hero" />
 
-            @if (_features.Count > 1)
+            @if (_rest.Count > 0)
             {
-                <div class="extv-glow__grid">
-                    @for (var i = 1; i < _features.Count; i++)
+                <MudCarousel TData="object"
+                             Class="feat-carousel"
+                             Style="@CarouselStyle"
+                             ShowArrows="@ShowOverlayControls"
+                             ShowBullets="@ShowOverlayControls"
+                             BulletsColor="Color.Primary"
+                             EnableSwipeGesture="true"
+                             AutoCycle="false"
+                             @bind-SelectedIndex="_page">
+                    @foreach (var page in Pages)
                     {
-                        <FeatureCard Feature="_features[i]" />
+                        <MudCarouselItem Transition="Transition.Slide">
+                            <div class="extv-glow__grid feat-carousel__page @(_columns == 1 ? "feat-carousel__page--single" : null)">
+                                @foreach (var feature in page)
+                                {
+                                    <FeatureCard Feature="feature" />
+                                }
+                            </div>
+                        </MudCarouselItem>
                     }
-                </div>
+                </MudCarousel>
+
+                @if (ShowCounter)
+                {
+                    <div class="feat-carousel__nav">
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft"
+                                       Size="Size.Small"
+                                       aria-label="Предыдущая статья"
+                                       Disabled="@(_page == 0)"
+                                       OnClick="ShowPreviousPage" />
+                        <span class="feat-carousel__counter">@(_page + 1) / @PageCount</span>
+                        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight"
+                                       Size="Size.Small"
+                                       aria-label="Следующая статья"
+                                       Disabled="@(_page == PageCount - 1)"
+                                       OnClick="ShowNextPage" />
+                    </div>
+                }
             }
         </div>
     }

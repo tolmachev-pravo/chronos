@@ -19,7 +19,7 @@
             }
         </div>
 
-        <MudText Typo="@(Featured ? Typo.h5 : Typo.h6)" Class="mt-3" Style="font-weight:600">@Feature.Metadata.Title</MudText>
+        <MudText Typo="@(Featured ? Typo.h5 : Typo.h6)" Class="feat-card__title mt-3" Style="font-weight:600">@Feature.Metadata.Title</MudText>
 
         <div class="feat-card__preview mt-1">
             <MudMarkdown Value="@Feature.PreviewMarkdown" />
