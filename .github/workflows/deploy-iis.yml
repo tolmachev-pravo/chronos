@@ -23,10 +23,26 @@ jobs:
 
     env:
       RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
-      APP_POOL: _jira.copilot
-      SITE_PATH: F:\inetpub\sites\jira.copilot
+      APP_POOL: ${{ vars.APP_POOL }}
+      SITE_PATH: ${{ vars.SITE_PATH }}
 
     steps:
+    # The deployment target lives in repository variables so that moving the site needs no
+    # commit. An unset variable arrives as an empty string and would reach robocopy and
+    # Stop-WebAppPool as one, so refuse here, while the site is still untouched.
+    - name: Check the deployment target is configured
+      shell: powershell
+      run: |
+        $missing = @()
+        if (-not $env:APP_POOL) { $missing += "APP_POOL" }
+        if (-not $env:SITE_PATH) { $missing += "SITE_PATH" }
+
+        if ($missing.Count -gt 0) {
+            throw "Repository variables not set: $($missing -join ', '). Settings - Secrets and variables - Actions - Variables."
+        }
+
+        Write-Host "Target: $env:SITE_PATH, app pool $env:APP_POOL"
+
     # No checkout and no build: the site is deployed from the artifact the Release
     # workflow built and tested on the tag, so production matches a known release.
     #
