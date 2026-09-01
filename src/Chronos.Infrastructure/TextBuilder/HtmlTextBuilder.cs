@@ -6,7 +6,7 @@ namespace Chronos.Infrastructure.TextBuilder
 {
     public class HtmlTextBuilder : BaseTextBuilder, ITextBuilder
     {
-        public ITextBuilder AddLink(string href, string value)
+        public ITextBuilder AddLink(string? href, string? value)
         {
             _stringBuilder.Append($"<a href=\"{href}\">{value}</a>");
             _stringBuilder.Append(' ');
@@ -19,7 +19,7 @@ namespace Chronos.Infrastructure.TextBuilder
             return this;
         }
 
-        public ITextBuilder AddText(string text, params TextOption[] options)
+        public ITextBuilder AddText(string? text, params TextOption[] options)
         {
             foreach (var option in options)
             {

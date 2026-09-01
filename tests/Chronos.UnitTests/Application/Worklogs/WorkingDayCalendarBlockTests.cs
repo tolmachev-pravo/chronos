@@ -12,7 +12,7 @@ namespace Chronos.UnitTests.Application.Worklogs
     {
         private static WorkingDay DayWith(
             IReadOnlyList<BlockedCalendarEvent> blocked,
-            IList<WorkingDayWorklog> worklogs = null)
+            IList<WorkingDayWorklog>? worklogs = null)
         {
             var settings = new WorkingDaySettings(
                 TimeSpan.FromHours(10), TimeSpan.FromHours(19), TimeSpan.FromHours(1));

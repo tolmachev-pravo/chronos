@@ -9,7 +9,7 @@ namespace Chronos.Infrastructure.Jira.Dto
         public object[] Errors { get; set; }
 
         [JsonProperty("detail")]
-        public Detail[] Detail { get; set; }
+        public Detail[]? Detail { get; set; }
     }
 
     public partial class Detail

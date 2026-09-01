@@ -22,7 +22,7 @@ namespace Chronos.Infrastructure.Jira.Dto
 
         /// <summary>Worklog start as a local ISO datetime, e.g. "2026-07-13T17:25:00".</summary>
         [JsonProperty("dateStarted")]
-        public string DateStarted { get; set; }
+        public string? DateStarted { get; set; }
 
         [JsonProperty("comment")]
         public string Comment { get; set; }
