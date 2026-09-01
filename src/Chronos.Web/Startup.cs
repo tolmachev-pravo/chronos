@@ -167,6 +167,18 @@ namespace Chronos.Web
                     Predicate = _ => true,
                     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
                 });
+
+                // Liveness: runs no checks at all, so it answers 200 whenever the process is
+                // serving requests. /health above pings Jira and weighs the process memory, so
+                // it turns 503 when a dependency is down - true, but useless for telling apart
+                // "the deployment did not come back up" from "Jira is having a bad afternoon".
+                // The deploy smoke check wants the former, and moves onto this endpoint once
+                // a release carrying it has reached production.
+                endpoints.MapHealthChecks("/health/live", new HealthCheckOptions()
+                {
+                    Predicate = _ => false
+                });
+
                 endpoints.MapHealthChecksUI(setup =>
                 {
                     setup.AddCustomStylesheet("wwwroot/css/dotnet.css");
