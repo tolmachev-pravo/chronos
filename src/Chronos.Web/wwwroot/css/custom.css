@@ -1018,12 +1018,13 @@ body #components-reconnect-modal {
     animation: chr-rc-pop .25s cubic-bezier(.2,.7,.2,1) both;
 }
 
-/* Show only the block for the current class; 'failed' and 'rejected' share the
-   reload block (both mean state is unrecoverable). */
+/* Show only the block for the current class. 'failed' (we never reached the server, the
+   circuit may still be alive) and 'rejected' (the server dropped the circuit, state is
+   gone) get different blocks — only the second one has no way back but a reload. */
 .chr-rc__state { display: none; }
 #components-reconnect-modal.components-reconnect-show .chr-rc__state--show { display: block; }
-#components-reconnect-modal.components-reconnect-failed .chr-rc__state--reload,
-#components-reconnect-modal.components-reconnect-rejected .chr-rc__state--reload { display: block; }
+#components-reconnect-modal.components-reconnect-failed .chr-rc__state--failed { display: block; }
+#components-reconnect-modal.components-reconnect-rejected .chr-rc__state--rejected { display: block; }
 
 .chr-rc__title {
     margin: 18px 0 8px;
@@ -1042,6 +1043,12 @@ body #components-reconnect-modal {
     font-size: .8rem;
     color: var(--mud-palette-text-secondary);
     opacity: .8;
+}
+/* Countdown to the next attempt — empty (and collapsed) unless the wait is long enough
+   for the overlay to look stuck without it. */
+.chr-rc__next:not(:empty) {
+    display: block;
+    margin-top: 4px;
 }
 
 .chr-rc__spinner {
@@ -1067,6 +1074,13 @@ body #components-reconnect-modal {
     background: rgba(var(--mud-palette-primary-rgb), .12);
 }
 
+#components-reconnect-modal .chr-rc__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 22px;
+}
 /* id-scoped to beat MudBlazor's own button rule (uppercase + 40px auto margin). */
 #components-reconnect-modal .chr-rc__btn {
     display: block;
@@ -1090,6 +1104,19 @@ body #components-reconnect-modal {
     box-shadow: 0 10px 26px -8px rgba(var(--mud-palette-primary-rgb), .9);
 }
 #components-reconnect-modal .chr-rc__btn:active { transform: translateY(1px); }
+/* Inside .chr-rc__actions the flex row owns the spacing, and the reload button steps back
+   to secondary — retrying is the option that keeps the page state. */
+#components-reconnect-modal .chr-rc__actions .chr-rc__btn { margin: 0 !important; }
+#components-reconnect-modal .chr-rc__btn--ghost {
+    color: var(--mud-palette-text-primary);
+    background: transparent;
+    border: 1px solid var(--mud-palette-lines-default);
+    box-shadow: none;
+}
+#components-reconnect-modal .chr-rc__btn--ghost:hover {
+    background: var(--mud-palette-action-default-hover);
+    box-shadow: none;
+}
 
 @keyframes chr-rc-spin { to { transform: rotate(360deg); } }
 @keyframes chr-rc-fade { from { opacity: 0; } to { opacity: 1; } }

@@ -54,8 +54,9 @@
         <a class="dismiss">🗙</a>
     </div>
 
-    @* Blazor toggles the components-reconnect-* classes on this element and fills
-       the attempt counters; styling in css/custom.css keys off those classes. *@
+    @* Our reconnection handler (scripts/reconnect.js) toggles the components-reconnect-*
+       classes on this element and fills the attempt counters; styling in css/custom.css
+       keys off those classes. *@
     <div id="components-reconnect-modal">
         <div class="chr-rc__dialog" role="alertdialog" aria-live="assertive">
             <div class="chr-rc__state chr-rc__state--show">
@@ -65,16 +66,38 @@
                     Восстанавливаем связь с сервером…
                     <span class="chr-rc__attempt">
                         Попытка <span id="components-reconnect-current-attempt">1</span>
-                        из <span id="components-reconnect-max-retries"></span>
+                        из <span id="components-reconnect-max-retries">12</span>
+                        @* aria-hidden: this ticks every second, and the dialog is an assertive
+                           live region — a screen reader would read the countdown out loud. *@
+                        <span class="chr-rc__next" id="chr-rc-next-attempt" aria-hidden="true"></span>
                     </span>
                 </p>
             </div>
-            @* Terminal state for both 'failed' and 'rejected' — state is gone, reload is the only option. *@
-            <div class="chr-rc__state chr-rc__state--reload">
+            @* Retries exhausted, but the server never answered — offer another round before
+               giving up on the page state. *@
+            <div class="chr-rc__state chr-rc__state--failed">
+                <div class="chr-rc__icon" aria-hidden="true">⚠</div>
+                <h2 class="chr-rc__title">Сервер не отвечает</h2>
+                <p class="chr-rc__text">
+                    Мы несколько минут пытались восстановить связь и не смогли.
+                    Можно попробовать ещё раз — состояние страницы пока не потеряно.
+                </p>
+                <div class="chr-rc__actions">
+                    <button type="button" class="chr-rc__btn chr-rc__btn--retry">
+                        Повторить
+                    </button>
+                    <button type="button" class="chr-rc__btn chr-rc__btn--ghost" onclick="location.reload()">
+                        Перезагрузить страницу
+                    </button>
+                </div>
+            </div>
+            @* The server explicitly dropped the circuit: the state is gone, retrying cannot
+               bring it back, so a reload is the only way out. *@
+            <div class="chr-rc__state chr-rc__state--rejected">
                 <div class="chr-rc__icon" aria-hidden="true">↻</div>
                 <h2 class="chr-rc__title">Не удалось восстановить соединение</h2>
                 <p class="chr-rc__text">
-                    Связь с сервером не восстановилась, а состояние страницы потеряно.
+                    Сервер уже освободил состояние страницы, восстанавливать нечего.
                     Перезагрузите страницу, чтобы продолжить работу.
                 </p>
                 <button type="button" class="chr-rc__btn" onclick="location.reload()">
@@ -84,7 +107,15 @@
         </div>
     </div>
 
-    <script src="_framework/blazor.server.js"></script>
+    @* Explicit start, so scripts/reconnect.js can install its own reconnection policy —
+       the framework default gives up too early for the short drops our users see (issue #285).
+       If that file is missing or broke, chronosReconnect is undefined and we start with the
+       framework defaults rather than leaving the page without a circuit. *@
+    <script src="_framework/blazor.server.js" autostart="false"></script>
+    <script src="scripts/reconnect.js" asp-append-version="true"></script>
+    <script>
+        Blazor.start(window.chronosReconnect ? { reconnectionHandler: window.chronosReconnect.handler } : {});
+    </script>
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
     <script src="_content/MudBlazor.Markdown/MudBlazor.Markdown.min.js"></script>
     <script src="scripts/clipboard.js"></script>
