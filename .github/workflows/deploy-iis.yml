@@ -123,25 +123,42 @@ jobs:
       shell: powershell
       run: |
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        $url = "${{ vars.SITE_URL }}".TrimEnd('/') + "/health"
+
+        # /health/live runs no health checks, so it answers 200 exactly when the app is
+        # serving. /health would have been wrong here: it pings Jira and weighs the process
+        # memory, and would fail this step over an outage the deployment did not cause.
+        $url = "${{ vars.SITE_URL }}".TrimEnd('/') + "/health/live"
 
         for ($attempt = 1; $attempt -le 10; $attempt++) {
             try {
                 $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 15
-                Write-Host "$url answered $($response.StatusCode) on attempt $attempt"
-                exit 0
-            } catch {
-                # Any HTTP status means the site is serving requests, which is what this
-                # step checks. /health also pings Jira and reports the process memory, so
-                # it answers 503 whenever a dependency is down - not a failed deployment.
-                $status = $_.Exception.Response.StatusCode
-                if ($status) {
-                    Write-Host "$url answered $([int]$status) on attempt $attempt, the site is up"
+
+                # The status alone proves nothing: the app maps a fallback page, so every
+                # unrouted path answers 200 with the Blazor host document. Only the body
+                # tells "the liveness endpoint is live" from "something else replied".
+                if ($response.Content.Trim() -eq "Healthy") {
+                    Write-Host "$url answered Healthy on attempt $attempt"
                     exit 0
                 }
-                Write-Host "Attempt ${attempt}: $($_.Exception.Message)"
+
+                # Reached on a rollback to a release built before the endpoint existed: the
+                # fallback page answers in its place. The site is serving, which is as much
+                # as that build can be asked to prove, so let the deployment stand.
+                Write-Host "$env:RELEASE_TAG serves no /health/live: answered $($response.StatusCode) with $($response.Content.Length) bytes that are not a health report."
+                Write-Host "The site is up, so this is not treated as a failed deployment."
+                exit 0
+            } catch {
+                $status = $_.Exception.Response.StatusCode
+
+                # Everything else is retried and then fails the run. A 500.30 from an app
+                # that could not start looks like this, and is exactly what must not pass.
+                if ($status) {
+                    Write-Host "Attempt ${attempt}: answered $([int]$status)"
+                } else {
+                    Write-Host "Attempt ${attempt}: $($_.Exception.Message)"
+                }
                 Start-Sleep -Seconds 6
             }
         }
 
-        throw "$url did not answer after the deployment of $env:RELEASE_TAG."
+        throw "$url did not come up after the deployment of $env:RELEASE_TAG."
