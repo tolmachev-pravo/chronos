@@ -11,8 +11,8 @@ namespace Chronos.Web.Components.Features
     public interface IFeatureCatalogService
     {
         /// <summary>
-        /// Returns all features, highlighted first, then by date descending.
-        /// Returns an empty list when no features exist.
+        /// Returns all features in catalog order: features whose highlight is still active
+        /// first, then by date descending. Returns an empty list when no features exist.
         /// </summary>
         Task<IReadOnlyList<FeatureSummary>> GetFeaturesAsync(CancellationToken cancellationToken = default);
 

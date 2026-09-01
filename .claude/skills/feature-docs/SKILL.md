@@ -67,7 +67,10 @@ src/Chronos.Web/wwwroot/documents/features/{feature-id}/
 - `id` MUST equal the folder name.
 - `date` is ISO `YYYY-MM-DD`; the app sorts features by this descending (newest first)
   and shows a "new" badge for recent ones.
-- `isHighlighted` (optional, default `false`) pins the feature to the top of the section.
+- `isHighlighted` (optional, default `false`) pins the feature to the top of the Features
+  catalog — and to its hero banner — for **30 days after `date`**. Once that window passes
+  the feature falls back into the plain chronological order. The "what's new" widget in
+  the worklog shows the head of the same list, so it follows the same rule.
 - `tags` is optional.
 
 ## preview.md rules
