@@ -10,6 +10,11 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    # Checkout, build and test only read the repository; nothing here writes back.
+    permissions:
+      contents: read
+
     strategy:
       matrix:
         dotnet-version: ['8.x']

@@ -21,6 +21,11 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
     runs-on: self-hosted
 
+    # This job never uses GITHUB_TOKEN: there is no checkout, and the release archive is
+    # downloaded anonymously over its public URL. So it needs no permissions at all, and
+    # saying so keeps it that way if the repository default is ever widened.
+    permissions: {}
+
     env:
       RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
       APP_POOL: ${{ vars.APP_POOL }}
