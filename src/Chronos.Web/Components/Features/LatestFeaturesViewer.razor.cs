@@ -9,6 +9,10 @@ namespace Chronos.Web.Components.Features
 {
     public partial class LatestFeaturesViewer : ComponentBase
     {
+        /// <summary>
+        /// How many features the widget shows — the head of the same list the catalog page
+        /// renders, so both agree on what comes first.
+        /// </summary>
         private const int MaxFeatures = 3;
 
         /// <summary>

@@ -55,10 +55,7 @@ namespace Chronos.Web.Components.Features
                 summaries.Add(new FeatureSummary(metadata, preview));
             }
 
-            return summaries
-                .OrderByDescending(summary => summary.Metadata.IsHighlighted)
-                .ThenByDescending(summary => summary.Metadata.Date)
-                .ToList();
+            return FeatureOrdering.ForCatalog(summaries, DateOnly.FromDateTime(DateTime.Today));
         }
 
         public async Task<FeatureDetail> GetFeatureAsync(string id, CancellationToken cancellationToken = default)
