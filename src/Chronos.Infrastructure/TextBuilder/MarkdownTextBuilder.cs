@@ -7,7 +7,7 @@ namespace Chronos.Infrastructure.TextBuilder
 {
     public class MarkdownTextBuilder : BaseTextBuilder, ITextBuilder
     {
-        public ITextBuilder AddLink(string href, string value)
+        public ITextBuilder AddLink(string? href, string? value)
         {
             _stringBuilder.Append($"[{value}]({href})");
             _stringBuilder.Append(' ');
@@ -20,7 +20,7 @@ namespace Chronos.Infrastructure.TextBuilder
             return this;
         }
 
-        public ITextBuilder AddText(string text, params TextOption[] options)
+        public ITextBuilder AddText(string? text, params TextOption[] options)
         {
             foreach (var option in options)
             {

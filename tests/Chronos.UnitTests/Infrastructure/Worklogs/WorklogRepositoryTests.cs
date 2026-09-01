@@ -33,7 +33,7 @@ namespace Chronos.UnitTests.Infrastructure.Worklogs
             _storage = new Mock<IStorage<string, UserProfile>>();
             _storage
                 .Setup(mock => mock.GetValueAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.FromResult(new UserProfile
+                .Returns(Task.FromResult<UserProfile?>(new UserProfile
                 {
                     TimeZoneId = TimeZoneInfo.Utc.Id
                 }));

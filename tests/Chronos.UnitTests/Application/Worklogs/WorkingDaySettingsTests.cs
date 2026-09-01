@@ -1,5 +1,6 @@
 ﻿using Chronos.Application.Worklogs.Dto;
 using System.Collections;
+using System.ComponentModel.DataAnnotations;
 
 namespace Chronos.UnitTests.Application.Worklogs
 {
@@ -46,7 +47,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                 lunchTime: TimeSpan.FromHours(1));
 
             // Act
-            var validationResults = settings.Validate(default);
+            var validationResults = settings.Validate(new ValidationContext(settings));
 
             // Assert
             Assert.That(validationResults.Count(), Is.EqualTo(1));

@@ -29,7 +29,7 @@ namespace Chronos.Application.Worklogs.Dto
         public WorkingDay(
             DateTime date,
             WorkingDaySettings settings,
-            IList<WorkingDayWorklog> worklogs = null)
+            IList<WorkingDayWorklog>? worklogs = null)
         {
             Date = date;
             Settings = settings;
