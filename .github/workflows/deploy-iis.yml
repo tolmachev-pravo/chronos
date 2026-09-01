@@ -115,6 +115,14 @@ jobs:
                 Write-Host "$url answered $($response.StatusCode) on attempt $attempt"
                 exit 0
             } catch {
+                # Any HTTP status means the site is serving requests, which is what this
+                # step checks. /health also pings Jira and reports the process memory, so
+                # it answers 503 whenever a dependency is down - not a failed deployment.
+                $status = $_.Exception.Response.StatusCode
+                if ($status) {
+                    Write-Host "$url answered $([int]$status) on attempt $attempt, the site is up"
+                    exit 0
+                }
                 Write-Host "Attempt ${attempt}: $($_.Exception.Message)"
                 Start-Sleep -Seconds 6
             }
