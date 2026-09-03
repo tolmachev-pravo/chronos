@@ -1,5 +1,6 @@
 ﻿using Chronos.Application.Common.Extensions;
 using Chronos.Application.Worklogs.Dto;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -85,7 +86,13 @@ namespace Chronos.Application.Worklogs
                     continue;
                 }
 
-                child.Parent = issueParents.First();
+                // The worklog was logged outside every event of its issue, so no rule above
+                // can tell the events apart. It still belongs to one of them: the closest in
+                // time takes it. Taking the first one instead piled every such worklog onto
+                // a single row.
+                child.Parent = issueParents
+                    .OrderBy(parent => DistanceBetween(parent, child))
+                    .First();
             }
 
             foreach (var parent in parents)
@@ -94,6 +101,24 @@ namespace Chronos.Application.Worklogs
                     .Where(worklog => worklog.Parent == parent)
                     .ToList();
             }
+        }
+
+        /// <summary>
+        /// Gap between the two intervals — zero when they overlap.
+        /// </summary>
+        private static TimeSpan DistanceBetween(
+            WorkingDayWorklog parent,
+            WorkingDayWorklog child)
+        {
+            if (parent.RawStartDate <= child.RawCompleteDate
+                && child.RawStartDate <= parent.RawCompleteDate)
+            {
+                return TimeSpan.Zero;
+            }
+
+            return parent.RawStartDate > child.RawCompleteDate
+                ? parent.RawStartDate - child.RawCompleteDate
+                : child.RawStartDate - parent.RawCompleteDate;
         }
 
         /// <summary>
