@@ -32,6 +32,31 @@ namespace Chronos.UnitTests.Application.Worklogs
                 Source = EventSource.Calendar
             };
 
+        private static WorkingDayWorklog Actual(int fromHour, int fromMinute, int toHour, int toMinute) =>
+            new(
+                new DateTime(2026, 6, 1, fromHour, fromMinute, 0),
+                new DateTime(2026, 6, 1, toHour, toMinute, 0),
+                new Issue { Key = "PROJ-1" },
+                WorklogType.Actual,
+                null);
+
+        private static WorkingDayWorklog CalendarEstimate(int fromHour, int fromMinute, int toHour, int toMinute) =>
+            new(
+                new DateTime(2026, 6, 1, fromHour, fromMinute, 0),
+                new DateTime(2026, 6, 1, toHour, toMinute, 0),
+                new Issue { Key = "PROJ-1" },
+                WorklogType.Estimated,
+                EventSource.Calendar);
+
+        private static UserEvent KeylessEvent(int fromHour, int fromMinute, int toHour, int toMinute) =>
+            new()
+            {
+                StartDate = new DateTime(2026, 6, 1, fromHour, fromMinute, 0),
+                CompleteDate = new DateTime(2026, 6, 1, toHour, toMinute, 0),
+                Summary = "Unmapped meeting",
+                Source = EventSource.Calendar
+            };
+
         [Test]
         public void KeylessEvent_WithoutMatchingWorklog_BlocksTimeAndNotLogged()
         {
@@ -88,6 +113,79 @@ namespace Chronos.UnitTests.Application.Worklogs
             day.Refresh();
 
             Assert.That(day.EstimatedWorklogTimeSpent, Is.EqualTo(TimeSpan.Zero));
+        }
+
+        [Test]
+        public void KeylessEvent_TakesItsWorklogAwayFromAnEstimateWithTheSameIssue()
+        {
+            // A mapped event at 09:00 and an unmapped one at 12:20, both logged against the
+            // same issue. The 12:20 worklog belongs to the event it was logged for — before
+            // the fix it was also matched by issue key and shown under the 09:00 estimate.
+            var mapped = CalendarEstimate(9, 0, 9, 30);
+            var loggedForMapped = Actual(9, 0, 9, 30);
+            var loggedForKeyless = Actual(12, 20, 12, 50);
+            var keyless = KeylessEvent(12, 20, 12, 50);
+
+            var day = DayWith(
+                new List<IEvent> { keyless },
+                new List<WorkingDayWorklog> { loggedForMapped, loggedForKeyless, mapped });
+
+            day.Refresh();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(day.GetLoggedWorklog(keyless), Is.SameAs(loggedForKeyless));
+                Assert.That(loggedForKeyless.Parent, Is.Null);
+                Assert.That(mapped.Children, Is.EqualTo(new[] { loggedForMapped }));
+                Assert.That(day.LoggedEventWorklogs, Is.EqualTo(new[] { loggedForKeyless }));
+            });
+        }
+
+        [Test]
+        public void KeylessEvent_AddedAfterAnEarlierRefresh_TakesItsWorklogOffTheEstimate()
+        {
+            var mapped = CalendarEstimate(9, 0, 9, 30);
+            var loggedForKeyless = Actual(12, 20, 12, 50);
+            var keyless = KeylessEvent(12, 20, 12, 50);
+
+            var day = DayWith(
+                new List<IEvent>(),
+                new List<WorkingDayWorklog> { loggedForKeyless, mapped });
+
+            day.Refresh();
+            Assert.That(mapped.Children, Is.EqualTo(new[] { loggedForKeyless }), "precondition");
+
+            day.BlockedEvents = new List<IEvent> { keyless };
+            day.Refresh();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(day.GetLoggedWorklog(keyless), Is.SameAs(loggedForKeyless));
+                Assert.That(loggedForKeyless.Parent, Is.Null);
+                Assert.That(mapped.Children, Is.Empty);
+            });
+        }
+
+        [Test]
+        public void TwoKeylessEventsAtTheSameTime_ShareNoWorklog()
+        {
+            var first = KeylessEvent(12, 0, 13, 0);
+            var second = KeylessEvent(12, 0, 13, 0);
+            var logged = Actual(12, 0, 13, 0);
+
+            var day = DayWith(
+                new List<IEvent> { first, second },
+                new List<WorkingDayWorklog> { logged });
+
+            day.Refresh();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(day.GetLoggedWorklog(first), Is.SameAs(logged));
+                Assert.That(day.GetLoggedWorklog(second), Is.Null);
+                Assert.That(day.LoggedEventWorklogs, Has.Count.EqualTo(1));
+                Assert.That(day.BlockedEventsTime, Is.EqualTo(TimeSpan.FromHours(1)));
+            });
         }
 
         [Test]

@@ -59,16 +59,12 @@ namespace Chronos.Web.Components.Worklogs
 
         private void RebuildDayRows()
         {
-            // Actual worklogs matched to keyless blocked events are shown as children
-            // of the blocked event row, so exclude them from standalone worklog rows.
-            var blockedMatchedWorklogs = Entity.BlockedEvents
-                .Select(e => Entity.ActualWorklogs
-                    .FirstOrDefault(w => w.StartDate == e.StartDate && w.CompleteDate == e.CompleteDate))
-                .Where(w => w != null)
-                .ToHashSet();
+            // Which worklog belongs to which keyless event is decided by the working day
+            // itself, so a worklog shown under an event row is not shown anywhere else.
+            var loggedEventWorklogs = Entity.LoggedEventWorklogs.ToHashSet();
 
             var worklogRows = Entity.ActualWorklogs
-                .Where(w => w.Parent == null && !blockedMatchedWorklogs.Contains(w))
+                .Where(w => w.Parent == null && !loggedEventWorklogs.Contains(w))
                 .Select(w => new DayRow(w.RawStartDate, Worklog: w));
 
             var regularEstimatedRows = Entity.EstimatedWorklogs
@@ -82,8 +78,7 @@ namespace Chronos.Web.Components.Worklogs
             var blockedRows = Entity.BlockedEvents.Select(e =>
             {
                 var template = CreateBlockedTemplate(e);
-                var matched = Entity.ActualWorklogs
-                    .FirstOrDefault(w => w.StartDate == e.StartDate && w.CompleteDate == e.CompleteDate);
+                var matched = Entity.GetLoggedWorklog(e);
                 if (matched != null)
                 {
                     template.Children.Add(matched);

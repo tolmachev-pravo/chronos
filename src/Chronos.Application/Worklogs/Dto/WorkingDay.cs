@@ -90,11 +90,30 @@ namespace Chronos.Application.Worklogs.Dto
             .Aggregate(TimeSpan.Zero, (acc, calendarEvent) => acc + calendarEvent.Duration);
 
         /// <summary>
-        /// True when an actual worklog exactly matches the event's start and end.
+        /// True when the event has already been logged — an actual worklog matches its
+        /// start and end exactly. Filled in by <see cref="Refresh"/>.
         /// </summary>
         public bool IsEventLogged(IEvent calendarEvent) =>
-            ActualWorklogs.Any(worklog =>
-                worklog.StartDate == calendarEvent.StartDate && worklog.CompleteDate == calendarEvent.CompleteDate);
+            GetLoggedWorklog(calendarEvent) is not null;
+
+        /// <summary>
+        /// The worklog the event was logged as, or null while it is not logged.
+        /// </summary>
+        public WorkingDayWorklog GetLoggedWorklog(IEvent calendarEvent) =>
+            calendarEvent is not null && _loggedEventWorklogs.TryGetValue(calendarEvent, out var worklog)
+                ? worklog
+                : null;
+
+        /// <summary>
+        /// Worklogs already claimed by a keyless event: they belong to that event's row and
+        /// to no other.
+        /// </summary>
+        public IReadOnlyCollection<WorkingDayWorklog> LoggedEventWorklogs => _loggedEventWorklogs.Values;
+
+        // Keyed by reference: two events with the same time are still two events, and each
+        // of them may have a worklog of its own.
+        private readonly Dictionary<IEvent, WorkingDayWorklog> _loggedEventWorklogs =
+            new(ReferenceEqualityComparer.Instance);
 
         /// <summary>
         /// Events with no issue of their own — shown for context; they block time until the
@@ -104,9 +123,14 @@ namespace Chronos.Application.Worklogs.Dto
 
         public void Refresh()
         {
+            ClaimLoggedEventWorklogs();
+
+            // A worklog claimed by a keyless event is left out of the matching: it is shown
+            // under that event, and matching it by issue key as well would put the same time
+            // entry under two rows.
             WorklogMatching.Match(
                 parents: EstimatedWorklogs,
-                children: ActualWorklogs);
+                children: ActualWorklogs.Except(_loggedEventWorklogs.Values));
 
             var unmatchedEstimated = EstimatedWorklogs
                 .Where(worklog => worklog.ChildrenTimeSpent == TimeSpan.Zero)
@@ -156,6 +180,40 @@ namespace Chronos.Application.Worklogs.Dto
                 {
                     estimatedWorklog.UpdateRemainingTimeSpent(TimeSpan.Zero);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Hands every keyless event the worklog it was logged as — the one whose start and
+        /// end match it exactly. An event claims at most one worklog and a worklog is claimed
+        /// by at most one event, so two events at the same time cannot show the same entry.
+        /// </summary>
+        private void ClaimLoggedEventWorklogs()
+        {
+            _loggedEventWorklogs.Clear();
+
+            if (BlockedEvents.IsEmpty())
+                return;
+
+            var unclaimed = ActualWorklogs.ToList();
+
+            foreach (var calendarEvent in BlockedEvents)
+            {
+                var index = unclaimed.FindIndex(worklog =>
+                    worklog.StartDate == calendarEvent.StartDate
+                    && worklog.CompleteDate == calendarEvent.CompleteDate);
+
+                if (index < 0)
+                    continue;
+
+                var claimed = unclaimed[index];
+                unclaimed.RemoveAt(index);
+
+                // Drop the tie to an estimated worklog a previous refresh may have made.
+                claimed.Parent?.Children.Remove(claimed);
+                claimed.Parent = null;
+
+                _loggedEventWorklogs[calendarEvent] = claimed;
             }
         }
 

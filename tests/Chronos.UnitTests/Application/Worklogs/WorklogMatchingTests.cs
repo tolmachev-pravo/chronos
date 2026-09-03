@@ -170,6 +170,82 @@ namespace Chronos.UnitTests.Application.Worklogs
 		}
 
 		[Test]
+		public void Match_WhenChildIsOutsideEveryParent_ShouldMatchNearestParentInTime()
+		{
+			// Arrange
+			var parents = new List<WorkingDayWorklog>
+			{
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(9), TimeSpan.FromHours(9.5)),
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(18), TimeSpan.FromHours(18.5))
+			};
+			var children = new List<WorkingDayWorklog>
+			{
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(16), TimeSpan.FromHours(17))
+			};
+
+			// Act
+			WorklogMatching.Match(parents, children);
+
+			// Assert
+			Assert.That(children[0].Parent, Is.EqualTo(parents[1]));
+		}
+
+		[Test]
+		public void Match_WhenSeveralChildrenAreOutsideEveryParent_ShouldSpreadThemByProximity()
+		{
+			// Arrange
+			// Two calendar events of one issue and four worklogs, two of them logged at a
+			// time no event covers — they used to pile up on the first event.
+			var parents = new List<WorkingDayWorklog>
+			{
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(9), TimeSpan.FromHours(9.5)),
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(18), TimeSpan.FromHours(18.5))
+			};
+			var children = new List<WorkingDayWorklog>
+			{
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(9), TimeSpan.FromHours(9.5)),
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromMinutes(740), TimeSpan.FromMinutes(770)),
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(16), TimeSpan.FromHours(17)),
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(18), TimeSpan.FromHours(18.5))
+			};
+
+			// Act
+			WorklogMatching.Match(parents, children);
+
+			// Assert
+			Assert.Multiple(() =>
+			{
+				Assert.That(children[0].Parent, Is.EqualTo(parents[0]));
+				Assert.That(children[1].Parent, Is.EqualTo(parents[0]));
+				Assert.That(children[2].Parent, Is.EqualTo(parents[1]));
+				Assert.That(children[3].Parent, Is.EqualTo(parents[1]));
+				Assert.That(parents[0].Children, Has.Count.EqualTo(2));
+				Assert.That(parents[1].Children, Has.Count.EqualTo(2));
+			});
+		}
+
+		[Test]
+		public void Match_WhenParentsAreEquallyFarFromChild_ShouldMatchTheFirstOne()
+		{
+			// Arrange
+			var parents = new List<WorkingDayWorklog>
+			{
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(9), TimeSpan.FromHours(10)),
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(12), TimeSpan.FromHours(13))
+			};
+			var children = new List<WorkingDayWorklog>
+			{
+				_issues[0].CreateWorkingDayWorklog(_date, TimeSpan.FromHours(10.5), TimeSpan.FromHours(11.5))
+			};
+
+			// Act
+			WorklogMatching.Match(parents, children);
+
+			// Assert
+			Assert.That(children[0].Parent, Is.EqualTo(parents[0]));
+		}
+
+		[Test]
 		public void Match_WhenChildrenAndParentsAreNotEmpty_ShouldMatchByStartDateNesting()
 		{
 			// Arrange
