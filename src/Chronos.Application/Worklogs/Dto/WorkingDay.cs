@@ -1,4 +1,5 @@
 ﻿using Chronos.Application.Common.Extensions;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Worklogs;
 using System;
 using System.Collections.Generic;
@@ -62,7 +63,7 @@ namespace Chronos.Application.Worklogs.Dto
         /// <summary>
         /// Estimated worklog time spent
         /// </summary>
-        public TimeSpan EstimatedWorklogTimeSpent => EstimatedWorklogs.RemainingTimeSpent() + CalendarBlockedTime;
+        public TimeSpan EstimatedWorklogTimeSpent => EstimatedWorklogs.RemainingTimeSpent() + BlockedEventsTime;
 
         /// <summary>
         /// Worklog time spent
@@ -80,25 +81,26 @@ namespace Chronos.Application.Worklogs.Dto
         public bool HasRawEstimatedWorklogs => RawEstimatedWorklogCount > 0;
 
         /// <summary>
-        /// Time blocked by keyless calendar events that are not yet logged — subtracted from
+        /// Time blocked by events without an issue that are not yet logged — subtracted from
         /// available day time during distribution. Logged events (matched by exact start/end to an
         /// actual worklog) do not block, since their time is already accounted for.
         /// </summary>
-        public TimeSpan CalendarBlockedTime => BlockedCalendarEvents
-            .Where(calendarEvent => !IsCalendarEventLogged(calendarEvent))
+        public TimeSpan BlockedEventsTime => BlockedEvents
+            .Where(calendarEvent => !IsEventLogged(calendarEvent))
             .Aggregate(TimeSpan.Zero, (acc, calendarEvent) => acc + calendarEvent.Duration);
 
         /// <summary>
-        /// True when an actual worklog exactly matches the calendar event's start and end.
+        /// True when an actual worklog exactly matches the event's start and end.
         /// </summary>
-        public bool IsCalendarEventLogged(BlockedCalendarEvent calendarEvent) =>
+        public bool IsEventLogged(IEvent calendarEvent) =>
             ActualWorklogs.Any(worklog =>
-                worklog.StartDate == calendarEvent.Start && worklog.CompleteDate == calendarEvent.End);
+                worklog.StartDate == calendarEvent.StartDate && worklog.CompleteDate == calendarEvent.CompleteDate);
 
         /// <summary>
-        /// Calendar events without a Jira key — shown for context; they block time but are not loggable.
+        /// Events with no issue of their own — shown for context; they block time until the
+        /// user logs them against a task they pick. See issue #299.
         /// </summary>
-        public IReadOnlyList<BlockedCalendarEvent> BlockedCalendarEvents { get; set; } = new List<BlockedCalendarEvent>();
+        public IReadOnlyList<IEvent> BlockedEvents { get; set; } = new List<IEvent>();
 
         public void Refresh()
         {
@@ -112,12 +114,12 @@ namespace Chronos.Application.Worklogs.Dto
 
             // Calendar and Comment events use their own time directly — not scaled to day capacity
             var fixedTimeUnmatched = unmatchedEstimated
-                .Where(w => w.Source == WorklogSource.Calendar || w.Source == WorklogSource.Comment)
+                .Where(w => w.Source == EventSource.Calendar || w.Source == EventSource.Comment)
                 .ToList();
 
             // Assignee and Tester events are scaled proportionally from remaining day time
             var proportionalUnmatched = unmatchedEstimated
-                .Where(w => w.Source != WorklogSource.Calendar && w.Source != WorklogSource.Comment)
+                .Where(w => w.Source != EventSource.Calendar && w.Source != EventSource.Comment)
                 .ToList();
 
             foreach (var estimatedWorklog in EstimatedWorklogs.Where(w => w.ChildrenTimeSpent > TimeSpan.Zero))
@@ -134,12 +136,12 @@ namespace Chronos.Application.Worklogs.Dto
                 .Select(w => w.TimeSpent)
                 .Sum();
 
-            // Fixed events and keyless calendar blocks reduce the pool available for proportional events.
+            // Fixed events and blocked events reduce the pool available for proportional events.
             // Raw time is used for fixed events — they may fall outside working hours but still consume time.
             var fixedRawTimeSpent = fixedTimeUnmatched.Select(w => w.RawTimeSpent).Sum();
             var remainingDayTimeSpent = Settings.WorkingTime
                 - ActualWorklogs.TimeSpent()
-                - CalendarBlockedTime
+                - BlockedEventsTime
                 - fixedRawTimeSpent;
 
             foreach (var estimatedWorklog in proportionalUnmatched)

@@ -6,22 +6,14 @@ using System.Threading.Tasks;
 
 namespace Chronos.Application.Worklogs
 {
+    /// <summary>
+    /// The source of real time entries. Everything that is merely a trace of activity
+    /// is served by <see cref="Events.IEventDataSource"/> instead. See issue #299.
+    /// </summary>
     public interface IWorklogDataSource
     {
         Task<IEnumerable<IWorklog>> GetIssueWorklogsAsync(
             GetIssueWorklogs.Query query,
-            CancellationToken cancellationToken = default);
-
-        Task<IEnumerable<IWorklog>> GetAssigneeRawIssueWorklogsAsync(
-            GetAssigneeJiraEvents.Query query,
-            CancellationToken cancellationToken = default);
-
-        Task<IEnumerable<IWorklog>> GetTesterRawIssueWorklogsAsync(
-            GetTesterJiraEvents.Query query,
-            CancellationToken cancellationToken = default);
-
-        Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(
-            GetCommentJiraEvents.Query query,
             CancellationToken cancellationToken = default);
     }
 }

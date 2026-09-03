@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Chronos.Application.Authentication;
+using Chronos.Application.Events;
 using Chronos.Application.Issues;
 using Chronos.Application.Storage;
 using Chronos.Application.Worklogs;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Issues;
 using Chronos.Domain.Models.Users;
+using System;
 
 namespace Chronos.Infrastructure.Mock
 {
@@ -13,6 +16,14 @@ namespace Chronos.Infrastructure.Mock
         public static IServiceCollection AddMockInfrastructureLayer(this IServiceCollection services)
         {
             services.AddTransient<IWorklogDataSource, MockWorklogDataSource>();
+
+            // One provider per source, so the mock mode goes through the same event
+            // orchestration as the real infrastructure. See issue #299.
+            foreach (var source in Enum.GetValues<EventSource>())
+            {
+                var eventSource = source;
+                services.AddTransient<IEventProvider>(_ => new MockEventProvider(eventSource));
+            }
             services.AddTransient<IWorklogRepository, MockWorklogRepository>();
             services.AddTransient<IAuthenticationService, MockAuthenticationService>();
             services.AddTransient<IIssueDataSource, MockIssueDataSource>();

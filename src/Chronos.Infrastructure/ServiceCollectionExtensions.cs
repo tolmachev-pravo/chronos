@@ -21,9 +21,13 @@ using Chronos.Infrastructure.Storage;
 using Chronos.Infrastructure.Users;
 using Chronos.Infrastructure.Worklogs;
 using Chronos.Application.Extensions;
+using Chronos.Application.Events;
+using Chronos.Application.Extensions.Jira;
 using Chronos.Application.Extensions.YandexCalendar;
 using Chronos.Application.Security;
 using Chronos.Infrastructure.Extensions;
+using Chronos.Infrastructure.Events;
+using Chronos.Infrastructure.Extensions.Jira;
 using Chronos.Infrastructure.Extensions.YandexCalendar;
 using Chronos.Infrastructure.Security;
 
@@ -52,6 +56,15 @@ namespace Chronos.Infrastructure
             {
                 services.AddTransient<IWorklogDataSource, JiraWorklogDataSource>();
             }
+            // The event sources behind IEventDataSource (issue #299). Registering them as
+            // a collection is what makes a new source a one-line change: nothing in the
+            // day assembly names a provider.
+            services.AddTransient<IJiraExtensionProvider, JiraExtensionProvider>();
+            services.AddTransient<IEventProvider, JiraAssigneeEventProvider>();
+            services.AddTransient<IEventProvider, JiraTesterEventProvider>();
+            services.AddTransient<IEventProvider, JiraCommentEventProvider>();
+            services.AddTransient<IEventProvider, YandexCalendarEventProvider>();
+
             services.AddSingleton<IJiraLinkGenerator, JiraLinkGenerator>();
             services.AddTransient<IWorklogRepository, WorklogRepository>();
             services.AddTransient<IAuthenticationService, AuthenticationService>();

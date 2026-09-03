@@ -1,5 +1,6 @@
 ﻿using Chronos.Application.Worklogs.Dto;
 using Chronos.Domain.Models.Issues;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Worklogs;
 using Chronos.UnitTests.Application.Mock;
 
@@ -348,7 +349,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                     StartDate = _date.AddHours(10),
                     CompleteDate = _date.AddHours(11).AddMinutes(30),
                     Type = WorklogType.Estimated,
-                    Source = WorklogSource.Calendar,
+                    Source = EventSource.Calendar,
                     Issue = _issues[0]
                 }
             };
@@ -377,7 +378,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                     StartDate = _date.AddHours(9),          // clipped to working start
                     CompleteDate = _date.AddHours(9).AddMinutes(30),
                     Type = WorklogType.Estimated,
-                    Source = WorklogSource.Calendar,
+                    Source = EventSource.Calendar,
                     Issue = _issues[0]
                 }
             };
@@ -405,7 +406,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                     StartDate = _date.AddHours(14),
                     CompleteDate = _date.AddHours(14).AddMinutes(45),
                     Type = WorklogType.Estimated,
-                    Source = WorklogSource.Comment,
+                    Source = EventSource.Comment,
                     Issue = _issues[0]
                 }
             };
@@ -435,7 +436,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                     StartDate = _date.AddHours(9),
                     CompleteDate = _date.AddHours(13),
                     Type = WorklogType.Estimated,
-                    Source = WorklogSource.Assignee,
+                    Source = EventSource.Assignee,
                     Issue = _issues[0]
                 },
                 new WorkingDayWorklog
@@ -445,7 +446,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                     StartDate = _date.AddHours(13),
                     CompleteDate = _date.AddHours(14),
                     Type = WorklogType.Estimated,
-                    Source = WorklogSource.Comment,
+                    Source = EventSource.Comment,
                     Issue = _issues[1]
                 }
             };
@@ -476,7 +477,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                 new WorkingDayWorklog
                 {
                     Type = WorklogType.Estimated,
-                    Source = WorklogSource.Calendar,
+                    Source = EventSource.Calendar,
                     StartDate = _date.AddHours(10),
                     CompleteDate = _date.AddHours(11),
                     Issue = _issues[0]
@@ -485,7 +486,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                 new WorkingDayWorklog
                 {
                     Type = WorklogType.Actual,
-                    Source = WorklogSource.Calendar,
+                    Source = EventSource.Calendar,
                     StartDate = _date.AddHours(10),
                     CompleteDate = _date.AddHours(11),
                     Issue = _issues[0]
@@ -494,7 +495,7 @@ namespace Chronos.UnitTests.Application.Worklogs
                 new WorkingDayWorklog
                 {
                     Type = WorklogType.Estimated,
-                    Source = WorklogSource.Assignee,
+                    Source = EventSource.Assignee,
                     StartDate = _date.AddHours(11),
                     CompleteDate = _date.AddHours(13),
                     Issue = _issues[1]

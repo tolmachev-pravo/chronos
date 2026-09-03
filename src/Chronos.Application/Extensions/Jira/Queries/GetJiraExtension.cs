@@ -1,6 +1,5 @@
 using MediatR;
 using Chronos.Application.Extensions.Jira.Dto;
-using Chronos.Domain.Entities.Extensions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -12,27 +11,20 @@ namespace Chronos.Application.Extensions.Jira.Queries
 
         public class Handler : IRequestHandler<Query, JiraExtensionDto>
         {
-            private readonly IUserExtensionRepository _repository;
+            private readonly IJiraExtensionProvider _provider;
 
-            public Handler(IUserExtensionRepository repository)
+            public Handler(IJiraExtensionProvider provider)
             {
-                _repository = repository;
+                _provider = provider;
             }
 
             /// <summary>
-            /// A user without a stored extension is treated as connected with the default
-            /// settings, so worklog search keeps working before the extension is seeded.
+            /// The "no stored extension means connected with the default settings" rule
+            /// lives in the provider, so the event providers see the same state outside
+            /// the MediatR pipeline. See issue #299.
             /// </summary>
-            public async Task<JiraExtensionDto> Handle(Query request, CancellationToken cancellationToken)
-            {
-                var entity = await _repository.GetAsync(request.Username, ExtensionType.Jira, cancellationToken);
-                if (entity is null)
-                    return new JiraExtensionDto(true, JiraExtensionSettingsDto.Default);
-
-                return new JiraExtensionDto(
-                    entity.IsEnabled,
-                    JiraExtensionSettingsSerializer.Deserialize(entity.Settings));
-            }
+            public Task<JiraExtensionDto> Handle(Query request, CancellationToken cancellationToken)
+                => _provider.GetAsync(request.Username, cancellationToken);
         }
     }
 }

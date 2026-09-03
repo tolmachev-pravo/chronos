@@ -1,8 +1,9 @@
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Chronos.Application.Worklogs.Commands;
 using Chronos.Application.Worklogs.Dto;
+using Chronos.Domain.Models.Events;
 using Chronos.Web.Shared;
 using System;
 using System.Collections.Generic;
@@ -60,9 +61,9 @@ namespace Chronos.Web.Components.Worklogs
         {
             // Actual worklogs matched to keyless blocked events are shown as children
             // of the blocked event row, so exclude them from standalone worklog rows.
-            var blockedMatchedWorklogs = Entity.BlockedCalendarEvents
+            var blockedMatchedWorklogs = Entity.BlockedEvents
                 .Select(e => Entity.ActualWorklogs
-                    .FirstOrDefault(w => w.StartDate == e.Start && w.CompleteDate == e.End))
+                    .FirstOrDefault(w => w.StartDate == e.StartDate && w.CompleteDate == e.CompleteDate))
                 .Where(w => w != null)
                 .ToHashSet();
 
@@ -71,24 +72,24 @@ namespace Chronos.Web.Components.Worklogs
                 .Select(w => new DayRow(w.RawStartDate, Worklog: w));
 
             var regularEstimatedRows = Entity.EstimatedWorklogs
-                .Where(w => w.Source != Domain.Models.Worklogs.WorklogSource.Calendar)
+                .Where(w => w.Source != Domain.Models.Events.EventSource.Calendar)
                 .Select(w => new DayRow(w.RawStartDate, EstimatedWorklog: w));
 
             var calendarEstimatedRows = Entity.EstimatedWorklogs
-                .Where(w => w.Source == Domain.Models.Worklogs.WorklogSource.Calendar)
+                .Where(w => w.Source == Domain.Models.Events.EventSource.Calendar)
                 .Select(w => new DayRow(w.RawStartDate, CalendarWorklog: w));
 
-            var blockedRows = Entity.BlockedCalendarEvents.Select(e =>
+            var blockedRows = Entity.BlockedEvents.Select(e =>
             {
                 var template = CreateBlockedTemplate(e);
                 var matched = Entity.ActualWorklogs
-                    .FirstOrDefault(w => w.StartDate == e.Start && w.CompleteDate == e.End);
+                    .FirstOrDefault(w => w.StartDate == e.StartDate && w.CompleteDate == e.CompleteDate);
                 if (matched != null)
                 {
                     template.Children.Add(matched);
                     template.UpdateRemainingTimeSpent(TimeSpan.Zero);
                 }
-                return new DayRow(e.Start, CalendarWorklog: template, BlockedEventRef: e);
+                return new DayRow(e.StartDate, CalendarWorklog: template, BlockedEventRef: e);
             });
 
             _dayRows = worklogRows
@@ -99,18 +100,18 @@ namespace Chronos.Web.Components.Worklogs
                 .ToList();
         }
 
-        private static WorkingDayWorklog CreateBlockedTemplate(BlockedCalendarEvent e)
+        private static WorkingDayWorklog CreateBlockedTemplate(IEvent e)
         {
             var template = new WorkingDayWorklog
             {
-                RawStartDate = e.Start,
-                RawCompleteDate = e.End,
-                StartDate = e.Start,
-                CompleteDate = e.End,
-                Comment = e.Title,
+                RawStartDate = e.StartDate,
+                RawCompleteDate = e.CompleteDate,
+                StartDate = e.StartDate,
+                CompleteDate = e.CompleteDate,
+                Comment = e.Summary,
                 Issue = null,
                 Type = Domain.Models.Worklogs.WorklogType.Actual,
-                Source = Domain.Models.Worklogs.WorklogSource.Calendar
+                Source = Domain.Models.Events.EventSource.Calendar
             };
             template.UpdateRemainingTimeSpent(e.Duration);
             return template;
@@ -160,6 +161,6 @@ namespace Chronos.Web.Components.Worklogs
             WorkingDayWorklog? Worklog = null,
             WorkingDayWorklog? EstimatedWorklog = null,
             WorkingDayWorklog? CalendarWorklog = null,
-            BlockedCalendarEvent? BlockedEventRef = null);
+            IEvent? BlockedEventRef = null);
     }
 }

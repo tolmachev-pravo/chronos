@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Chronos.Application.Common.Behaviors;
+using Chronos.Application.Events;
 using Chronos.Application.Storage;
 using Chronos.Application.Time;
 using Chronos.Application.Tracing;
@@ -23,6 +24,11 @@ namespace Chronos.Application
             services.AddSingleton<IMemoryCache<string, UserWorklogFilter>, UserWorklogFilterMemoryCache>();
 
 			services.AddSingleton<IPerformanceStatsCollector, PerformanceStatsCollector>();
+
+			// The orchestrator over the registered IEventProvider implementations; the
+			// providers themselves are registered in the infrastructure layer, so nothing
+			// here names a source. See issue #299.
+			services.AddTransient<IEventDataSource, EventDataSource>();
 
 			services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 			services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
