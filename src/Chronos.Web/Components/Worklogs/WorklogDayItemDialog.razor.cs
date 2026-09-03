@@ -89,7 +89,7 @@ namespace Chronos.Web.Components.Worklogs
                     RemainingTimeSpent = CompleteTime.Value - StartTime.Value,
                     Issue = Issue,
                     Type = Domain.Models.Worklogs.WorklogType.Actual,
-                    Source = Domain.Models.Worklogs.WorklogSource.Calendar,
+                    Source = Domain.Models.Events.EventSource.Calendar,
                     Comment = Comment
                 };
             }

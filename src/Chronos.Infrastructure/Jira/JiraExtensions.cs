@@ -1,5 +1,5 @@
-﻿using Chronos.Application.Time;
-using Chronos.Domain.Models.Worklogs;
+using Chronos.Application.Time;
+using Chronos.Domain.Models.Events;
 using Chronos.Infrastructure.Jira.Dto;
 using System;
 using System.Collections.Generic;
@@ -17,12 +17,11 @@ namespace Chronos.Infrastructure.Jira
             return match.Success;
 		}
 
-        public static IEnumerable<T> ConvertTo<T>(this IList<IssueChangeLogItemDto> issueChangeLogItems,
+        public static IEnumerable<UserEvent> ConvertTo(this IList<IssueChangeLogItemDto> issueChangeLogItems,
             string statusName,
             ITimeProvider timeProvider,
             TimeZoneInfo timeZoneInfo,
-			WorklogSource worklogSource)
-            where T : IWorklog, new()
+			EventSource eventSource)
         {
             var i = 0;
             while (i < issueChangeLogItems.Count)
@@ -31,37 +30,37 @@ namespace Chronos.Infrastructure.Jira
                 // 1. Первый элемент сразу выходит из прогресса. Значит это завершающий
                 if (item.FromValue == statusName)
                 {
-                    yield return new T()
+                    yield return new UserEvent()
                     {
                         CompleteDate = timeProvider.ConvertToUserTimezone(item.ChangeLog.CreatedDate, timeZoneInfo),
                         StartDate = DateTime.MinValue,
                         Issue = item.ChangeLog.Issue.Adapt(),
                         Author = item.Author,
-                        Source = worklogSource
+                        Source = eventSource
 					};
                 }
                 // 2. Это последний элемент и он не завершается
                 else if (i == (issueChangeLogItems.Count - 1))
                 {
-                    yield return new T()
+                    yield return new UserEvent()
                     {
                         CompleteDate = DateTime.MaxValue,
                         StartDate = timeProvider.ConvertToUserTimezone(item.ChangeLog.CreatedDate, timeZoneInfo),
                         Issue = item.ChangeLog.Issue.Adapt(),
                         Author = item.Author,
-                        Source = worklogSource
+                        Source = eventSource
 					};
                 }
                 // 3. Обычный случай когда после FromInProgress следует ToInProgress
                 else
                 {
-                    yield return new T()
+                    yield return new UserEvent()
                     {
                         CompleteDate = timeProvider.ConvertToUserTimezone(issueChangeLogItems[i + 1].ChangeLog.CreatedDate, timeZoneInfo),
                         StartDate = timeProvider.ConvertToUserTimezone(item.ChangeLog.CreatedDate, timeZoneInfo),
                         Issue = item.ChangeLog.Issue.Adapt(),
                         Author = item.Author,
-                        Source = worklogSource
+                        Source = eventSource
 					};
                 }
 
@@ -69,18 +68,17 @@ namespace Chronos.Infrastructure.Jira
             }
         }
 
-        public static IEnumerable<T> ConvertTo<T>(
+        public static IEnumerable<UserEvent> ConvertTo(
             this List<IssueCommentDto> comments,
             ITimeProvider timeProvider,
             TimeZoneInfo timeZoneInfo,
-            WorklogSource source,
+            EventSource source,
             TimeSpan time)
-                where T : IWorklog, new()
         {
             foreach (var comment in comments)
             {
                 var createdDate = timeProvider.ConvertToUserTimezone(comment.CreatedDate, timeZoneInfo);
-                yield return new T()
+                yield return new UserEvent()
                 {
                     CompleteDate = createdDate,
                     StartDate = createdDate.Add(-time),

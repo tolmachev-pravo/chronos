@@ -1,4 +1,5 @@
 ﻿using Chronos.Domain.Models.Issues;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Worklogs;
 using System;
 using System.Collections.Generic;
@@ -58,57 +59,57 @@ namespace Chronos.Infrastructure.Mock
                 issue: Issues[4])
         };
 
-        public static IList<IWorklog> RawIssueWorklogs = new List<IWorklog>
+        public static IList<UserEvent> Events = new List<UserEvent>
         {
-            new RawIssueWorklog
+            new UserEvent
             {
                 StartDate = DateTime.Now.Date.AddHours(10),
                 CompleteDate = DateTime.Now.Date.AddHours(11),
                 Issue = Issues[0]
             },
-            new RawIssueWorklog
+            new UserEvent
             {
                 StartDate = DateTime.Now.Date.AddHours(11),
                 CompleteDate = DateTime.Now.Date.AddHours(17),
                 Issue = Issues[1]
             },
-            new RawIssueWorklog
+            new UserEvent
             {
                 StartDate = DateTime.Now.Date.AddHours(17),
                 CompleteDate = DateTime.Now.Date.AddHours(19),
                 Issue = Issues[2]
             },
-            new RawIssueWorklog
+            new UserEvent
             {
                 StartDate = DateTime.Now.Date.AddDays(-1).AddHours(11),
                 CompleteDate = DateTime.Now.Date.AddDays(-1).AddHours(16),
                 Issue = Issues[1]
             },
-            new RawIssueWorklog
+            new UserEvent
             {
                 StartDate = DateTime.Now.Date.AddDays(-1).AddHours(16),
                 CompleteDate = DateTime.Now.Date.AddDays(-1).AddHours(20),
                 Issue = Issues[3]
             },
-            new RawIssueWorklog
+            new UserEvent
             {
                 StartDate = DateTime.Now.Date.AddDays(-5).AddHours(19),
                 CompleteDate = DateTime.Now.Date.AddDays(-2).AddHours(19),
                 Issue = Issues[4]
             },            
-            new RawIssueWorklog
+            new UserEvent
             {
                 StartDate = DateTime.Now.Date.AddDays(-3).AddHours(11),
                 CompleteDate = DateTime.Now.Date.AddDays(-3).AddHours(12),
                 Issue = Issues[5],
-                Source = WorklogSource.Comment
+                Source = EventSource.Comment
             },
-            new RawIssueWorklog
+            new UserEvent
 			{
 				StartDate = DateTime.Now.Date.AddDays(-3).AddHours(12),
 				CompleteDate = DateTime.Now.Date.AddDays(-3).AddHours(15),
 				Issue = Issues[6],
-				Source = WorklogSource.Tester
+				Source = EventSource.Tester
 			}
 		};
     }

@@ -1,4 +1,4 @@
-@using MudBlazor
+﻿@using MudBlazor
 @using Chronos.Web.Common
 
 <tr class="chr-table-summary-tr">
@@ -42,7 +42,7 @@
             else if (row.CalendarWorklog is not null)
             {
                 var isLogged = row.BlockedEventRef != null
-                    ? Entity.IsCalendarEventLogged(row.BlockedEventRef)
+                    ? Entity.IsEventLogged(row.BlockedEventRef)
                     : row.CalendarWorklog.ChildrenTimeSpent > TimeSpan.Zero;
                 <CalendarWorklogItem Entity="@row.CalendarWorklog"
                                      IsLogged="@isLogged"

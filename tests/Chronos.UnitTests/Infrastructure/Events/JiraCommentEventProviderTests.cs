@@ -2,44 +2,45 @@ using Atlassian.Jira;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using Chronos.Application.Authentication;
+using Chronos.Application.Events;
+using Chronos.Application.Extensions.Jira;
+using Chronos.Application.Extensions.Jira.Dto;
 using Chronos.Application.Storage;
 using Chronos.Application.Time;
-using Chronos.Application.Worklogs.Queries;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Users;
+using Chronos.Infrastructure.Events;
 using Chronos.Infrastructure.Jira;
 using Chronos.Infrastructure.Jira.Dto;
 using Chronos.Infrastructure.Jira.Query;
 
-namespace Chronos.UnitTests.Infrastructure.Jira
+namespace Chronos.UnitTests.Infrastructure.Events
 {
     /// <summary>
     /// The comment events are searched with the ScriptRunner "commented" issue function
-    /// so the period filtering happens on the Jira side. See issue #259.
+    /// so the period filtering happens on the Jira side. See issue #259. Moved from
+    /// JiraWorklogDataSourceCommentTests when comments became an event source (#299).
     /// </summary>
     [TestFixture]
-    public class JiraWorklogDataSourceCommentTests
+    public class JiraCommentEventProviderTests
     {
         private const string CurrentUser = "d.tolmachev";
 
         private Mock<IJiraService> _jiraServiceMock;
-        private Mock<IIdentityService> _identityServiceMock;
-        private Mock<ITimeProvider> _timeProviderMock;
         private Mock<IStorage<string, UserProfile>> _userProfileStorageMock;
+        private Mock<ITimeProvider> _timeProviderMock;
+        private Mock<IJiraExtensionProvider> _extensionProviderMock;
         private JiraConfiguration _configuration;
 
         [SetUp]
         public void SetUp()
         {
             _jiraServiceMock = new Mock<IJiraService>();
-            _identityServiceMock = new Mock<IIdentityService>();
-            _timeProviderMock = new Mock<ITimeProvider>();
             _userProfileStorageMock = new Mock<IStorage<string, UserProfile>>();
+            _timeProviderMock = new Mock<ITimeProvider>();
+            _extensionProviderMock = new Mock<IJiraExtensionProvider>();
             _configuration = new JiraConfiguration();
 
-            _identityServiceMock
-                .Setup(mock => mock.GetCurrentUserAsync())
-                .ReturnsAsync(new User { Username = CurrentUser });
             _userProfileStorageMock
                 .Setup(mock => mock.GetValueAsync(CurrentUser, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new UserProfile { Username = CurrentUser, TimeZoneId = "Europe/Moscow" });
@@ -50,23 +51,37 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                 .Setup(mock => mock.GetIssuesAsync(
                     It.IsAny<IssueSearchOptions>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(Array.Empty<IssueDto>());
+            SetupExtension(new JiraExtensionSettingsDto(
+                AssigneeEventsEnabled: true,
+                CommentEventsEnabled: true,
+                CommentWorklogTime: TimeSpan.FromMinutes(15),
+                TesterEventsEnabled: false));
         }
 
-        private JiraWorklogDataSource CreateSut() => new(
+        private void SetupExtension(JiraExtensionSettingsDto settings, bool isEnabled = true) =>
+            _extensionProviderMock
+                .Setup(mock => mock.GetAsync(CurrentUser, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new JiraExtensionDto(isEnabled, settings));
+
+        private JiraCommentEventProvider CreateSut() => new(
             _jiraServiceMock.Object,
             new JiraQueryFactory(),
-            _identityServiceMock.Object,
-            _timeProviderMock.Object,
             _userProfileStorageMock.Object,
+            _timeProviderMock.Object,
+            _extensionProviderMock.Object,
             Options.Create(_configuration),
-            Mock.Of<ILogger<JiraWorklogDataSource>>());
+            Mock.Of<ILogger<JiraCommentEventProvider>>());
 
-        private static GetCommentJiraEvents.Query Query() => new()
+        private static EventQuery Query() => new(
+            CurrentUser,
+            new DateTime(2026, 07, 01),
+            new DateTime(2026, 07, 15, 23, 59, 59));
+
+        private async Task<IEnumerable<IEvent>> GetEventsAsync(JiraCommentEventProvider sut)
         {
-            StartDate = new DateTime(2026, 07, 01),
-            EndDate = new DateTime(2026, 07, 15, 23, 59, 59),
-            CommentWorklogTime = TimeSpan.FromMinutes(15)
-        };
+            Assert.That(await sut.PrepareAsync(Query()), Is.True);
+            return await sut.GetEventsAsync();
+        }
 
         private List<string> CapturedJql()
         {
@@ -80,13 +95,13 @@ namespace Chronos.UnitTests.Infrastructure.Jira
         }
 
         [Test]
-        public async Task GetCommentRawIssueWorklogsAsync_Should_UseTheCommentedIssueFunction_When_ScriptRunnerEnabled()
+        public async Task GetEventsAsync_Should_UseTheCommentedIssueFunction_When_ScriptRunnerEnabled()
         {
             // Arrange
             var captured = CapturedJql();
 
             // Act
-            await CreateSut().GetCommentRawIssueWorklogsAsync(Query());
+            await GetEventsAsync(CreateSut());
 
             // Assert — the end bound is shifted a day forward because "before" is an
             // exclusive midnight, and the watcher condition is no longer needed.
@@ -98,14 +113,14 @@ namespace Chronos.UnitTests.Infrastructure.Jira
         }
 
         [Test]
-        public async Task GetCommentRawIssueWorklogsAsync_Should_UseThePlainQuery_When_ScriptRunnerDisabled()
+        public async Task GetEventsAsync_Should_UseThePlainQuery_When_ScriptRunnerDisabled()
         {
             // Arrange
             _configuration.ScriptRunner.Enabled = false;
             var captured = CapturedJql();
 
             // Act
-            await CreateSut().GetCommentRawIssueWorklogsAsync(Query());
+            await GetEventsAsync(CreateSut());
 
             // Assert
             Assert.That(captured, Has.Count.EqualTo(1));
@@ -117,7 +132,7 @@ namespace Chronos.UnitTests.Infrastructure.Jira
         }
 
         [Test]
-        public async Task GetCommentRawIssueWorklogsAsync_Should_FallBackToThePlainQuery_When_TheCommentedSearchFails()
+        public async Task GetEventsAsync_Should_FallBackToThePlainQuery_When_TheCommentedSearchFails()
         {
             // Arrange — the addon is missing, so Jira rejects the issue function.
             var captured = new List<string>();
@@ -131,7 +146,7 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                         : Task.FromResult<IEnumerable<IssueDto>>(Array.Empty<IssueDto>()));
 
             // Act
-            var result = await CreateSut().GetCommentRawIssueWorklogsAsync(Query());
+            var result = await GetEventsAsync(CreateSut());
 
             // Assert — both queries were attempted, in that order, and no exception escaped.
             Assert.That(result, Is.Empty);
@@ -141,7 +156,7 @@ namespace Chronos.UnitTests.Infrastructure.Jira
         }
 
         [Test]
-        public async Task GetCommentRawIssueWorklogsAsync_Should_ReturnTheCommentsAuthoredByTheCurrentUserInsideThePeriod()
+        public async Task GetEventsAsync_Should_ReturnTheCommentsAuthoredByTheCurrentUserInsideThePeriod()
         {
             // Arrange
             var issue = new IssueDto { Key = "CASEM-1", Summary = "s", Link = "l", Identifier = "1" };
@@ -165,12 +180,31 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                 });
 
             // Act
-            var result = (await CreateSut().GetCommentRawIssueWorklogsAsync(Query())).ToList();
+            var result = (await GetEventsAsync(CreateSut())).ToList();
 
             // Assert
             Assert.That(result, Has.Count.EqualTo(1));
             Assert.That(result.Single().Issue.Key, Is.EqualTo("CASEM-1"));
             Assert.That(result.Single().Author, Is.EqualTo(CurrentUser));
+            Assert.That(result.Single().Source, Is.EqualTo(EventSource.Comment));
+            // The comment worklog time from the extension settings frames the event.
+            Assert.That(result.Single().Duration, Is.EqualTo(TimeSpan.FromMinutes(15)));
+        }
+
+        [Test]
+        public async Task PrepareAsync_Should_ReturnFalse_When_CommentEventsAreDisabled()
+        {
+            // Arrange
+            SetupExtension(JiraExtensionSettingsDto.Default);
+
+            // Act
+            var prepared = await CreateSut().PrepareAsync(Query());
+
+            // Assert — a disabled source is not queried at all. See issue #242.
+            Assert.That(prepared, Is.False);
+            _jiraServiceMock.Verify(
+                mock => mock.GetIssuesAsync(It.IsAny<IssueSearchOptions>(), It.IsAny<CancellationToken>()),
+                Times.Never);
         }
     }
 }

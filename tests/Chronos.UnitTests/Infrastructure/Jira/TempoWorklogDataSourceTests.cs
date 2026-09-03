@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Chronos.Application.Authentication;
@@ -58,9 +58,7 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                 new JiraQueryFactory(),
                 _identityServiceMock.Object,
                 _timeProviderMock.Object,
-                _userProfileStorageMock.Object,
-                Options.Create(new JiraConfiguration()),
-                Mock.Of<ILogger<JiraWorklogDataSource>>());
+                _userProfileStorageMock.Object);
 
             _sut = new TempoWorklogDataSource(
                 _jiraServiceMock.Object,

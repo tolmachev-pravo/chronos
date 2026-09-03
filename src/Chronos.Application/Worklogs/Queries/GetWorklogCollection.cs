@@ -1,15 +1,11 @@
-using MediatR;
+﻿using MediatR;
 using Chronos.Application.Authentication;
 using Chronos.Application.Common.Extensions;
-using Chronos.Application.Extensions.Jira.Dto;
-using Chronos.Application.Extensions.Jira.Queries;
-using Chronos.Application.Extensions.YandexCalendar.Dto;
-using Chronos.Application.Extensions.YandexCalendar.Queries;
+using Chronos.Application.Events.Queries;
 using Chronos.Application.Users.Dto;
 using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Dto;
-using Chronos.Domain.Models.Issues;
-using Chronos.Domain.Models.Users;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Worklogs;
 using System;
 using System.Collections.Generic;
@@ -57,9 +53,12 @@ namespace Chronos.Application.Worklogs.Queries
                 return new Model { WorkingDays = worklogCollection };
             }
 
-            private static readonly Task<IEnumerable<IWorklog>> NoWorklogs =
-                Task.FromResult(Enumerable.Empty<IWorklog>());
-
+            /// <summary>
+            /// A day is built from two independent streams: worklogs — the time actually
+            /// logged — and events, the traces of activity an estimate is derived from.
+            /// Which event sources exist and whether they are enabled is the concern of
+            /// IEventDataSource, not of this handler. See issue #299.
+            /// </summary>
             private async Task<IEnumerable<WorkingDay>> CalculateWorklogCollection(Query query,
                 CancellationToken cancellationToken)
             {
@@ -70,48 +69,16 @@ namespace Chronos.Application.Worklogs.Queries
                 var userSettings = await _mediator.Send(
                     new GetUserSettings.Query(user?.Username), cancellationToken);
 
-                // Which kinds of Jira events the user wants (issue #242). A disabled
-                // extension loads none of them; a disabled kind is not requested at all,
-                // so Jira is not queried for it.
-                var extension = await _mediator.Send(
-                    new GetJiraExtension.Query(user?.Username), cancellationToken);
-                var jiraSettings = extension.IsEnabled
-                    ? extension.Settings
-                    : JiraExtensionSettingsDto.Disabled;
-
-                // Kick off the independent data fetches concurrently to cut wall-clock.
-                // Safe against the scoped, non-thread-safe ApplicationDbContext: only the
-                // calendar path touches it, and it runs as a single task, so there is no
-                // concurrent DbContext access; the Jira queries use transient services with
-                // no shared state. Trade-off: PerformanceBehavior's per-request allocation
-                // stats are not representative while these run concurrently. See issue #258.
-                var assigneeTask = jiraSettings.AssigneeEventsEnabled
-                    ? _mediator.Send(
-                        new GetAssigneeJiraEvents.Query()
-                        {
-                            StartDate = query.StartDate,
-                            EndDate = query.EndDate
-                        }, cancellationToken)
-                    : NoWorklogs;
-
-                var testerTask = jiraSettings.TesterEventsEnabled
-                    ? _mediator.Send(
-                        new GetTesterJiraEvents.Query()
-                        {
-                            StartDate = query.StartDate,
-                            EndDate = query.EndDate
-                        }, cancellationToken)
-                    : NoWorklogs;
-
-                var commentTask = jiraSettings.CommentEventsEnabled
-                    ? _mediator.Send(
-                        new GetCommentJiraEvents.Query()
-                        {
-                            StartDate = query.StartDate,
-                            EndDate = query.EndDate,
-                            CommentWorklogTime = jiraSettings.CommentWorklogTime
-                        }, cancellationToken)
-                    : NoWorklogs;
+                // Events and worklogs are fetched concurrently to cut wall-clock. Trade-off:
+                // PerformanceBehavior's per-request allocation stats are not representative
+                // while these run concurrently; the event orchestrator records its own
+                // per-provider measures. See issue #258.
+                var eventsTask = _mediator.Send(
+                    new GetUserEvents.Query()
+                    {
+                        StartDate = query.StartDate,
+                        EndDate = query.EndDate
+                    }, cancellationToken);
 
                 var issueWorklogsTask = _mediator.Send(
                     new GetIssueWorklogs.Query()
@@ -120,98 +87,39 @@ namespace Chronos.Application.Worklogs.Queries
                         EndDate = query.EndDate
                     }, cancellationToken);
 
-                var calendarTask = GetCalendarWorklogsAsync(query, user, cancellationToken);
+                await Task.WhenAll(eventsTask, issueWorklogsTask);
 
-                await Task.WhenAll(
-                    assigneeTask, testerTask, commentTask, issueWorklogsTask, calendarTask);
-
-                var rawIssueWorklogs = (await assigneeTask)
-                    .Concat(await testerTask)
-                    .Concat(await commentTask);
-
+                var events = (await eventsTask).ToList();
                 var issueWorklogs = await issueWorklogsTask;
 
-                var (calendarWorklogs, blockedEventsByDay) = await calendarTask;
+                // An event without an issue is time the user spent but cannot log against a
+                // task: it blocks the day instead of becoming an estimated worklog.
+                var keyedEvents = events.Where(userEvent => userEvent.Issue is not null);
+                var blockedEventsByDay = events
+                    .Where(userEvent => userEvent.Issue is null)
+                    .GroupBy(userEvent => userEvent.StartDate.Date)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => (IReadOnlyList<IEvent>)group.ToList());
 
-                var allRawWorklogs = rawIssueWorklogs.Concat(calendarWorklogs);
-
-                var days = CalculateDays(issueWorklogs, allRawWorklogs, query, userSettings).ToList();
+                var days = CalculateDays(issueWorklogs, keyedEvents, query, userSettings).ToList();
                 foreach (var day in days)
                 {
-                    day.BlockedCalendarEvents = blockedEventsByDay.GetValueOrDefault(day.Date) ?? new List<BlockedCalendarEvent>();
+                    day.BlockedEvents = blockedEventsByDay.GetValueOrDefault(day.Date) ?? new List<IEvent>();
                     day.Refresh();
                 }
 
                 return days;
             }
 
-            /// <summary>
-            /// Fetches calendar events for the query range and splits them into estimated
-            /// worklogs (events with a Jira key) and per-day blocked time (events without).
-            /// Calendar failures degrade silently — the collection is returned without calendar.
-            /// </summary>
-            private async Task<(List<IWorklog> CalendarWorklogs, Dictionary<DateTime, List<BlockedCalendarEvent>> BlockedEventsByDay)>
-                GetCalendarWorklogsAsync(Query query, User user, CancellationToken cancellationToken)
-            {
-                var calendarWorklogs = new List<IWorklog>();
-                var blockedEventsByDay = new Dictionary<DateTime, List<BlockedCalendarEvent>>();
-
-                try
-                {
-                    for (var date = query.StartDate.Date; date <= query.EndDate.Date; date = date.AddDays(1))
-                    {
-                        var events = await _mediator.Send(
-                            new GetYandexCalendarEvents.Query(user.Username, DateOnly.FromDateTime(date)),
-                            cancellationToken);
-
-                        foreach (var calendarEvent in events)
-                        {
-                            if (!string.IsNullOrEmpty(calendarEvent.JiraIssueKeyHint))
-                            {
-                                calendarWorklogs.Add(new RawIssueWorklog
-                                {
-                                    StartDate = calendarEvent.Start,
-                                    CompleteDate = calendarEvent.End,
-                                    Issue = new Issue
-                                    {
-                                        Key = calendarEvent.JiraIssueKeyHint,
-                                        Identifier = calendarEvent.JiraIssueKeyHint,
-                                        Summary = calendarEvent.Summary
-                                    },
-                                    Author = user.Username,
-                                    Source = WorklogSource.Calendar
-                                });
-                            }
-                            else
-                            {
-                                var dayKey = calendarEvent.Start.Date;
-                                if (!blockedEventsByDay.TryGetValue(dayKey, out var dayEvents))
-                                {
-                                    dayEvents = new List<BlockedCalendarEvent>();
-                                    blockedEventsByDay[dayKey] = dayEvents;
-                                }
-                                dayEvents.Add(new BlockedCalendarEvent(
-                                    calendarEvent.Start, calendarEvent.End, calendarEvent.Summary));
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    // Calendar unavailable — return worklogs without calendar.
-                }
-
-                return (calendarWorklogs, blockedEventsByDay);
-            }
-
             private static IEnumerable<WorkingDay> CalculateDays(
                 IEnumerable<IWorklog> issueWorklogs,
-                IEnumerable<IWorklog> rawIssueWorklogs,
+                IEnumerable<IEvent> events,
                 Query query,
                 UserSettingsDto userSettings)
             {
                 var day = query.EndDate.Date;
-                var splitedRawIssueWorklogs = rawIssueWorklogs.SplitByDays(
+                var splitedEvents = events.SplitByDays(
                     firstDate: query.StartDate,
                     lastDate: query.EndDate);
 
@@ -221,11 +129,11 @@ namespace Chronos.Application.Worklogs.Queries
                         .Where(worklog => worklog.StartDate.Date == day)
                         .Select(worklog => WorkingDayWorklog.CreateActual(worklog));
 
-                    var dailyEstimatedWorklogs = splitedRawIssueWorklogs
-                        .Where(worklog => worklog.StartDate.Date == day)
-                        .Select(worklog =>
+                    var dailyEstimatedWorklogs = splitedEvents
+                        .Where(userEvent => userEvent.StartDate.Date == day)
+                        .Select(userEvent =>
                             WorkingDayWorklog.CreateEstimated(
-                                worklog: worklog,
+                                userEvent: userEvent,
                                 day: day,
                                 dailyWorkingStartTime: userSettings.WorkingStartTime,
                                 dailyWorkingEndTime: userSettings.WorkingEndTime));

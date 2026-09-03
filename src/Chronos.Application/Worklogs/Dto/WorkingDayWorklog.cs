@@ -1,4 +1,5 @@
 ﻿using Chronos.Application.Common.Extensions;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Issues;
 using Chronos.Domain.Models.Worklogs;
 using System;
@@ -32,8 +33,11 @@ namespace Chronos.Application.Worklogs.Dto
         [Required]
         public WorklogType Type { get; set; }
 
-        [Required]
-        public WorklogSource Source { get; set; }
+        /// <summary>
+        /// The event this row came from. Null for an actual worklog logged in Jira or
+        /// Tempo: a real time entry has no event source. See issue #299.
+        /// </summary>
+        public EventSource? Source { get; set; }
 
         public WorkingDay WorkingDay { get; set; }
 
@@ -57,7 +61,7 @@ namespace Chronos.Application.Worklogs.Dto
             DateTime completeDate,
             IIssue issue,
             WorklogType type,
-            WorklogSource source) : this()
+            EventSource? source) : this()
         {
             RawStartDate = startDate;
             RawCompleteDate = completeDate;
@@ -95,8 +99,7 @@ namespace Chronos.Application.Worklogs.Dto
                 StartDate = worklog.StartDate,
                 CompleteDate = worklog.CompleteDate,
                 Issue = worklog.Issue,
-                Type = WorklogType.Actual,
-                Source = worklog.Source
+                Type = WorklogType.Actual
             };
 
             result.UpdateRemainingTimeSpent(worklog.TimeSpent);
@@ -105,7 +108,7 @@ namespace Chronos.Application.Worklogs.Dto
         }
 
         public static WorkingDayWorklog CreateEstimated(
-            IWorklog worklog,
+            IEvent userEvent,
             DateTime day,
             TimeSpan dailyWorkingStartTime,
             TimeSpan dailyWorkingEndTime)
@@ -113,23 +116,23 @@ namespace Chronos.Application.Worklogs.Dto
             var startOfWorkingDay = day.Add(dailyWorkingStartTime);
             var endOfWorkingDay = day.Add(dailyWorkingEndTime);
 
-            DateTime startDate = AdaptWorkingTime(worklog.StartDate, startOfWorkingDay, endOfWorkingDay);
-            DateTime completeDate = AdaptWorkingTime(worklog.CompleteDate, startOfWorkingDay, endOfWorkingDay);
+            DateTime startDate = AdaptWorkingTime(userEvent.StartDate, startOfWorkingDay, endOfWorkingDay);
+            DateTime completeDate = AdaptWorkingTime(userEvent.CompleteDate, startOfWorkingDay, endOfWorkingDay);
 
             var result = new WorkingDayWorklog
             {
-                RawStartDate = worklog.StartDate,
-                RawCompleteDate = worklog.CompleteDate,
+                RawStartDate = userEvent.StartDate,
+                RawCompleteDate = userEvent.CompleteDate,
                 StartDate = startDate,
                 CompleteDate = completeDate,
-                Issue = worklog.Issue,
+                Issue = userEvent.Issue,
                 Type = WorklogType.Estimated,
-                Source = worklog.Source
+                Source = userEvent.Source
             };
 
             result.UpdateRemainingTimeSpent(result.TimeSpent);
 
-            if (result.Source == WorklogSource.Calendar && result.Issue?.Summary != null)
+            if (result.Source == EventSource.Calendar && result.Issue?.Summary != null)
                 result.Comment = result.Issue.Summary;
 
             return result;
@@ -174,10 +177,10 @@ namespace Chronos.Application.Worklogs.Dto
         {
             return Source switch
             {
-                WorklogSource.Assignee => $"Working on task {Issue?.Key}",
-                WorklogSource.Comment => $"Task discussion {Issue?.Key}",
-                WorklogSource.Calendar => $"Discussion {Issue?.Key}",
-				WorklogSource.Tester => $"Testing task {Issue?.Key}",
+                EventSource.Assignee => $"Working on task {Issue?.Key}",
+                EventSource.Comment => $"Task discussion {Issue?.Key}",
+                EventSource.Calendar => $"Discussion {Issue?.Key}",
+				EventSource.Tester => $"Testing task {Issue?.Key}",
 				_ => "Default worklog",
             };
         }

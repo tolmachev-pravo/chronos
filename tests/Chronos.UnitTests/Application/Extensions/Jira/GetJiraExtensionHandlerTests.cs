@@ -1,9 +1,10 @@
-using Moq;
+﻿using Moq;
 using NUnit.Framework;
 using Chronos.Application.Extensions;
 using Chronos.Application.Extensions.Jira;
 using Chronos.Application.Extensions.Jira.Dto;
 using Chronos.Application.Extensions.Jira.Queries;
+using Chronos.Infrastructure.Extensions.Jira;
 using Chronos.Domain.Entities.Extensions;
 using System;
 using System.Threading;
@@ -84,6 +85,6 @@ namespace Chronos.UnitTests.Application.Extensions.Jira
             Assert.That(result.Settings, Is.EqualTo(JiraExtensionSettingsDto.Default));
         }
 
-        private GetJiraExtension.Handler CreateHandler() => new(_repoMock.Object);
+        private GetJiraExtension.Handler CreateHandler() => new(new JiraExtensionProvider(_repoMock.Object));
     }
 }

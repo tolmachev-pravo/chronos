@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Chronos.Application.Authentication;
 using Chronos.Application.Storage;
 using Chronos.Application.Worklogs;
@@ -20,10 +20,8 @@ namespace Chronos.Infrastructure.Jira
     /// instead of the per-issue Jira worklog endpoint, which loads every worklog of
     /// an issue into memory. See issue #245.
     ///
-    /// Only <see cref="GetIssueWorklogsAsync"/> (actual worklogs) uses Tempo; raw
-    /// worklogs (derived from changelog/comments/tester) are delegated to the
-    /// existing <see cref="JiraWorklogDataSource"/>. If the Tempo call fails, this
-    /// source falls back to the Jira implementation so behaviour degrades safely.
+    /// If the Tempo call fails, this source falls back to the Jira implementation so
+    /// behaviour degrades safely.
     /// </summary>
     public class TempoWorklogDataSource : IWorklogDataSource
     {
@@ -85,42 +83,6 @@ namespace Chronos.Infrastructure.Jira
                 return await _fallback.GetIssueWorklogsAsync(query, cancellationToken);
             }
         }
-
-        /// <summary>
-        /// Raw worklogs (changelog/comment/tester based) are not provided by Tempo —
-        /// delegate to the existing Jira implementation.
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task<IEnumerable<IWorklog>> GetAssigneeRawIssueWorklogsAsync(
-            GetAssigneeJiraEvents.Query query,
-            CancellationToken cancellationToken = default)
-            => _fallback.GetAssigneeRawIssueWorklogsAsync(query, cancellationToken);
-
-        /// <summary>
-        /// Raw worklogs (changelog/comment/tester based) are not provided by Tempo —
-        /// delegate to the existing Jira implementation.
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task<IEnumerable<IWorklog>> GetTesterRawIssueWorklogsAsync(
-            GetTesterJiraEvents.Query query,
-            CancellationToken cancellationToken = default)
-            => _fallback.GetTesterRawIssueWorklogsAsync(query, cancellationToken);
-
-        /// <summary>
-        /// Raw worklogs (changelog/comment/tester based) are not provided by Tempo —
-        /// delegate to the existing Jira implementation.
-        /// </summary>
-        /// <param name="query"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public Task<IEnumerable<IWorklog>> GetCommentRawIssueWorklogsAsync(
-            GetCommentJiraEvents.Query query,
-            CancellationToken cancellationToken = default)
-            => _fallback.GetCommentRawIssueWorklogsAsync(query, cancellationToken);
 
         private static bool IsAuthoredByCurrentUser(TempoWorklogDto worklog, UserProfile userProfile)
             => string.Equals(worklog.Author?.Login, userProfile.Username, StringComparison.OrdinalIgnoreCase);

@@ -1,6 +1,6 @@
 ﻿using Moq;
 using Chronos.Application.Time;
-using Chronos.Domain.Models.Worklogs;
+using Chronos.Domain.Models.Events;
 using Chronos.Infrastructure.Jira;
 using Chronos.Infrastructure.Jira.Dto;
 using System.Collections;
@@ -46,17 +46,17 @@ namespace Chronos.UnitTests.Infrastructure.Jira
             List<IssueCommentDto> comments = new() { comment };
 
             // Act
-            var worklogs = comments.ConvertTo<RawIssueWorklog>(_timeProvider, It.IsAny<TimeZoneInfo>(), WorklogSource.Comment, TimeSpan.FromMinutes(10));
+            var worklogs = comments.ConvertTo(_timeProvider, It.IsAny<TimeZoneInfo>(), EventSource.Comment, TimeSpan.FromMinutes(10));
 
             // Assert
             var worklog = worklogs.Single();
             Assert.Multiple(() =>
             {
                 Assert.That(worklog.Author, Is.EqualTo(comment.Author));
-                Assert.That(worklog.TimeSpent, Is.EqualTo(TimeSpan.FromMinutes(10)));
+                Assert.That(worklog.Duration, Is.EqualTo(TimeSpan.FromMinutes(10)));
                 Assert.That(worklog.CompleteDate, Is.EqualTo(comment.CreatedDate));
                 Assert.That(worklog.StartDate, Is.EqualTo(comment.CreatedDate.AddMinutes(-10)));
-                Assert.That(worklog.Source, Is.EqualTo(WorklogSource.Comment));
+                Assert.That(worklog.Source, Is.EqualTo(EventSource.Comment));
             });
         }
 
@@ -100,12 +100,12 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                     var changeLog = CreateChangeLog(new DateTime(2022, 01, 03, 13, 22, 10));
                     var changeLogItem = CreateItem(changeLog, _user1, IssueStatus.InProgress, IssueStatus.InReview);
                     List<IssueChangeLogItemDto> source = new() { changeLogItem };
-                    List<RawIssueWorklog> expected = new()
+                    List<UserEvent> expected = new()
                     {
-                        new RawIssueWorklog {
+                        new UserEvent {
                             Author = changeLogItem.Author,
                             Issue = new Domain.Models.Issues.Issue{ Key = _issue.Key},
-                            Source = WorklogSource.Assignee,
+                            Source = EventSource.Assignee,
                             CompleteDate = changeLog.CreatedDate,
                             StartDate = DateTime.MinValue
                         }
@@ -117,12 +117,12 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                     var changeLog = CreateChangeLog(new DateTime(2022, 01, 03, 13, 22, 10));
                     var changeLogItem = CreateItem(changeLog, _user1, IssueStatus.Open, IssueStatus.InProgress);
                     List<IssueChangeLogItemDto> source = new() { changeLogItem };
-                    List<RawIssueWorklog> expected = new()
+                    List<UserEvent> expected = new()
                     {
-                        new RawIssueWorklog {
+                        new UserEvent {
                             Author = changeLogItem.Author,
                             Issue = new Domain.Models.Issues.Issue{ Key = _issue.Key},
-                            Source = WorklogSource.Assignee,
+                            Source = EventSource.Assignee,
                             CompleteDate = DateTime.MaxValue,
                             StartDate = changeLog.CreatedDate
                         }
@@ -138,12 +138,12 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                     var changeLogItemEnd = CreateItem(changeLogEnd, _user2, IssueStatus.InProgress, IssueStatus.InReview);
 
                     List<IssueChangeLogItemDto> source = new() { changeLogItemStart, changeLogItemEnd };
-                    List<RawIssueWorklog> expected = new()
+                    List<UserEvent> expected = new()
                     {
-                        new RawIssueWorklog {
+                        new UserEvent {
                             Author = changeLogItemStart.Author,
                             Issue = new Domain.Models.Issues.Issue{ Key = _issue.Key},
-                            Source = WorklogSource.Assignee,
+                            Source = EventSource.Assignee,
                             CompleteDate = changeLogEnd.CreatedDate,
                             StartDate = changeLogStart.CreatedDate
                         }
@@ -154,12 +154,12 @@ namespace Chronos.UnitTests.Infrastructure.Jira
         }
 
         [TestCaseSource(typeof(ChangeLogItemConvertToCases))]
-        public void ChangeLogItemConvertTo_Should_BeCorrect(List<IssueChangeLogItemDto> source, List<RawIssueWorklog> expected)
+        public void ChangeLogItemConvertTo_Should_BeCorrect(List<IssueChangeLogItemDto> source, List<UserEvent> expected)
         {
             // Arrange
             // Act
-            var worklogSource = WorklogSource.Assignee;
-			var worklogs = source.ConvertTo<RawIssueWorklog>(IssueStatus.InProgress, _timeProvider, It.IsAny<TimeZoneInfo>(), worklogSource);
+            var worklogSource = EventSource.Assignee;
+			var worklogs = source.ConvertTo(IssueStatus.InProgress, _timeProvider, It.IsAny<TimeZoneInfo>(), worklogSource);
 
             // Assert
             var i = 0;
@@ -170,7 +170,7 @@ namespace Chronos.UnitTests.Infrastructure.Jira
                 Assert.Multiple(() =>
                 {
                     Assert.That(worklog.Author, Is.EqualTo(expectedWorklog.Author));
-                    Assert.That(worklog.Issue.Key, Is.EqualTo(expectedWorklog.Issue.Key));
+                    Assert.That(worklog.Issue!.Key, Is.EqualTo(expectedWorklog.Issue!.Key));
                     Assert.That(worklog.Source, Is.EqualTo(worklogSource));
                     Assert.That(worklog.CompleteDate, Is.EqualTo(expectedWorklog.CompleteDate));
                     Assert.That(worklog.StartDate, Is.EqualTo(expectedWorklog.StartDate));

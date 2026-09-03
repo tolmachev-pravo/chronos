@@ -10,6 +10,5 @@ namespace Chronos.Domain.Models.Worklogs
         public TimeSpan TimeSpent { get; set; }
         public IIssue Issue { get; set; }
         public string Author { get; set; }
-        public WorklogSource Source { get; set; }
     }
 }

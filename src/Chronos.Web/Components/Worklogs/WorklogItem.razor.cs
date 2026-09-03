@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components;
 using MudBlazor;
 using Chronos.Application.Worklogs.Dto;
-using Chronos.Domain.Models.Worklogs;
+using Chronos.Domain.Models.Events;
 using Chronos.Web.Shared;
 using System.Threading.Tasks;
 
@@ -38,16 +38,16 @@ namespace Chronos.Web.Components.Worklogs
 
         public Color Color => Entity.Source switch
 		{
-			WorklogSource.Assignee => Color.Primary,
-			WorklogSource.Tester => Color.Secondary,
+			EventSource.Assignee => Color.Primary,
+			EventSource.Tester => Color.Secondary,
 			_ => Color.Info
 		};
 
         public string Icon => Entity.Source switch
         {
-            WorklogSource.Assignee => Icons.Material.Filled.Assignment,
-            WorklogSource.Tester => Icons.Material.Filled.BugReport,
-            WorklogSource.Comment => Icons.Material.Filled.Comment,
+            EventSource.Assignee => Icons.Material.Filled.Assignment,
+            EventSource.Tester => Icons.Material.Filled.BugReport,
+            EventSource.Comment => Icons.Material.Filled.Comment,
             _ => Icons.Material.Filled.Assignment
         };
 	}
