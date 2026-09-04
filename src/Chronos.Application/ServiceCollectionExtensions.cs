@@ -34,6 +34,10 @@ namespace Chronos.Application
 			services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>));
 			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+			// Registered last, so it sits closest to the handler and sees what the handler
+			// itself threw: a 401 from Jira, told apart from every other failure. See
+			// issue #305.
+			services.AddTransient(typeof(IPipelineBehavior<,>), typeof(AuthenticationBehavior<,>));
 
 			return services;
         }

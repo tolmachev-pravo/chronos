@@ -15,6 +15,7 @@ using Chronos.Domain.Models.Issues;
 using Chronos.Domain.Models.Users;
 using Chronos.Domain.Models.Worklogs;
 using Chronos.Web.Mcp.Tools;
+using System.Security.Authentication;
 
 namespace Chronos.UnitTests.Web.Mcp
 {
@@ -430,6 +431,34 @@ namespace Chronos.UnitTests.Web.Mcp
             _mediator.Verify(
                 mediator => mediator.Send(It.IsAny<AddWorklog.Command>(), It.IsAny<CancellationToken>()),
                 Times.Never());
+        }
+
+        [Test]
+        public void GetWorklogCollection_Should_SayTheTokenWasRejected_When_JiraRefusedTheUser()
+        {
+            // The token was revoked while the authentication handler still had it cached.
+            // A client is told to ask for a new one instead of retrying. See issue #305.
+            _mediator
+                .Setup(mediator => mediator.Send(
+                    It.IsAny<GetWorklogCollection.Query>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new JiraAuthenticationException(new AuthenticationException("401")));
+
+            var exception = Assert.ThrowsAsync<McpException>(
+                () => _tools.GetWorklogCollection(_date, _date));
+
+            Assert.That(exception.Message, Does.Contain("token"));
+        }
+
+        [Test]
+        public void GetIssue_Should_SayTheTokenWasRejected_When_JiraRefusedTheUser()
+        {
+            // Issues are read straight from the data source, outside the MediatR pipeline,
+            // so the refusal arrives here as the Jira client threw it.
+            _issueDataSource
+                .Setup(source => source.GetIssueAsync("CH-101", It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new AuthenticationException("401"));
+
+            Assert.ThrowsAsync<McpException>(() => _tools.GetIssue("CH-101"));
         }
     }
 }
