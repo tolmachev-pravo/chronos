@@ -71,8 +71,9 @@ namespace Chronos.Web.Mcp.Tools
             "— and each carries the minutes Chronos suggests logging for it. Worklogs are what " +
             "is already recorded in Jira. A worklog names the event it was logged for, or none " +
             "when it matches no activity; that tie is Chronos matching a key and an interval, " +
-            "not something Jira records. An event with no issue key cannot be logged as it is: " +
-            "ask the user which issue the time belongs to, then log it with add_worklog. Event " +
+            "not something Jira records. An event with no issue key still says how many minutes " +
+            "it suggests — what it does not say is against what: ask the user which issue the " +
+            "time belongs to, then log those minutes with add_worklog. Event " +
             "ids name events inside one answer only. Durations are minutes.")]
         public async Task<IReadOnlyList<WorkingDayView>> GetWorklogCollection(
             [Description("First day of the period, ISO date, for example 2026-09-01.")]

@@ -207,7 +207,9 @@ namespace Chronos.UnitTests.Web.Mcp
             Assert.That(blockedEvent.IssueKey, Is.Null);
             Assert.That(blockedEvent.Summary, Is.EqualTo("Core Daily Sync"));
             Assert.That(blockedEvent.Minutes, Is.EqualTo(60));
-            Assert.That(blockedEvent.SuggestedMinutes, Is.Zero);
+            // How much to log is known without an issue — an hour of a meeting is an hour.
+            // What is missing is the issue, which the absent key says.
+            Assert.That(blockedEvent.SuggestedMinutes, Is.EqualTo(60));
             Assert.That(blockedEvent.Source, Is.EqualTo("calendar"));
             Assert.That(reported.BlockedMinutes, Is.EqualTo(60));
         }
@@ -229,6 +231,42 @@ namespace Chronos.UnitTests.Web.Mcp
 
             Assert.That(reported.BlockedMinutes, Is.Zero);
             Assert.That(reported.Worklogs.Single().EventId, Is.EqualTo(reported.Events.Single().Id));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_SuggestNothingForAnEvent_AlreadyLoggedAgainstAnIssue()
+        {
+            var day = CreateDay(Logged("CH-1", 11, 12));
+            day.BlockedEvents = new List<IEvent>
+            {
+                Meeting(_date.AddHours(11), _date.AddHours(12), "Core Daily Sync")
+            };
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(reported.Events.Single().SuggestedMinutes, Is.Zero);
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_HaveItsEventsAddUp_ToTheDaySuggestedTotal()
+        {
+            // The day counts a keyless meeting in its own suggested total. Rows that left it
+            // out would disagree with the number right above them.
+            var day = CreateDay(Suggested("CH-1", 10, 13));
+            day.BlockedEvents = new List<IEvent>
+            {
+                Meeting(_date.AddHours(14), _date.AddHours(15), "Core Daily Sync")
+            };
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(
+                reported.Events.Sum(reportedEvent => reportedEvent.SuggestedMinutes),
+                Is.EqualTo(reported.SuggestedMinutes));
         }
 
         [Test]

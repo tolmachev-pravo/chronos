@@ -17,8 +17,10 @@ namespace Chronos.Web.Mcp.Contracts
     /// </param>
     /// <param name="Minutes">How long the event ran, within the day's own bounds.</param>
     /// <param name="SuggestedMinutes">
-    /// What Chronos proposes to log for it now. Zero when the time is already covered by a
-    /// worklog — that worklog points back at this event.
+    /// What Chronos proposes to log for it now, which it knows with or without an issue: an
+    /// hour of a meeting is an hour either way. Zero means the time is already covered by a
+    /// worklog — that worklog points back at this event. Across a day these add up to the
+    /// day's own suggested total.
     /// </param>
     public record EventView(
         string Id,

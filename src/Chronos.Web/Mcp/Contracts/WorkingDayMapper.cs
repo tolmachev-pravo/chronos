@@ -76,6 +76,7 @@ namespace Chronos.Web.Mcp.Contracts
             foreach (var blockedEvent in day.BlockedEvents)
             {
                 var id = NextId(events.Count);
+                var loggedWorklog = day.GetLoggedWorklog(blockedEvent);
                 events.Add(new EventView(
                     Id: id,
                     Source: Name(blockedEvent.Source),
@@ -83,11 +84,12 @@ namespace Chronos.Web.Mcp.Contracts
                     Summary: blockedEvent.Summary,
                     StartedAt: blockedEvent.StartDate,
                     Minutes: Minutes(blockedEvent.Duration),
-                    // Nothing can be suggested for an event with no issue: there is nothing to
-                    // log it against until somebody names one.
-                    SuggestedMinutes: 0));
+                    // How much to log is known even with no issue to log it against: an hour
+                    // of a meeting is an hour. What is missing is the issue, and the absent
+                    // key says so. The day counts these minutes in its own suggested total,
+                    // so leaving them at zero here would make the rows disagree with it.
+                    SuggestedMinutes: loggedWorklog is null ? Minutes(blockedEvent.Duration) : 0));
 
-                var loggedWorklog = day.GetLoggedWorklog(blockedEvent);
                 if (loggedWorklog is not null)
                 {
                     byLoggedWorklog[loggedWorklog] = id;
