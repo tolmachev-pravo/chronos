@@ -126,11 +126,60 @@ Chronos умеет отдавать свои сценарии наружу ка�
 Chronos токен не хранит: он живёт в рамках запроса, а отзывается на стороне Jira. Запрос без
 валидного токена получает `401`.
 
+### Как подключить клиента
+
+Всюду ниже `https://chronos/mcp` — адрес вашего инстанса, а `<PAT>` — персональный токен из Jira
+(*Profile → Personal Access Tokens*). Токен даёт клиенту тот же доступ, что и вам, — храните его как
+пароль и держите в переменной окружения, а не в файле конфигурации, если файл попадает в репозиторий.
+
+**Claude Code** — одной командой:
+
 ```bash
-claude mcp add --transport http chronos https://chronos/mcp --header "Authorization: Bearer <ваш Jira PAT>"
+claude mcp add --transport http chronos https://chronos/mcp --header "Authorization: Bearer <PAT>"
 ```
 
-Инструменты:
+**Claude Desktop** — свои заголовки в конфигурации не поддерживаются, поэтому подключение идёт через
+мост `mcp-remote`. Файл: `%APPDATA%\Claude\claude_desktop_config.json` в Windows,
+`~/Library/Application Support/Claude/claude_desktop_config.json` в macOS.
+
+```json
+{
+  "mcpServers": {
+    "chronos": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://chronos/mcp", "--header", "Authorization:${AUTH_HEADER}"],
+      "env": { "AUTH_HEADER": "Bearer <PAT>" }
+    }
+  }
+}
+```
+
+Заголовок собирается из переменной окружения не только ради секрета: пробел внутри значения аргумента
+`--header` теряется по дороге, а `Authorization:${AUTH_HEADER}` пробела не содержит.
+
+**Cursor** — `~/.cursor/mcp.json` для всех проектов или `.cursor/mcp.json` внутри проекта:
+
+```json
+{
+  "mcpServers": {
+    "chronos": {
+      "url": "https://chronos/mcp",
+      "headers": { "Authorization": "Bearer ${env:CHRONOS_PAT}" }
+    }
+  }
+}
+```
+
+**Codex** — `~/.codex/config.toml`. Токен берётся из переменной окружения, имя которой указано в
+`bearer_token_env_var`; Codex сам добавляет `Authorization: Bearer`:
+
+```toml
+[mcp_servers.chronos]
+url = "https://chronos/mcp"
+bearer_token_env_var = "CHRONOS_PAT"
+```
+
+### Инструменты
 
 | Инструмент | Что делает |
 | --- | --- |
