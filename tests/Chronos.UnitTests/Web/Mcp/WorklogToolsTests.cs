@@ -4,6 +4,7 @@ using ModelContextProtocol;
 using Moq;
 using Chronos.Application.Authentication;
 using Chronos.Application.Issues;
+using Chronos.Application.Storage;
 using Chronos.Application.Users.Dto;
 using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Commands;
@@ -22,6 +23,7 @@ namespace Chronos.UnitTests.Web.Mcp
         private Mock<IMediator> _mediator = null!;
         private Mock<IIssueDataSource> _issueDataSource = null!;
         private Mock<IIdentityService> _identityService = null!;
+        private Mock<IStorage<string, UserProfile>> _userProfileStorage = null!;
         private Mock<ILogger<WorklogTools>> _logger = null!;
         private WorklogTools _tools = null!;
         private DateTime _date;
@@ -45,12 +47,14 @@ namespace Chronos.UnitTests.Web.Mcp
                 .Setup(service => service.GetCurrentUserAsync())
                 .ReturnsAsync(new User { Username = "john" });
 
+            _userProfileStorage = new Mock<IStorage<string, UserProfile>>();
             _logger = new Mock<ILogger<WorklogTools>>();
 
             _tools = new WorklogTools(
                 _mediator.Object,
                 _issueDataSource.Object,
                 _identityService.Object,
+                _userProfileStorage.Object,
                 _logger.Object);
         }
 
@@ -104,6 +108,37 @@ namespace Chronos.UnitTests.Web.Mcp
             Assert.That(day.Logged.Single().IssueKey, Is.EqualTo("CH-1"));
             Assert.That(day.Suggested.Single().IssueKey, Is.EqualTo("CH-2"));
             Assert.That(day.Suggested.Single().Minutes, Is.EqualTo(300));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_LoadTheProfile_BeforeAssemblingTheDay()
+        {
+            // The profile normally comes from the browser's local storage, which a client
+            // request has none of. Unloaded, it leaves the day filtered by nobody.
+            SetUpWorklogCollection(CreateDay());
+
+            await _tools.GetWorklogCollection(_date, _date);
+
+            _userProfileStorage.Verify(
+                storage => storage.InitAsync("john", It.IsAny<CancellationToken>()),
+                Times.Once());
+        }
+
+        [Test]
+        public async Task AddWorklog_Should_LoadTheProfile_BeforeLoggingTheTime()
+        {
+            // The logged time is converted by the profile time zone: without the profile the
+            // worklog would land in Jira at the wrong hour, or not land at all.
+            _mediator
+                .Setup(mediator => mediator.Send(It.IsAny<AddWorklog.Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((object request, CancellationToken _) =>
+                    new AddWorklog.Model { Worklog = ((AddWorklog.Command)request).Worklog });
+
+            await _tools.AddWorklog("CH-101", _date.AddHours(10), minutes: 60);
+
+            _userProfileStorage.Verify(
+                storage => storage.InitAsync("john", It.IsAny<CancellationToken>()),
+                Times.Once());
         }
 
         [Test]

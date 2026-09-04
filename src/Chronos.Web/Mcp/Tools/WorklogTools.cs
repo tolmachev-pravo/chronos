@@ -4,10 +4,12 @@ using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using Chronos.Application.Authentication;
 using Chronos.Application.Issues;
+using Chronos.Application.Storage;
 using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Commands;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Application.Worklogs.Queries;
+using Chronos.Domain.Models.Users;
 using Chronos.Web.Mcp.Contracts;
 using System;
 using System.Collections.Generic;
@@ -45,17 +47,20 @@ namespace Chronos.Web.Mcp.Tools
         private readonly IMediator _mediator;
         private readonly IIssueDataSource _issueDataSource;
         private readonly IIdentityService _identityService;
+        private readonly IStorage<string, UserProfile> _userProfileStorage;
         private readonly ILogger<WorklogTools> _logger;
 
         public WorklogTools(
             IMediator mediator,
             IIssueDataSource issueDataSource,
             IIdentityService identityService,
+            IStorage<string, UserProfile> userProfileStorage,
             ILogger<WorklogTools> logger)
         {
             _mediator = mediator;
             _issueDataSource = issueDataSource;
             _identityService = identityService;
+            _userProfileStorage = userProfileStorage;
             _logger = logger;
         }
 
@@ -81,6 +86,8 @@ namespace Chronos.Web.Mcp.Tools
             {
                 throw new McpException($"A period longer than {MaximumPeriodDays} days cannot be read at once");
             }
+
+            await EnsureUserProfileAsync(cancellationToken);
 
             var collection = await _mediator.Send(
                 new GetWorklogCollection.Query
@@ -155,6 +162,8 @@ namespace Chronos.Web.Mcp.Tools
                 throw new McpException($"A single worklog cannot be longer than {MaximumWorklogMinutes} minutes");
             }
 
+            await EnsureUserProfileAsync(cancellationToken);
+
             var issue = await ResolveIssueAsync(issueKey, cancellationToken);
             var worklog = new AddedWorklogDto
             {
@@ -182,6 +191,25 @@ namespace Chronos.Web.Mcp.Tools
                 StartedAt: result.Worklog.StartedAt,
                 Minutes: (int)result.Worklog.ElapsedTime.TotalMinutes,
                 Comment: result.Worklog.Comment);
+        }
+
+        /// <summary>
+        /// The user profile — the Jira account behind the worklogs and the time zone their
+        /// hours are read in — normally reaches the scenarios from the browser's local
+        /// storage. A client request has no browser, and the storage answers null there, so
+        /// the profile is asked for from Jira first and kept in the process cache. Without
+        /// it a day is assembled for nobody: worklogs are filtered by the profile username
+        /// and a logged time is converted by the profile time zone.
+        /// </summary>
+        private async Task EnsureUserProfileAsync(CancellationToken cancellationToken)
+        {
+            var user = await _identityService.GetCurrentUserAsync();
+            if (user?.Username is null)
+            {
+                throw new McpException("The request is not authenticated");
+            }
+
+            await _userProfileStorage.InitAsync(user.Username, cancellationToken);
         }
 
         /// <summary>
