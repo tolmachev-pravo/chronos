@@ -23,6 +23,7 @@ using Chronos.Web.Components.Features;
 using Chronos.Web.Components.Markdown;
 using Chronos.Web.Components.Releases;
 using Chronos.Web.Logging;
+using Chronos.Web.Mcp;
 using System;
 using Thinktecture.Blazor.AsyncClipboard;
 
@@ -39,6 +40,10 @@ namespace Chronos.Web
         public IConfiguration Configuration { get; }
 
         public IWebHostEnvironment Environment { get; }
+
+        private McpOptions McpOptions => Configuration
+            .GetSection(Mcp.McpOptions.SectionName)
+            .Get<McpOptions>() ?? new McpOptions();
 
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
@@ -144,6 +149,13 @@ namespace Chronos.Web
                     setup.SetMinimumSecondsBetweenFailureNotifications(120);
                 }).AddInMemoryStorage();
 
+            // MCP server (issue #298): off unless the configuration turns it on, so a
+            // deployment opts into the endpoint deliberately.
+            if (McpOptions.Enabled)
+            {
+                services.AddChronosMcpServer();
+            }
+
 			services.AddControllers();
 			services.AddEndpointsApiExplorer();
 			services.AddSwaggerGen();
@@ -205,6 +217,15 @@ namespace Chronos.Web
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
                 endpoints.MapControllers();
+
+                if (McpOptions.Enabled)
+                {
+                    // The policy is what makes the endpoint answer 401 to a request without
+                    // a personal access token, instead of running a scenario as nobody.
+                    endpoints
+                        .MapMcp(McpOptions.Path)
+                        .RequireAuthorization(PersonalAccessTokenDefaults.AuthorizationPolicy);
+                }
 			});
 
 			using (var scope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
