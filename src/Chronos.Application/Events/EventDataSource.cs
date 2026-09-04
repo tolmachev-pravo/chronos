@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -60,6 +61,11 @@ namespace Chronos.Application.Events
             {
                 return await provider.PrepareAsync(query, cancellationToken);
             }
+            catch (AuthenticationException)
+            {
+                // A refused user, not a source to skip — see FetchAsync. Issue #305.
+                throw;
+            }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {
                 _logger.LogWarning(exception,
@@ -71,9 +77,10 @@ namespace Chronos.Application.Events
 
         /// <summary>
         /// A failing source is skipped rather than failing the whole collection — the
-        /// behaviour the calendar always had, now applied to every provider. Per-provider
-        /// timings keep the source breakdown that separate MediatR requests used to
-        /// give. See issue #258.
+        /// behaviour the calendar always had, now applied to every provider. The one
+        /// failure that is not skipped is Jira refusing the user's credentials, which
+        /// empties every Jira source at once (issue #305). Per-provider timings keep the
+        /// source breakdown that separate MediatR requests used to give. See issue #258.
         /// </summary>
         private async Task<IEnumerable<IEvent>> FetchAsync(
             IEventProvider provider,
@@ -84,6 +91,14 @@ namespace Chronos.Application.Events
             try
             {
                 return await provider.GetEventsAsync(cancellationToken);
+            }
+            catch (AuthenticationException)
+            {
+                // Not a failing source but a refused user: Jira answers every provider
+                // the same 401, and a day assembled from what is left is wrong without
+                // saying so. It leaves the collection and reaches the caller. See
+                // issue #305.
+                throw;
             }
             catch (Exception exception) when (exception is not OperationCanceledException)
             {

@@ -1,6 +1,4 @@
 ﻿using MediatR;
-using System;
-using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,15 +29,8 @@ namespace Chronos.Application.Issues.Queries
                 Query query,
                 CancellationToken cancellationToken)
             {
-                try
-                {
-                    var url = await _issueDataSource.GetIssueOpenPullRequestUrlAsync(query, cancellationToken);
-                    return new Model { Url = url };
-                }
-                catch (AuthenticationException e)
-                {
-                    throw new Exception($"Authentication exception") { Source = e.Source };
-                }
+                var url = await _issueDataSource.GetIssueOpenPullRequestUrlAsync(query, cancellationToken);
+                return new Model { Url = url };
             }
         }
     }

@@ -14,6 +14,7 @@ using Chronos.Web.Mcp.Contracts;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -92,16 +93,19 @@ namespace Chronos.Web.Mcp.Tools
                 throw new McpException($"A period longer than {MaximumPeriodDays} days cannot be read at once");
             }
 
-            await EnsureUserProfileAsync(cancellationToken);
+            return await WithJiraSessionAsync(async () =>
+            {
+                await EnsureUserProfileAsync(cancellationToken);
 
-            var collection = await _mediator.Send(
-                new GetWorklogCollection.Query
-                {
-                    StartDate = startDate.Date,
-                    EndDate = endDate.Date
-                }, cancellationToken);
+                var collection = await _mediator.Send(
+                    new GetWorklogCollection.Query
+                    {
+                        StartDate = startDate.Date,
+                        EndDate = endDate.Date
+                    }, cancellationToken);
 
-            return WorkingDayMapper.ToViews(collection.WorkingDays);
+                return WorkingDayMapper.ToViews(collection.WorkingDays);
+            });
         }
 
         [McpServerTool(Name = "get_user_settings", Title = "Working day of the user", ReadOnly = true)]
@@ -131,8 +135,11 @@ namespace Chronos.Web.Mcp.Tools
             string issueKey,
             CancellationToken cancellationToken = default)
         {
-            var issue = await ResolveIssueAsync(issueKey, cancellationToken);
-            return new IssueView(issue.Key, issue.Summary, issue.Link);
+            return await WithJiraSessionAsync(async () =>
+            {
+                var issue = await ResolveIssueAsync(issueKey, cancellationToken);
+                return new IssueView(issue.Key, issue.Summary, issue.Link);
+            });
         }
 
         [McpServerTool(
@@ -167,35 +174,60 @@ namespace Chronos.Web.Mcp.Tools
                 throw new McpException($"A single worklog cannot be longer than {MaximumWorklogMinutes} minutes");
             }
 
-            await EnsureUserProfileAsync(cancellationToken);
-
-            var issue = await ResolveIssueAsync(issueKey, cancellationToken);
-            var worklog = new AddedWorklogDto
+            return await WithJiraSessionAsync(async () =>
             {
-                IssueKey = issue.Key,
-                Issue = issue,
-                StartedAt = startedAt,
-                ElapsedTime = TimeSpan.FromMinutes(minutes),
-                Comment = comment
-            };
+                await EnsureUserProfileAsync(cancellationToken);
 
-            var result = await _mediator.Send(new AddWorklog.Command(worklog), cancellationToken);
+                var issue = await ResolveIssueAsync(issueKey, cancellationToken);
+                var worklog = new AddedWorklogDto
+                {
+                    IssueKey = issue.Key,
+                    Issue = issue,
+                    StartedAt = startedAt,
+                    ElapsedTime = TimeSpan.FromMinutes(minutes),
+                    Comment = comment
+                };
 
-            // The one line that says a worklog came from a client and not from the site.
-            // Nothing else distinguishes them afterwards: Jira records the user, not what
-            // they used to log the time.
-            _logger.LogInformation(
-                "MCP client logged {Minutes} minutes to {IssueKey} at {StartedAt:yyyy-MM-dd HH:mm}",
-                minutes,
-                issue.Key,
-                startedAt);
+                var result = await _mediator.Send(new AddWorklog.Command(worklog), cancellationToken);
 
-            return new AddedWorklogView(
-                IssueKey: result.Worklog.IssueKey,
-                Summary: issue.Summary,
-                StartedAt: result.Worklog.StartedAt,
-                Minutes: (int)result.Worklog.ElapsedTime.TotalMinutes,
-                Comment: result.Worklog.Comment);
+                // The one line that says a worklog came from a client and not from the site.
+                // Nothing else distinguishes them afterwards: Jira records the user, not what
+                // they used to log the time.
+                _logger.LogInformation(
+                    "MCP client logged {Minutes} minutes to {IssueKey} at {StartedAt:yyyy-MM-dd HH:mm}",
+                    minutes,
+                    issue.Key,
+                    startedAt);
+
+                return new AddedWorklogView(
+                    IssueKey: result.Worklog.IssueKey,
+                    Summary: issue.Summary,
+                    StartedAt: result.Worklog.StartedAt,
+                    Minutes: (int)result.Worklog.ElapsedTime.TotalMinutes,
+                    Comment: result.Worklog.Comment);
+            });
+        }
+
+        /// <summary>
+        /// Jira refusing the caller's credentials is the end of the session, not a failure
+        /// of the tool: the token was revoked or expired while it was still cached by the
+        /// authentication handler. Said plainly, so a client asks the user for a new token
+        /// instead of retrying a call that will never work. See issue #305.
+        /// </summary>
+        private static async Task<T> WithJiraSessionAsync<T>(Func<Task<T>> tool)
+        {
+            try
+            {
+                return await tool();
+            }
+            catch (Exception exception)
+                when (exception is JiraAuthenticationException or AuthenticationException)
+            {
+                throw new McpException(
+                    "Jira rejected the personal access token of this request — it was revoked " +
+                    "or has expired. Ask the user for a new token; retrying will not help.",
+                    exception);
+            }
         }
 
         /// <summary>

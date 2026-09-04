@@ -1,6 +1,4 @@
-﻿using System;
-using System.Security.Authentication;
-using MediatR;
+﻿using MediatR;
 using Chronos.Application.Worklogs.Dto;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,15 +36,10 @@ namespace Chronos.Application.Worklogs.Commands
                 Command request,
                 CancellationToken cancellationToken)
             {
-                try
-                {
-                    await _worklogRepository.AddAsync(request.Worklog, cancellationToken);
-                    return new Model { Worklog = request.Worklog };
-                }
-                catch (AuthenticationException e)
-                {
-                    throw new Exception($"Authentication exception") { Source = e.Source };
-                }
+                // A refusal by Jira becomes JiraAuthenticationException in
+                // AuthenticationBehavior, one place for every scenario. See issue #305.
+                await _worklogRepository.AddAsync(request.Worklog, cancellationToken);
+                return new Model { Worklog = request.Worklog };
             }
         }
     }

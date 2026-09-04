@@ -7,6 +7,7 @@ using Chronos.Domain.Models.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -97,6 +98,31 @@ namespace Chronos.UnitTests.Application.Events
             var result = await CreateSut(failing.Object, healthy.Object).GetEventsAsync(Query());
 
             Assert.That(result.Single().Source, Is.EqualTo(EventSource.Assignee));
+        }
+
+        [Test]
+        public void GetEventsAsync_Should_NotSkipAProvider_When_JiraRefusedTheUser()
+        {
+            // A 401 empties every Jira source at once, so a day assembled from what is
+            // left would be wrong without saying so. It reaches the caller. See issue #305.
+            var refused = Provider(EventSource.Tester);
+            refused.Setup(provider => provider.GetEventsAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new AuthenticationException("401"));
+            var healthy = Provider(EventSource.Assignee);
+
+            Assert.ThrowsAsync<AuthenticationException>(
+                () => CreateSut(refused.Object, healthy.Object).GetEventsAsync(Query()));
+        }
+
+        [Test]
+        public void PrepareAsync_Should_NotSkipAProvider_When_JiraRefusedTheUser()
+        {
+            var refused = Provider(EventSource.Tester);
+            refused.Setup(provider => provider.PrepareAsync(It.IsAny<EventQuery>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new AuthenticationException("401"));
+
+            Assert.ThrowsAsync<AuthenticationException>(
+                () => CreateSut(refused.Object).GetEventsAsync(Query()));
         }
 
         [Test]

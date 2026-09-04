@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Components;
+using Chronos.Application.Authentication;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Application.Worklogs.Queries;
 using Chronos.Web.Components.Common;
@@ -24,6 +25,14 @@ namespace Chronos.Web.Components.Worklogs
                 Model.StateTo(ComponentModelState.InProgress);
                 var filterResult = await Mediator.Send(filter);
                 Model.Items = filterResult.WorkingDays;
+            }
+            catch (JiraAuthenticationException e)
+            {
+                // The period was never read: Jira refused the user halfway through. What
+                // an earlier search left on screen goes with it, so the page does not
+                // keep showing a day as if nothing had happened. See issue #305.
+                Model.Items = null;
+                ErrorHandler.ProcessError(e);
             }
             catch (Exception e)
             {
