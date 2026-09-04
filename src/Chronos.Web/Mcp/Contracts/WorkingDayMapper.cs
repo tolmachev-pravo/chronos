@@ -1,4 +1,5 @@
 using Chronos.Application.Worklogs.Dto;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Worklogs;
 using System;
 using System.Collections.Generic;
@@ -38,6 +39,15 @@ namespace Chronos.Web.Mcp.Contracts
                 Suggested: day.EstimatedWorklogs
                     .Where(worklog => worklog.RemainingTimeSpent > TimeSpan.Zero)
                     .Select(ToView)
+                    .ToList(),
+                // An event with no issue never becomes a suggestion — there is nothing to log
+                // it against. Reporting only its minutes would leave the client wondering
+                // where the day went, so it is named: the client can ask which issue it
+                // belongs to and log it with add_worklog. Once it is logged it stops
+                // blocking and appears among the logged rows instead.
+                Blocked: day.BlockedEvents
+                    .Where(blockedEvent => !day.IsEventLogged(blockedEvent))
+                    .Select(ToView)
                     .ToList());
         }
 
@@ -53,6 +63,15 @@ namespace Chronos.Web.Mcp.Contracts
                     : worklog.RemainingTimeSpent),
                 Comment: worklog.Comment,
                 Source: worklog.Source?.ToString().ToLowerInvariant() ?? LoggedSource);
+        }
+
+        public static BlockedEventView ToView(IEvent blockedEvent)
+        {
+            return new BlockedEventView(
+                Summary: blockedEvent.Summary,
+                StartedAt: blockedEvent.StartDate,
+                Minutes: Minutes(blockedEvent.Duration),
+                Source: blockedEvent.Source.ToString().ToLowerInvariant());
         }
 
         private static int Minutes(TimeSpan time) => (int)Math.Round(time.TotalMinutes);

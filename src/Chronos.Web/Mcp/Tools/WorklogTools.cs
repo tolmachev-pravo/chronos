@@ -69,7 +69,9 @@ namespace Chronos.Web.Mcp.Tools
             "Returns the working days of a period: the time already logged in Jira, the time " +
             "Chronos suggests logging on top of it, and how much of the day the two of them " +
             "cover. This is what answers what the user did last week and what is still not " +
-            "logged. Durations are minutes.")]
+            "logged. Durations are minutes. The blocked list holds time the user spent on " +
+            "something carrying no issue key — a meeting, usually: it cannot be logged as it " +
+            "is, so ask the user which issue it belongs to and log it with add_worklog.")]
         public async Task<IReadOnlyList<WorkingDayView>> GetWorklogCollection(
             [Description("First day of the period, ISO date, for example 2026-09-01.")]
             DateTime startDate,

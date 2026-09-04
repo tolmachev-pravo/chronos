@@ -10,6 +10,7 @@ using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Commands;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Application.Worklogs.Queries;
+using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Issues;
 using Chronos.Domain.Models.Users;
 using Chronos.Domain.Models.Worklogs;
@@ -159,6 +160,66 @@ namespace Chronos.UnitTests.Web.Mcp
             var days = await _tools.GetWorklogCollection(_date, _date);
 
             Assert.That(days.Single().Suggested, Is.Empty);
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_ReportAnEventWithNoIssue_InsteadOfSwallowingIt()
+        {
+            // A meeting whose title names no issue never becomes a suggestion — there is
+            // nothing to log it against — but it did take the hours out of the day. Naming it
+            // is what lets a client ask the user which issue it belongs to.
+            var day = CreateDay();
+            day.BlockedEvents = new List<IEvent>
+            {
+                new UserEvent
+                {
+                    StartDate = _date.AddHours(11),
+                    CompleteDate = _date.AddHours(12),
+                    Source = EventSource.Calendar,
+                    Summary = "Core Daily Sync"
+                }
+            };
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var blocked = (await _tools.GetWorklogCollection(_date, _date)).Single().Blocked;
+
+            Assert.That(blocked, Has.Count.EqualTo(1));
+            Assert.That(blocked[0].Summary, Is.EqualTo("Core Daily Sync"));
+            Assert.That(blocked[0].Minutes, Is.EqualTo(60));
+            Assert.That(blocked[0].Source, Is.EqualTo("calendar"));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_StopReportingAnEvent_OnceItIsLogged()
+        {
+            // The worklog it was logged as is already among the logged rows: listing the event
+            // as well would ask the client to log the same hour twice.
+            var day = CreateDay(new WorkingDayWorklog
+            {
+                Type = WorklogType.Actual,
+                StartDate = _date.AddHours(11),
+                CompleteDate = _date.AddHours(12),
+                RemainingTimeSpent = TimeSpan.FromHours(1),
+                Issue = new Issue { Key = "CH-1" }
+            });
+            day.BlockedEvents = new List<IEvent>
+            {
+                new UserEvent
+                {
+                    StartDate = _date.AddHours(11),
+                    CompleteDate = _date.AddHours(12),
+                    Source = EventSource.Calendar,
+                    Summary = "Core Daily Sync"
+                }
+            };
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(reported.Blocked, Is.Empty);
+            Assert.That(reported.Logged.Single().IssueKey, Is.EqualTo("CH-1"));
         }
 
         [Test]

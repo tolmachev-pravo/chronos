@@ -16,5 +16,6 @@ namespace Chronos.Web.Mcp.Contracts
         int BlockedMinutes,
         int ProgressPercent,
         IReadOnlyList<WorklogView> Logged,
-        IReadOnlyList<WorklogView> Suggested);
+        IReadOnlyList<WorklogView> Suggested,
+        IReadOnlyList<BlockedEventView> Blocked);
 }
