@@ -5,19 +5,11 @@
     <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
 </MudOverlay>
 
+@* The token comes first, and the first panel is the one a tab set opens on: a token
+   outlives a password change, and a password kept in the authentication cookie is
+   exactly what leaves a user refused by Jira mid-day. See issue #305. *@
 <MudTabs Elevation="2" Rounded="true" Color="@Color.Primary">
-    <MudTabPanel Text="Basic">
-        <MudCard Outlined="true" @onkeyup="@BasicOnKeyUp">
-            <MudCardContent>
-                <MudTextField @bind-Value="Model.BasicLoginRequest.Username" Label="Username" Variant="Variant.Text" />
-                <MudTextField @bind-Value="Model.BasicLoginRequest.Password" Label="Password" Variant="Variant.Text" InputType="InputType.Password" />
-            </MudCardContent>
-            <MudCardActions>
-                <MudButton OnClick="BasicLogin" Variant="Variant.Filled" Color="Color.Primary">Login</MudButton>
-            </MudCardActions>
-        </MudCard>
-    </MudTabPanel>
-    <MudTabPanel Text="Bearer">
+    <MudTabPanel Text="Token">
         <MudCard Outlined="true" @onkeyup="@BearerOnKeyUp">
             <MudCardContent>
                 <MudTextField @bind-Value="Model.BearerLoginRequest.Token" Label="Personal access token" Variant="Variant.Text" />
@@ -25,6 +17,17 @@
             </MudCardContent>
             <MudCardActions>
                 <MudButton OnClick="BearerLogin" Variant="Variant.Filled" Color="Color.Primary">Login</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudTabPanel>
+    <MudTabPanel Text="Password">
+        <MudCard Outlined="true" @onkeyup="@BasicOnKeyUp">
+            <MudCardContent>
+                <MudTextField @bind-Value="Model.BasicLoginRequest.Username" Label="Username" Variant="Variant.Text" />
+                <MudTextField @bind-Value="Model.BasicLoginRequest.Password" Label="Password" Variant="Variant.Text" InputType="InputType.Password" />
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton OnClick="BasicLogin" Variant="Variant.Filled" Color="Color.Primary">Login</MudButton>
             </MudCardActions>
         </MudCard>
     </MudTabPanel>
