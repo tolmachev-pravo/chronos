@@ -109,6 +109,96 @@ ASPNETCORE_IS_MOCK=true dotnet run --project src/Chronos.Web
 $env:ASPNETCORE_IS_MOCK = "true"; dotnet run --project src/Chronos.Web
 ```
 
+## MCP-сервер
+
+Chronos умеет отдавать свои сценарии наружу как MCP-сервер — чтобы спросить про свою неделю или
+списать время из Claude Code, Claude Desktop или расширения редактора, не открывая интерфейс.
+Эндпоинт включён по умолчанию и слушает `/mcp`. Выключить или перенести его можно конфигурацией:
+
+```json
+"Mcp": {
+  "Enabled": false,
+  "Path": "/mcp"
+}
+```
+
+Открытым он от этого не становится: без валидного персонального токена Jira любой запрос к нему
+получает `401`, а с токеном клиент видит ровно то же, что и вы в интерфейсе, — свой доступ, и ничей
+больше.
+
+Клиент аутентифицируется персональным токеном Jira — тем же, которым вы входите в интерфейс.
+Chronos токен не хранит: он живёт в рамках запроса, а отзывается на стороне Jira. Запрос без
+валидного токена получает `401`.
+
+### Как подключить клиента
+
+Всюду ниже `https://chronos/mcp` — адрес вашего инстанса, а `<PAT>` — персональный токен из Jira
+(*Profile → Personal Access Tokens*). Токен даёт клиенту тот же доступ, что и вам, — храните его как
+пароль и держите в переменной окружения, а не в файле конфигурации, если файл попадает в репозиторий.
+
+**Claude Code** — одной командой:
+
+```bash
+claude mcp add --transport http chronos https://chronos/mcp --header "Authorization: Bearer <PAT>"
+```
+
+**Claude Desktop** — свои заголовки в конфигурации не поддерживаются, поэтому подключение идёт через
+мост `mcp-remote`. Файл: `%APPDATA%\Claude\claude_desktop_config.json` в Windows,
+`~/Library/Application Support/Claude/claude_desktop_config.json` в macOS.
+
+```json
+{
+  "mcpServers": {
+    "chronos": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://chronos/mcp", "--header", "Authorization:${AUTH_HEADER}"],
+      "env": { "AUTH_HEADER": "Bearer <PAT>" }
+    }
+  }
+}
+```
+
+Заголовок собирается из переменной окружения не только ради секрета: пробел внутри значения аргумента
+`--header` теряется по дороге, а `Authorization:${AUTH_HEADER}` пробела не содержит.
+
+**Cursor** — `~/.cursor/mcp.json` для всех проектов или `.cursor/mcp.json` внутри проекта:
+
+```json
+{
+  "mcpServers": {
+    "chronos": {
+      "url": "https://chronos/mcp",
+      "headers": { "Authorization": "Bearer ${env:CHRONOS_PAT}" }
+    }
+  }
+}
+```
+
+**Codex** — `~/.codex/config.toml`. Токен берётся из переменной окружения, имя которой указано в
+`bearer_token_env_var`; Codex сам добавляет `Authorization: Bearer`:
+
+```toml
+[mcp_servers.chronos]
+url = "https://chronos/mcp"
+bearer_token_env_var = "CHRONOS_PAT"
+```
+
+### Инструменты
+
+| Инструмент | Что делает |
+| --- | --- |
+| `get_worklog_collection` | дни периода: сколько уже списано в Jira, что Chronos предлагает списать сверх этого, сколько от дня закрыто |
+| `get_user_settings` | рабочий день из профиля — начало, конец, обед |
+| `get_issue` | задача по ключу: проверить, что ключ существует и означает то, что нужно |
+| `add_worklog` | списать время в Jira. Помечен как destructive — клиент обязан спросить подтверждение, потому что ворклог уходит в Jira сразу и отменить его отсюда нельзя |
+
+Проверить каталог и вызовы удобно инспектором, в том числе на мок-режиме, без обращений к реальной
+Jira:
+
+```bash
+npx @modelcontextprotocol/inspector
+```
+
 ## Архитектура
 
 Clean Architecture, четыре проекта:

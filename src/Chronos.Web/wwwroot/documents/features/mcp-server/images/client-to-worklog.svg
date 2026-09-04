@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 360" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <!-- self-contained figure background so it reads on light and dark themes -->
+  <rect x="10" y="10" width="740" height="340" rx="18" fill="#F7F8FA" stroke="#E4E7EE"/>
+
+  <!-- ===== Left: the question asked in a client ===== -->
+  <text x="40" y="52" fill="#8A93A6" font-size="14" font-weight="600" letter-spacing="1">ВОПРОС В AI-КЛИЕНТЕ</text>
+  <rect x="36" y="66" width="286" height="224" rx="14" fill="#FFFFFF" stroke="#E4E7EE"/>
+
+  <rect x="60" y="92" width="34" height="34" rx="8" fill="#ECE7FB" stroke="#8260E5"/>
+  <circle cx="77" cy="109" r="8" fill="none" stroke="#8260E5" stroke-width="2"/>
+  <circle cx="77" cy="109" r="2.5" fill="#8260E5"/>
+  <text x="106" y="106" fill="#1F2430" font-size="16" font-weight="700">Claude, Cursor,</text>
+  <text x="106" y="124" fill="#1F2430" font-size="16" font-weight="700">Codex</text>
+
+  <line x1="60" y1="146" x2="298" y2="146" stroke="#EEF0F5"/>
+
+  <text x="60" y="180" fill="#1F2430" font-size="16">«Что у меня не списано</text>
+  <text x="60" y="202" fill="#1F2430" font-size="16">за прошлую неделю?»</text>
+  <text x="60" y="240" fill="#1F2430" font-size="16">«Спиши два часа</text>
+  <text x="60" y="262" fill="#1F2430" font-size="16">на CASEM-73656»</text>
+
+  <!-- ===== Arrow into Chronos ===== -->
+  <text x="360" y="164" fill="#8A93A6" font-size="12" font-weight="600" text-anchor="middle">ваш токен</text>
+  <text x="360" y="180" fill="#8260E5" font-size="12" font-weight="700" text-anchor="middle">Jira</text>
+  <line x1="330" y1="200" x2="392" y2="200" stroke="#8260E5" stroke-width="2.5"/>
+  <path d="M392 200 l-11 -6 v12 z" fill="#8260E5"/>
+
+  <!-- ===== Middle: Chronos tools ===== -->
+  <text x="404" y="52" fill="#8A93A6" font-size="14" font-weight="600" letter-spacing="1">ИНСТРУМЕНТЫ CHRONOS</text>
+  <rect x="400" y="66" width="196" height="224" rx="14" fill="#FFFFFF" stroke="#E4E7EE"/>
+
+  <rect x="420" y="92" width="156" height="30" rx="8" fill="#ECE7FB"/>
+  <text x="498" y="112" fill="#8260E5" font-size="12" font-weight="700" text-anchor="middle" font-family="Consolas, monospace">get_worklog_collection</text>
+
+  <rect x="420" y="132" width="156" height="30" rx="8" fill="#ECE7FB"/>
+  <text x="498" y="152" fill="#8260E5" font-size="12" font-weight="700" text-anchor="middle" font-family="Consolas, monospace">get_user_settings</text>
+
+  <rect x="420" y="172" width="156" height="30" rx="8" fill="#ECE7FB"/>
+  <text x="498" y="192" fill="#8260E5" font-size="12" font-weight="700" text-anchor="middle" font-family="Consolas, monospace">get_issue</text>
+
+  <rect x="420" y="212" width="156" height="30" rx="8" fill="#E4FBF4" stroke="#1FC8A5"/>
+  <text x="498" y="232" fill="#0E9B80" font-size="12" font-weight="700" text-anchor="middle" font-family="Consolas, monospace">add_worklog</text>
+
+  <text x="498" y="266" fill="#8A93A6" font-size="12" text-anchor="middle">списание — только</text>
+  <text x="498" y="282" fill="#8A93A6" font-size="12" text-anchor="middle">с вашего подтверждения</text>
+
+  <!-- ===== Arrow into Jira ===== -->
+  <line x1="604" y1="200" x2="666" y2="200" stroke="#1FC8A5" stroke-width="2.5"/>
+  <path d="M666 200 l-11 -6 v12 z" fill="#1FC8A5"/>
+
+  <!-- ===== Right: the worklog in Jira ===== -->
+  <text x="678" y="52" fill="#8A93A6" font-size="14" font-weight="600" letter-spacing="1" text-anchor="end">ВОРКЛОГ</text>
+  <rect x="674" y="66" width="60" height="224" rx="14" fill="#FFFFFF" stroke="#E4E7EE"/>
+  <circle cx="704" cy="150" r="20" fill="#E4FBF4" stroke="#1FC8A5"/>
+  <path d="M695 150 l7 7 l14 -15" fill="none" stroke="#1FC8A5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="704" y="196" fill="#1F2430" font-size="13" font-weight="700" text-anchor="middle">Jira</text>
+
+  <!-- ===== Footnote ===== -->
+  <text x="40" y="322" fill="#8A93A6" font-size="13">Клиент читает и пишет вашим доступом: Chronos токен не хранит, отзывается он в Jira.</text>
+</svg>

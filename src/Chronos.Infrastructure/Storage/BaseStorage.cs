@@ -71,19 +71,28 @@ namespace Chronos.Infrastructure.Storage
             {
                 return;
             }
-            TEntity entity = await _localStorage?.GetValueAsync(cancellationToken);
-            if (entity != null)
+
+            // Both tiers are optional — a storage may be built without a source of its own,
+            // as the mock one is — and awaiting what a null-conditional call did not make
+            // throws. ForceInitAsync right above has always checked; this one did not.
+            if (_localStorage != null)
             {
-                await UpdateAsync(key, entity, cancellationToken);
-                return;
+                var storedEntity = await _localStorage.GetValueAsync(cancellationToken);
+                if (storedEntity != null)
+                {
+                    await UpdateAsync(key, storedEntity, cancellationToken);
+                    return;
+                }
             }
 
-            entity = await _dataSource?.GetAsync(key, cancellationToken);
-            if (entity != null)
+            if (_dataSource != null)
             {
-                await UpdateAsync(key, entity, cancellationToken);
-                return;
-            };
+                var sourcedEntity = await _dataSource.GetAsync(key, cancellationToken);
+                if (sourcedEntity != null)
+                {
+                    await UpdateAsync(key, sourcedEntity, cancellationToken);
+                }
+            }
         }
 
         public virtual async Task<TEntity> GetValueAsync(TKey key, CancellationToken cancellationToken = default) 

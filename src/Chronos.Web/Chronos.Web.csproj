@@ -16,6 +16,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
     <PackageReference Include="MudBlazor" Version="9.5.0" />
     <PackageReference Include="MudBlazor.Markdown" Version="9.0.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
