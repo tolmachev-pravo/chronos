@@ -73,7 +73,13 @@ namespace Chronos.Web
                 config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
             });
             services.AddMudMarkdownServices();
-            services.AddTransient<IIdentityService, IdentityService>();
+            // Two ways in, one IIdentityService (issue #298): the browser brings a Blazor
+            // circuit, a token client brings only its request.
+            services.AddScoped<RequestUserAccessor>();
+            services.AddTransient<CircuitIdentityService>();
+            services.AddTransient<IIdentityService>(provider => new CompositeIdentityService(
+                provider.GetRequiredService<RequestUserAccessor>(),
+                provider.GetRequiredService<CircuitIdentityService>));
             services.AddTransient<IMarkdownService, MarkdownService>();
             services.AddTransient<IFeatureCatalogService, FeatureCatalogService>();
 
@@ -104,7 +110,20 @@ namespace Chronos.Web
                 .AddCookie(options =>
                 {
                     options.ExpireTimeSpan = TimeSpan.FromDays(30);
-                });
+                })
+                // Not a default scheme: only endpoints that ask for it by policy are opened
+                // to a personal access token, the site itself stays on cookies.
+                .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, PersonalAccessTokenAuthenticationHandler>(
+                    PersonalAccessTokenDefaults.AuthenticationScheme, configureOptions: null);
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(
+                    PersonalAccessTokenDefaults.AuthorizationPolicy,
+                    policy => policy
+                        .AddAuthenticationSchemes(PersonalAccessTokenDefaults.AuthenticationScheme)
+                        .RequireAuthenticatedUser());
+            });
 
             // Local storage
             services.AddBlazoredLocalStorage();
