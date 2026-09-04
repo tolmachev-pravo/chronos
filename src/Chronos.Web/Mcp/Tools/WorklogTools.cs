@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
 using Chronos.Application.Authentication;
@@ -44,15 +45,18 @@ namespace Chronos.Web.Mcp.Tools
         private readonly IMediator _mediator;
         private readonly IIssueDataSource _issueDataSource;
         private readonly IIdentityService _identityService;
+        private readonly ILogger<WorklogTools> _logger;
 
         public WorklogTools(
             IMediator mediator,
             IIssueDataSource issueDataSource,
-            IIdentityService identityService)
+            IIdentityService identityService,
+            ILogger<WorklogTools> logger)
         {
             _mediator = mediator;
             _issueDataSource = issueDataSource;
             _identityService = identityService;
+            _logger = logger;
         }
 
         [McpServerTool(Name = "get_worklog_collection", Title = "Worklogs of a period", ReadOnly = true)]
@@ -162,6 +166,15 @@ namespace Chronos.Web.Mcp.Tools
             };
 
             var result = await _mediator.Send(new AddWorklog.Command(worklog), cancellationToken);
+
+            // The one line that says a worklog came from a client and not from the site.
+            // Nothing else distinguishes them afterwards: Jira records the user, not what
+            // they used to log the time.
+            _logger.LogInformation(
+                "MCP client logged {Minutes} minutes to {IssueKey} at {StartedAt:yyyy-MM-dd HH:mm}",
+                minutes,
+                issue.Key,
+                startedAt);
 
             return new AddedWorklogView(
                 IssueKey: result.Worklog.IssueKey,

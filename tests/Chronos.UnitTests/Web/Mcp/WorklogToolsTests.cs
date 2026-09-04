@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using Moq;
 using Chronos.Application.Authentication;
@@ -21,6 +22,7 @@ namespace Chronos.UnitTests.Web.Mcp
         private Mock<IMediator> _mediator = null!;
         private Mock<IIssueDataSource> _issueDataSource = null!;
         private Mock<IIdentityService> _identityService = null!;
+        private Mock<ILogger<WorklogTools>> _logger = null!;
         private WorklogTools _tools = null!;
         private DateTime _date;
 
@@ -43,7 +45,13 @@ namespace Chronos.UnitTests.Web.Mcp
                 .Setup(service => service.GetCurrentUserAsync())
                 .ReturnsAsync(new User { Username = "john" });
 
-            _tools = new WorklogTools(_mediator.Object, _issueDataSource.Object, _identityService.Object);
+            _logger = new Mock<ILogger<WorklogTools>>();
+
+            _tools = new WorklogTools(
+                _mediator.Object,
+                _issueDataSource.Object,
+                _identityService.Object,
+                _logger.Object);
         }
 
         private void SetUpWorklogCollection(params WorkingDay[] days)
@@ -181,6 +189,29 @@ namespace Chronos.UnitTests.Web.Mcp
             Assert.That(command.Worklog.Comment, Is.EqualTo("review"));
             Assert.That(added.Minutes, Is.EqualTo(90));
             Assert.That(added.Summary, Is.EqualTo("Summary of ch-101"));
+        }
+
+        [Test]
+        public async Task AddWorklog_Should_RecordWhatItWrote_SoALoggedTimeCanBeTracedToAClient()
+        {
+            // Jira remembers who logged the time, not what they logged it with. Without
+            // this line nothing tells a worklog made by a client from one made in the site.
+            _mediator
+                .Setup(mediator => mediator.Send(It.IsAny<AddWorklog.Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((object request, CancellationToken _) =>
+                    new AddWorklog.Model { Worklog = ((AddWorklog.Command)request).Worklog });
+
+            await _tools.AddWorklog("CH-101", _date.AddHours(10), minutes: 90, comment: "review");
+
+            _logger.Verify(
+                logger => logger.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((state, _) =>
+                        state.ToString()!.Contains("CH-101") && state.ToString()!.Contains("90")),
+                    null,
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once());
         }
 
         [Test]
