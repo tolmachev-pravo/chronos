@@ -78,26 +78,54 @@ namespace Chronos.UnitTests.Web.Mcp
                 worklogs: worklogs.ToList());
         }
 
+        private WorkingDayWorklog Logged(string issueKey, int fromHour, int toHour)
+        {
+            return new WorkingDayWorklog
+            {
+                Type = WorklogType.Actual,
+                StartDate = _date.AddHours(fromHour),
+                CompleteDate = _date.AddHours(toHour),
+                RemainingTimeSpent = TimeSpan.FromHours(toHour - fromHour),
+                Issue = new Issue { Key = issueKey, Summary = $"Summary of {issueKey}" }
+            };
+        }
+
+        private WorkingDayWorklog Suggested(
+            string issueKey,
+            int fromHour,
+            int toHour,
+            EventSource source = EventSource.Assignee)
+        {
+            return new WorkingDayWorklog
+            {
+                Type = WorklogType.Estimated,
+                Source = source,
+                RawStartDate = _date.AddHours(fromHour),
+                RawCompleteDate = _date.AddHours(toHour),
+                StartDate = _date.AddHours(fromHour),
+                CompleteDate = _date.AddHours(toHour),
+                RemainingTimeSpent = TimeSpan.FromHours(toHour - fromHour),
+                Issue = new Issue { Key = issueKey, Summary = $"Summary of {issueKey}" }
+            };
+        }
+
+        private static IEvent Meeting(DateTime startDate, DateTime completeDate, string summary)
+        {
+            return new UserEvent
+            {
+                StartDate = startDate,
+                CompleteDate = completeDate,
+                Source = EventSource.Calendar,
+                Summary = summary
+            };
+        }
+
         [Test]
-        public async Task GetWorklogCollection_Should_ReportTheDay_AsLoggedAndSuggestedMinutes()
+        public async Task GetWorklogCollection_Should_TellTheDay_AsEventsAndWorklogs()
         {
             SetUpWorklogCollection(CreateDay(
-                new WorkingDayWorklog
-                {
-                    Type = WorklogType.Actual,
-                    StartDate = _date.AddHours(10),
-                    CompleteDate = _date.AddHours(13),
-                    RemainingTimeSpent = TimeSpan.FromHours(3),
-                    Issue = new Issue { Key = "CH-1", Summary = "Logged" }
-                },
-                new WorkingDayWorklog
-                {
-                    Type = WorklogType.Estimated,
-                    StartDate = _date.AddHours(14),
-                    CompleteDate = _date.AddHours(19),
-                    RemainingTimeSpent = TimeSpan.FromHours(5),
-                    Issue = new Issue { Key = "CH-2", Summary = "Suggested" }
-                }));
+                Logged("CH-1", 10, 13),
+                Suggested("CH-2", 14, 19)));
 
             var days = await _tools.GetWorklogCollection(_date, _date);
 
@@ -106,9 +134,119 @@ namespace Chronos.UnitTests.Web.Mcp
             Assert.That(day.PlannedMinutes, Is.EqualTo(480));
             Assert.That(day.LoggedMinutes, Is.EqualTo(180));
             Assert.That(day.SuggestedMinutes, Is.EqualTo(300));
-            Assert.That(day.Logged.Single().IssueKey, Is.EqualTo("CH-1"));
-            Assert.That(day.Suggested.Single().IssueKey, Is.EqualTo("CH-2"));
-            Assert.That(day.Suggested.Single().Minutes, Is.EqualTo(300));
+            Assert.That(day.Events.Single().IssueKey, Is.EqualTo("CH-2"));
+            Assert.That(day.Events.Single().SuggestedMinutes, Is.EqualTo(300));
+            Assert.That(day.Events.Single().Source, Is.EqualTo("assignee"));
+            Assert.That(day.Worklogs.Single().IssueKey, Is.EqualTo("CH-1"));
+            Assert.That(day.Worklogs.Single().Minutes, Is.EqualTo(180));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_PointAWorklog_AtTheEventItWasLoggedFor()
+        {
+            // The day matches a worklog to the suggestion of the same issue: what the page
+            // shows as one row nested under another is one id here.
+            var day = CreateDay(
+                Suggested("CH-1", 10, 13),
+                Logged("CH-1", 10, 12));
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(reported.Worklogs.Single().EventId, Is.EqualTo(reported.Events.Single().Id));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_LeaveAWorklogWithoutAnEvent_WhenItMatchesNoActivity()
+        {
+            // Time logged by hand for something Chronos never saw: there is no event to name.
+            var day = CreateDay(Logged("CH-9", 10, 12));
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(reported.Events, Is.Empty);
+            Assert.That(reported.Worklogs.Single().EventId, Is.Null);
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_KeepAnEvent_WhoseTimeIsAlreadyLogged()
+        {
+            // Suggesting zero is the day saying the time is covered. The event stays, so the
+            // client can see why the day is closed instead of wondering where it went.
+            var day = CreateDay(
+                Suggested("CH-1", 10, 13),
+                Logged("CH-1", 10, 13));
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(reported.Events.Single().SuggestedMinutes, Is.Zero);
+            Assert.That(reported.Worklogs.Single().EventId, Is.EqualTo(reported.Events.Single().Id));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_ReportAnEventWithNoIssue_AsAnEventWithoutAKey()
+        {
+            // A meeting whose title names no issue cannot be logged as it is, but it did take
+            // the hours out of the day. Naming it is what lets a client ask about it.
+            var day = CreateDay();
+            day.BlockedEvents = new List<IEvent>
+            {
+                Meeting(_date.AddHours(11), _date.AddHours(12), "Core Daily Sync")
+            };
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            var blockedEvent = reported.Events.Single();
+            Assert.That(blockedEvent.IssueKey, Is.Null);
+            Assert.That(blockedEvent.Summary, Is.EqualTo("Core Daily Sync"));
+            Assert.That(blockedEvent.Minutes, Is.EqualTo(60));
+            Assert.That(blockedEvent.SuggestedMinutes, Is.Zero);
+            Assert.That(blockedEvent.Source, Is.EqualTo("calendar"));
+            Assert.That(reported.BlockedMinutes, Is.EqualTo(60));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_TieAKeylessEvent_ToTheWorklogItWasLoggedAs()
+        {
+            // Logged against an issue the user picked, the meeting stops blocking the day and
+            // its worklog names it — the same hour is not asked for twice.
+            var day = CreateDay(Logged("CH-1", 11, 12));
+            day.BlockedEvents = new List<IEvent>
+            {
+                Meeting(_date.AddHours(11), _date.AddHours(12), "Core Daily Sync")
+            };
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(reported.BlockedMinutes, Is.Zero);
+            Assert.That(reported.Worklogs.Single().EventId, Is.EqualTo(reported.Events.Single().Id));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_GiveEveryEventOfADay_ItsOwnId()
+        {
+            var day = CreateDay(Suggested("CH-1", 10, 12), Suggested("CH-2", 12, 14));
+            day.BlockedEvents = new List<IEvent>
+            {
+                Meeting(_date.AddHours(15), _date.AddHours(16), "Core Daily Sync"),
+                Meeting(_date.AddHours(15), _date.AddHours(16), "Another call at the same hour")
+            };
+            day.Refresh();
+            SetUpWorklogCollection(day);
+
+            var events = (await _tools.GetWorklogCollection(_date, _date)).Single().Events;
+
+            Assert.That(events, Has.Count.EqualTo(4));
+            Assert.That(events.Select(reported => reported.Id).Distinct().Count(), Is.EqualTo(4));
         }
 
         [Test]
@@ -123,103 +261,6 @@ namespace Chronos.UnitTests.Web.Mcp
             _userProfileStorage.Verify(
                 storage => storage.InitAsync("john", It.IsAny<CancellationToken>()),
                 Times.Once());
-        }
-
-        [Test]
-        public async Task AddWorklog_Should_LoadTheProfile_BeforeLoggingTheTime()
-        {
-            // The logged time is converted by the profile time zone: without the profile the
-            // worklog would land in Jira at the wrong hour, or not land at all.
-            _mediator
-                .Setup(mediator => mediator.Send(It.IsAny<AddWorklog.Command>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((object request, CancellationToken _) =>
-                    new AddWorklog.Model { Worklog = ((AddWorklog.Command)request).Worklog });
-
-            await _tools.AddWorklog("CH-101", _date.AddHours(10), minutes: 60);
-
-            _userProfileStorage.Verify(
-                storage => storage.InitAsync("john", It.IsAny<CancellationToken>()),
-                Times.Once());
-        }
-
-        [Test]
-        public async Task GetWorklogCollection_Should_LeaveOutASuggestion_AlreadyCoveredByAWorklog()
-        {
-            // A suggestion of zero is one the day found logged: offering it would invite the
-            // client to log the same time twice.
-            SetUpWorklogCollection(CreateDay(
-                new WorkingDayWorklog
-                {
-                    Type = WorklogType.Estimated,
-                    StartDate = _date.AddHours(14),
-                    CompleteDate = _date.AddHours(15),
-                    RemainingTimeSpent = TimeSpan.Zero,
-                    Issue = new Issue { Key = "CH-2" }
-                }));
-
-            var days = await _tools.GetWorklogCollection(_date, _date);
-
-            Assert.That(days.Single().Suggested, Is.Empty);
-        }
-
-        [Test]
-        public async Task GetWorklogCollection_Should_ReportAnEventWithNoIssue_InsteadOfSwallowingIt()
-        {
-            // A meeting whose title names no issue never becomes a suggestion — there is
-            // nothing to log it against — but it did take the hours out of the day. Naming it
-            // is what lets a client ask the user which issue it belongs to.
-            var day = CreateDay();
-            day.BlockedEvents = new List<IEvent>
-            {
-                new UserEvent
-                {
-                    StartDate = _date.AddHours(11),
-                    CompleteDate = _date.AddHours(12),
-                    Source = EventSource.Calendar,
-                    Summary = "Core Daily Sync"
-                }
-            };
-            day.Refresh();
-            SetUpWorklogCollection(day);
-
-            var blocked = (await _tools.GetWorklogCollection(_date, _date)).Single().Blocked;
-
-            Assert.That(blocked, Has.Count.EqualTo(1));
-            Assert.That(blocked[0].Summary, Is.EqualTo("Core Daily Sync"));
-            Assert.That(blocked[0].Minutes, Is.EqualTo(60));
-            Assert.That(blocked[0].Source, Is.EqualTo("calendar"));
-        }
-
-        [Test]
-        public async Task GetWorklogCollection_Should_StopReportingAnEvent_OnceItIsLogged()
-        {
-            // The worklog it was logged as is already among the logged rows: listing the event
-            // as well would ask the client to log the same hour twice.
-            var day = CreateDay(new WorkingDayWorklog
-            {
-                Type = WorklogType.Actual,
-                StartDate = _date.AddHours(11),
-                CompleteDate = _date.AddHours(12),
-                RemainingTimeSpent = TimeSpan.FromHours(1),
-                Issue = new Issue { Key = "CH-1" }
-            });
-            day.BlockedEvents = new List<IEvent>
-            {
-                new UserEvent
-                {
-                    StartDate = _date.AddHours(11),
-                    CompleteDate = _date.AddHours(12),
-                    Source = EventSource.Calendar,
-                    Summary = "Core Daily Sync"
-                }
-            };
-            day.Refresh();
-            SetUpWorklogCollection(day);
-
-            var reported = (await _tools.GetWorklogCollection(_date, _date)).Single();
-
-            Assert.That(reported.Blocked, Is.Empty);
-            Assert.That(reported.Logged.Single().IssueKey, Is.EqualTo("CH-1"));
         }
 
         [Test]
@@ -285,6 +326,23 @@ namespace Chronos.UnitTests.Web.Mcp
             Assert.That(command.Worklog.Comment, Is.EqualTo("review"));
             Assert.That(added.Minutes, Is.EqualTo(90));
             Assert.That(added.Summary, Is.EqualTo("Summary of ch-101"));
+        }
+
+        [Test]
+        public async Task AddWorklog_Should_LoadTheProfile_BeforeLoggingTheTime()
+        {
+            // The logged time is converted by the profile time zone: without the profile the
+            // worklog would land in Jira at the wrong hour, or not land at all.
+            _mediator
+                .Setup(mediator => mediator.Send(It.IsAny<AddWorklog.Command>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync((object request, CancellationToken _) =>
+                    new AddWorklog.Model { Worklog = ((AddWorklog.Command)request).Worklog });
+
+            await _tools.AddWorklog("CH-101", _date.AddHours(10), minutes: 60);
+
+            _userProfileStorage.Verify(
+                storage => storage.InitAsync("john", It.IsAny<CancellationToken>()),
+                Times.Once());
         }
 
         [Test]

@@ -66,12 +66,14 @@ namespace Chronos.Web.Mcp.Tools
 
         [McpServerTool(Name = "get_worklog_collection", Title = "Worklogs of a period", ReadOnly = true)]
         [Description(
-            "Returns the working days of a period: the time already logged in Jira, the time " +
-            "Chronos suggests logging on top of it, and how much of the day the two of them " +
-            "cover. This is what answers what the user did last week and what is still not " +
-            "logged. Durations are minutes. The blocked list holds time the user spent on " +
-            "something carrying no issue key — a meeting, usually: it cannot be logged as it " +
-            "is, so ask the user which issue it belongs to and log it with add_worklog.")]
+            "Returns the working days of a period, each told as two lists. Events are what the " +
+            "user was seen doing — time in an issue, an issue they tested, a comment, a meeting " +
+            "— and each carries the minutes Chronos suggests logging for it. Worklogs are what " +
+            "is already recorded in Jira. A worklog names the event it was logged for, or none " +
+            "when it matches no activity; that tie is Chronos matching a key and an interval, " +
+            "not something Jira records. An event with no issue key cannot be logged as it is: " +
+            "ask the user which issue the time belongs to, then log it with add_worklog. Event " +
+            "ids name events inside one answer only. Durations are minutes.")]
         public async Task<IReadOnlyList<WorkingDayView>> GetWorklogCollection(
             [Description("First day of the period, ISO date, for example 2026-09-01.")]
             DateTime startDate,
