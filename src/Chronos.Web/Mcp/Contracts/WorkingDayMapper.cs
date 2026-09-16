@@ -70,7 +70,8 @@ namespace Chronos.Web.Mcp.Contracts
                     Minutes: Minutes(row.TimeSpent),
                     // Zero here does not mean an idle event: it means the day found the time
                     // already logged, and the worklog that covers it points back at this id.
-                    SuggestedMinutes: Minutes(row.RemainingTimeSpent)));
+                    SuggestedMinutes: Minutes(row.RemainingTimeSpent),
+                    Details: ToView(row.Details)));
             }
 
             foreach (var blockedEvent in day.BlockedEvents)
@@ -88,7 +89,10 @@ namespace Chronos.Web.Mcp.Contracts
                     // of a meeting is an hour. What is missing is the issue, and the absent
                     // key says so. The day counts these minutes in its own suggested total,
                     // so leaving them at zero here would make the rows disagree with it.
-                    SuggestedMinutes: loggedWorklog is null ? Minutes(blockedEvent.Duration) : 0));
+                    SuggestedMinutes: loggedWorklog is null ? Minutes(blockedEvent.Duration) : 0,
+                    // A meeting with no key is exactly the event a client has to ask the
+                    // user about, and these are the fields that let it. See issue #156.
+                    Details: ToView(blockedEvent.Details)));
 
                 if (loggedWorklog is not null)
                 {
@@ -130,6 +134,28 @@ namespace Chronos.Web.Mcp.Contracts
                 Comment: worklog.Comment,
                 EventId: eventId);
         }
+
+        /// <summary>
+        /// Flattens the kinds of detail into the one shape a client is given. Which fields
+        /// came back is what tells the kinds apart. See issue #156.
+        /// </summary>
+        private static EventDetailsView ToView(IEventDetails details) => details switch
+        {
+            CommentEventDetails comment => new EventDetailsView(
+                Text: comment.Body,
+                Link: comment.Link),
+            TransitionEventDetails transition => new EventDetailsView(
+                From: transition.FromStatus,
+                Status: transition.Status,
+                To: transition.ToStatus),
+            CalendarEventDetails meeting => new EventDetailsView(
+                Text: meeting.Description,
+                Title: meeting.Title,
+                Organizer: meeting.Organizer,
+                Location: meeting.Location,
+                Attendees: meeting.Attendees is { Count: > 0 } ? meeting.Attendees : null),
+            _ => null
+        };
 
         private static string NextId(int index) => $"e{index + 1}";
 

@@ -22,6 +22,10 @@ namespace Chronos.Web.Mcp.Contracts
     /// worklog — that worklog points back at this event. Across a day these add up to the
     /// day's own suggested total.
     /// </param>
+    /// <param name="Details">
+    /// What the source knew about this event beyond the fields above — the comment, the
+    /// status transition, the meeting. Absent when the source had nothing to add.
+    /// </param>
     public record EventView(
         string Id,
         string Source,
@@ -29,5 +33,6 @@ namespace Chronos.Web.Mcp.Contracts
         string Summary,
         DateTime StartedAt,
         int Minutes,
-        int SuggestedMinutes);
+        int SuggestedMinutes,
+        EventDetailsView Details = null);
 }
