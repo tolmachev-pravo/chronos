@@ -139,6 +139,70 @@ namespace Chronos.UnitTests.Application.Worklogs.Queries
         }
 
         [Test]
+        public async Task Handle_MultiDayEvent_KeepsItsDetailsOnEveryDay()
+        {
+            // Arrange — an issue left In Progress overnight. Splitting it by days rebuilds
+            // the event, which is where its details used to be dropped. See issue #156.
+            SetupEvents(new UserEvent
+            {
+                StartDate = new DateTime(2026, 6, 1, 16, 0, 0),
+                CompleteDate = new DateTime(2026, 6, 2, 11, 0, 0),
+                Author = "user1",
+                Source = EventSource.Assignee,
+                Issue = new Issue { Key = "PROJ-3", Identifier = "PROJ-3" },
+                Details = new TransitionEventDetails
+                {
+                    Status = "In Progress",
+                    FromStatus = "Open",
+                    ToStatus = "In Review"
+                }
+            });
+
+            // Act
+            var result = await _sut.Handle(new GetWorklogCollection.Query
+            {
+                StartDate = new DateTime(2026, 6, 1),
+                EndDate = new DateTime(2026, 6, 2)
+            });
+
+            // Assert — both pieces know which transition they came from.
+            var pieces = result.WorkingDays
+                .SelectMany(day => day.EstimatedWorklogs)
+                .ToList();
+            Assert.That(pieces, Has.Count.EqualTo(2));
+            Assert.That(pieces.Select(piece => (piece.Details as TransitionEventDetails)?.ToStatus),
+                Is.All.EqualTo("In Review"));
+        }
+
+        [Test]
+        public async Task Handle_KeylessCalendarEvent_KeepsItsDetails()
+        {
+            // Arrange — a meeting with no key never becomes a row, so its own details are
+            // the only thing that can say what the hour was. See issue #156.
+            SetupEvents(new UserEvent
+            {
+                StartDate = new DateTime(2026, 6, 1, 17, 0, 0),
+                CompleteDate = new DateTime(2026, 6, 1, 18, 0, 0),
+                Summary = "Sprint retro",
+                Author = "user1",
+                Source = EventSource.Calendar,
+                Details = new CalendarEventDetails
+                {
+                    Title = "Sprint retro",
+                    Organizer = "Anna Kovaleva"
+                }
+            });
+
+            // Act
+            var result = await _sut.Handle(SingleDayQuery());
+
+            // Assert
+            var details = result.WorkingDays.Single().BlockedEvents.Single().Details as CalendarEventDetails;
+            Assert.That(details, Is.Not.Null);
+            Assert.That(details.Organizer, Is.EqualTo("Anna Kovaleva"));
+        }
+
+        [Test]
         public async Task Handle_NoEvents_NoBlockedTimeNoEstimatedWorklogs()
         {
             var result = await _sut.Handle(SingleDayQuery());

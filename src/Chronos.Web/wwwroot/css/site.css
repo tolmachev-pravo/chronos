@@ -209,6 +209,99 @@ app {
 .chr-day-metric-lbl { font-size: 11px; opacity: 0.6; }
 .chr-day-sep { opacity: 0.3; font-size: 18px; line-height: 1; }
 
+/* Event details under a suggestion row. See issue #156. */
+
+/* The source icon is the only way in, and nothing happens on hover, so it has to look
+   live by itself: a dot in its corner says there is something to open. */
+.chr-source-toggle {
+    padding: 3px;
+    position: relative;
+}
+.chr-source-toggle::after {
+    content: "";
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.55;
+}
+.chr-source-toggle-open::after { opacity: 1; }
+
+.chr-event-details {
+    margin: 2px 14px 8px 52px;
+    padding: 6px 0 6px 12px;
+    border-left: 2px solid var(--chr-event-accent, var(--mud-palette-divider));
+    font-size: 12.5px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chr-event-details-label {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+/* The comment arrives as Jira wiki markup; its line breaks are all the shape it has.
+   Four lines is enough to recognise it — the rest is a click away in Jira. */
+.chr-event-details-body {
+    white-space: pre-wrap;
+    max-width: 72ch;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.chr-event-details-link { align-self: flex-start; }
+
+.chr-event-details-transition {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.chr-status {
+    font-size: 11px;
+    line-height: 18px;
+    padding: 0 8px;
+    border-radius: 3px;
+    border: 1px solid var(--mud-palette-divider);
+    opacity: 0.85;
+}
+.chr-status-current {
+    border-color: var(--chr-event-accent, var(--mud-palette-divider));
+    color: var(--chr-event-accent, inherit);
+    opacity: 1;
+    font-weight: 500;
+}
+.chr-status-open { border-style: dashed; opacity: 0.6; }
+.chr-status-arrow { opacity: 0.45; font-size: 12px; }
+
+.chr-event-details-fields {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 2px 12px;
+    margin: 0;
+    max-width: 72ch;
+}
+.chr-event-details-fields dt { opacity: 0.6; }
+.chr-event-details-fields dd { margin: 0; }
+
+@media (max-width: 600px) {
+    .chr-event-details { margin-left: 24px; }
+    .chr-event-details-fields { grid-template-columns: 1fr; gap: 0 0; }
+    .chr-event-details-fields dt { margin-top: 4px; }
+}
+
 
 @media (min-width: 768px) {
     app {

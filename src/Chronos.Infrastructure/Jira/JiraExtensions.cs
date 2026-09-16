@@ -36,7 +36,14 @@ namespace Chronos.Infrastructure.Jira
                         StartDate = DateTime.MinValue,
                         Issue = item.ChangeLog.Issue.Adapt(),
                         Author = item.Author,
-                        Source = eventSource
+                        Source = eventSource,
+                        // Entering the status happened before the changelog the period
+                        // asked for, so there is nothing to name as the status before.
+                        Details = new TransitionEventDetails
+                        {
+                            Status = statusName,
+                            ToStatus = item.ToValue
+                        }
 					};
                 }
                 // 2. Это последний элемент и он не завершается
@@ -48,7 +55,14 @@ namespace Chronos.Infrastructure.Jira
                         StartDate = timeProvider.ConvertToUserTimezone(item.ChangeLog.CreatedDate, timeZoneInfo),
                         Issue = item.ChangeLog.Issue.Adapt(),
                         Author = item.Author,
-                        Source = eventSource
+                        Source = eventSource,
+                        // Still in the status at the end of the period — no status to
+                        // name as the one it went to.
+                        Details = new TransitionEventDetails
+                        {
+                            Status = statusName,
+                            FromStatus = item.FromValue
+                        }
 					};
                 }
                 // 3. Обычный случай когда после FromInProgress следует ToInProgress
@@ -60,7 +74,13 @@ namespace Chronos.Infrastructure.Jira
                         StartDate = timeProvider.ConvertToUserTimezone(item.ChangeLog.CreatedDate, timeZoneInfo),
                         Issue = item.ChangeLog.Issue.Adapt(),
                         Author = item.Author,
-                        Source = eventSource
+                        Source = eventSource,
+                        Details = new TransitionEventDetails
+                        {
+                            Status = statusName,
+                            FromStatus = item.FromValue,
+                            ToStatus = issueChangeLogItems[i + 1].ToValue
+                        }
 					};
                 }
 
@@ -73,7 +93,8 @@ namespace Chronos.Infrastructure.Jira
             ITimeProvider timeProvider,
             TimeZoneInfo timeZoneInfo,
             EventSource source,
-            TimeSpan time)
+            TimeSpan time,
+            IJiraLinkGenerator linkGenerator)
         {
             foreach (var comment in comments)
             {
@@ -84,7 +105,13 @@ namespace Chronos.Infrastructure.Jira
                     StartDate = createdDate.Add(-time),
                     Issue = comment.Issue.Adapt(),
                     Author = comment.Author,
-                    Source = source
+                    Source = source,
+                    Details = new CommentEventDetails
+                    {
+                        Body = comment.Body,
+                        Author = comment.AuthorDisplayName ?? comment.Author,
+                        Link = linkGenerator.GenerateComment(comment.Issue.Key, comment.Id)
+                    }
                 };
             }
         }

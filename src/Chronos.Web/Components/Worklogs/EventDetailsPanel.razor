@@ -1,0 +1,71 @@
+@using Chronos.Domain.Models.Events
+
+@* Every kind of IEventDetails is rendered here. A kind added later and forgotten shows an
+   empty panel — which is what makes the omission visible. See issue #156. *@
+<div class="chr-event-details" style="@AccentStyle">
+    @if (Details is CommentEventDetails comment)
+    {
+        <div class="chr-event-details-label">@CommentLabel(comment)</div>
+        <div class="chr-event-details-body">@comment.Body</div>
+        @if (!string.IsNullOrEmpty(comment.Link))
+        {
+            <MudLink Href="@comment.Link"
+                     Target="_blank"
+                     Color="@Color"
+                     Typo="Typo.caption"
+                     Class="chr-event-details-link">
+                Открыть комментарий в Jira
+            </MudLink>
+        }
+    }
+    else if (Details is TransitionEventDetails transition)
+    {
+        <div class="chr-event-details-label">Переход статуса</div>
+        <div class="chr-event-details-transition">
+            @if (transition.FromStatus is not null)
+            {
+                <span class="chr-status">@transition.FromStatus</span>
+                <span class="chr-status-arrow">→</span>
+            }
+            <span class="chr-status chr-status-current">@transition.Status</span>
+            <span class="chr-status-arrow">→</span>
+            @if (transition.ToStatus is not null)
+            {
+                <span class="chr-status">@transition.ToStatus</span>
+            }
+            else
+            {
+                <span class="chr-status chr-status-open">ещё не завершено</span>
+            }
+        </div>
+    }
+    else if (Details is CalendarEventDetails meeting)
+    {
+        <div class="chr-event-details-label">Встреча</div>
+        @* The title is not repeated here: the row above already shows it. *@
+        <dl class="chr-event-details-fields">
+            @if (!string.IsNullOrEmpty(meeting.Organizer))
+            {
+                <dt>Организатор</dt>
+                <dd>@meeting.Organizer</dd>
+            }
+            @if (!string.IsNullOrEmpty(meeting.Location))
+            {
+                <dt>Место</dt>
+                <dd>@meeting.Location</dd>
+            }
+            @if (meeting.Attendees is { Count: > 0 })
+            {
+                <dt>Участники</dt>
+                <dd>@string.Join(", ", meeting.Attendees)</dd>
+            }
+            @if (!string.IsNullOrEmpty(meeting.Description))
+            {
+                <dt>Описание</dt>
+                <dd class="chr-event-details-body">@meeting.Description</dd>
+            }
+        </dl>
+    }
+</div>
+
+@code {}

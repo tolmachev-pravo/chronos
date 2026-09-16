@@ -1,56 +1,77 @@
 @using MudBlazor
 
-<MudElement Class="gap-2 d-flex flex-wrap border-none align-center">
-    <MudElement Class="flex-auto d-flex gap-1 align-center" Style="width: 300px">
-        <CalendarWorklogMenu Entity="@Entity"
-                             Color="Color.Tertiary"
-                             OnCreatedPressed="OnMenuCreatedPressed" />
-        <MudIcon Icon="@Icons.Material.Filled.Event"
-                 Color="Color.Tertiary"
-                 Size="Size.Small" />
-        <WorklogTimeRange StartDate="@Entity.RawStartDate"
-                          CompleteDate="@Entity.RawCompleteDate"
-                          Color="Color.Tertiary" />
-        <MudElement Class="pl-2" Style="flex:1;min-width:0;overflow:hidden">
-            <MudText Typo="Typo.body2"
-                     Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-                @Title
-            </MudText>
-        </MudElement>
-        @if (Entity.Issue is not null && !string.IsNullOrEmpty(Entity.Issue.Key))
-        {
-            <MudChip T="string"
-                     Href="@Entity.Issue.Link"
-                     Target="_blank"
-                     Size="Size.Small"
-                     Variant="Variant.Outlined"
-                     Color="Color.Tertiary"
-                     Style="height:20px;font-size:11px">
-                @Entity.Issue.Key
-            </MudChip>
-        }
-    </MudElement>
-    <MudElement Class="scalable-time-spent-container flex-none d-flex justify-end">
-        <MudElement Class="static-time-spent-container flex-none d-flex justify-end align-center gap-2">
-            <MudTextField @bind-Value="@Entity.RemainingTimeSpent"
-                          Class="chr-input-control"
-                          Variant="Variant.Text"
-                          IconSize="Size.Small" />
-            @if (_isAdding)
+<MudElement Class="chr-worklog-row">
+    <MudElement Class="gap-2 d-flex flex-wrap border-none align-center">
+        <MudElement Class="flex-auto d-flex gap-1 align-center" Style="width: 300px">
+            <CalendarWorklogMenu Entity="@Entity"
+                                 Color="Color.Tertiary"
+                                 OnCreatedPressed="OnMenuCreatedPressed" />
+            @if (HasDetails)
             {
-                <MudElement Class="d-flex align-center justify-center" Style="width:30px;height:30px">
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Tertiary" />
-                </MudElement>
+                @* The meeting's own icon opens what the invitation said. See issue #156. *@
+                <MudIconButton Icon="@Icons.Material.Filled.Event"
+                               Color="Color.Tertiary"
+                               Size="Size.Small"
+                               Class="@ToggleClass"
+                               OnClick="ToggleDetails"
+                               aria-expanded="@_detailsShown" />
             }
             else
             {
-                <MudIconButton Size="Size.Small"
-                               Icon="@Icons.Material.Filled.Add"
-                               Variant="Variant.Filled"
-                               Color="Color.Tertiary"
-                               OnClick="AddAsync"
-                               Disabled="@Entity.IsEmpty" />
+                <MudIcon Icon="@Icons.Material.Filled.Event"
+                         Color="Color.Tertiary"
+                         Size="Size.Small" />
+            }
+            <WorklogTimeRange StartDate="@Entity.RawStartDate"
+                              CompleteDate="@Entity.RawCompleteDate"
+                              Color="Color.Tertiary" />
+            <MudElement Class="pl-2" Style="flex:1;min-width:0;overflow:hidden">
+                <MudText Typo="Typo.body2"
+                         Style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                    @Title
+                </MudText>
+            </MudElement>
+            @if (Entity.Issue is not null && !string.IsNullOrEmpty(Entity.Issue.Key))
+            {
+                <MudChip T="string"
+                         Href="@Entity.Issue.Link"
+                         Target="_blank"
+                         Size="Size.Small"
+                         Variant="Variant.Outlined"
+                         Color="Color.Tertiary"
+                         Style="height:20px;font-size:11px">
+                    @Entity.Issue.Key
+                </MudChip>
             }
         </MudElement>
+        <MudElement Class="scalable-time-spent-container flex-none d-flex justify-end">
+            <MudElement Class="static-time-spent-container flex-none d-flex justify-end align-center gap-2">
+                <MudTextField @bind-Value="@Entity.RemainingTimeSpent"
+                              Class="chr-input-control"
+                              Variant="Variant.Text"
+                              IconSize="Size.Small" />
+                @if (_isAdding)
+                {
+                    <MudElement Class="d-flex align-center justify-center" Style="width:30px;height:30px">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Tertiary" />
+                    </MudElement>
+                }
+                else
+                {
+                    <MudIconButton Size="Size.Small"
+                                   Icon="@Icons.Material.Filled.Add"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Tertiary"
+                                   OnClick="AddAsync"
+                                   Disabled="@Entity.IsEmpty" />
+                }
+            </MudElement>
+        </MudElement>
     </MudElement>
+    @if (HasDetails)
+    {
+        <MudCollapse Expanded="_detailsShown">
+            <EventDetailsPanel Details="@Entity.Details" Color="Color.Tertiary" />
+        </MudCollapse>
+    }
 </MudElement>

@@ -1,5 +1,6 @@
 using MediatR;
 using Chronos.Application.Events;
+using Chronos.Application.Extensions.YandexCalendar.Dto;
 using Chronos.Application.Extensions.YandexCalendar.Queries;
 using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Issues;
@@ -61,12 +62,28 @@ namespace Chronos.Infrastructure.Events
                     Issue = CreateIssue(calendarEvent.JiraIssueKeyHint, calendarEvent.Summary),
                     Author = _query.Username,
                     Source = EventSource.Calendar,
-                    Summary = calendarEvent.Summary
+                    Summary = calendarEvent.Summary,
+                    Details = CreateDetails(calendarEvent)
                 }));
             }
 
             return events;
         }
+
+        /// <summary>
+        /// What the invitation said, for the row to show when it is expanded. The title is
+        /// the meeting's own — the issue whose key was found in it has a summary of its
+        /// own, and it is not what happened at this hour. See issue #156.
+        /// </summary>
+        private static IEventDetails CreateDetails(YandexCalendarEventDto calendarEvent) =>
+            new CalendarEventDetails
+            {
+                Title = calendarEvent.Summary,
+                Description = calendarEvent.Description,
+                Organizer = calendarEvent.Organizer,
+                Location = calendarEvent.Location,
+                Attendees = calendarEvent.Attendees ?? Array.Empty<string>()
+            };
 
         private static IIssue CreateIssue(string jiraIssueKeyHint, string summary) =>
             string.IsNullOrEmpty(jiraIssueKeyHint)

@@ -39,6 +39,13 @@ namespace Chronos.Application.Worklogs.Dto
         /// </summary>
         public EventSource? Source { get; set; }
 
+        /// <summary>
+        /// What the source knew about the event this row came from — the comment, the
+        /// status transition, the meeting. Null for an actual worklog and for an event
+        /// whose source had nothing to add. See issue #156.
+        /// </summary>
+        public IEventDetails Details { get; set; }
+
         public WorkingDay WorkingDay { get; set; }
 
         public IWorklog Worklog { get; set; }
@@ -127,7 +134,8 @@ namespace Chronos.Application.Worklogs.Dto
                 CompleteDate = completeDate,
                 Issue = userEvent.Issue,
                 Type = WorklogType.Estimated,
-                Source = userEvent.Source
+                Source = userEvent.Source,
+                Details = userEvent.Details
             };
 
             result.UpdateRemainingTimeSpent(result.TimeSpent);
@@ -138,6 +146,10 @@ namespace Chronos.Application.Worklogs.Dto
             return result;
         }
 
+        /// <summary>
+        /// The row that gets logged. It carries no event details: time logged is no longer
+        /// a trace of activity, and what it says about itself is its Comment. See #156.
+        /// </summary>
         public static WorkingDayWorklog CreateActualByEstimated(
             WorkingDayWorklog source)
         {

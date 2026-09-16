@@ -122,6 +122,65 @@ namespace Chronos.UnitTests.Web.Mcp
         }
 
         [Test]
+        public async Task GetWorklogCollection_Should_TellTheClient_WhatTheCommentSaid()
+        {
+            // Arrange — issue #156.
+            var suggested = Suggested("CH-3", 11, 12, EventSource.Comment);
+            suggested.Details = new CommentEventDetails
+            {
+                Body = "the certificate is renewed by hand",
+                Link = "https://jira.test/browse/CH-3?focusedCommentId=99"
+            };
+            SetUpWorklogCollection(CreateDay(suggested));
+
+            // Act
+            var days = await _tools.GetWorklogCollection(_date, _date);
+
+            // Assert
+            var details = days[0].Events.Single().Details;
+            Assert.That(details, Is.Not.Null);
+            Assert.That(details.Text, Is.EqualTo("the certificate is renewed by hand"));
+            Assert.That(details.Link, Does.Contain("focusedCommentId=99"));
+            // Fields belonging to other kinds of event stay empty — which fields came back
+            // is what tells the kinds apart.
+            Assert.That(details.Status, Is.Null);
+            Assert.That(details.Organizer, Is.Null);
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_TellTheClient_WhichTransitionTheTimeWas()
+        {
+            // Arrange
+            var suggested = Suggested("CH-4", 10, 13);
+            suggested.Details = new TransitionEventDetails
+            {
+                Status = "In Progress",
+                FromStatus = "Open",
+                ToStatus = "In Review"
+            };
+            SetUpWorklogCollection(CreateDay(suggested));
+
+            // Act
+            var days = await _tools.GetWorklogCollection(_date, _date);
+
+            // Assert
+            var details = days[0].Events.Single().Details;
+            Assert.That(details.From, Is.EqualTo("Open"));
+            Assert.That(details.Status, Is.EqualTo("In Progress"));
+            Assert.That(details.To, Is.EqualTo("In Review"));
+        }
+
+        [Test]
+        public async Task GetWorklogCollection_Should_LeaveDetailsOut_When_TheSourceAddedNothing()
+        {
+            SetUpWorklogCollection(CreateDay(Suggested("CH-5", 10, 13)));
+
+            var days = await _tools.GetWorklogCollection(_date, _date);
+
+            Assert.That(days[0].Events.Single().Details, Is.Null);
+        }
+
+        [Test]
         public async Task GetWorklogCollection_Should_TellTheDay_AsEventsAndWorklogs()
         {
             SetUpWorklogCollection(CreateDay(

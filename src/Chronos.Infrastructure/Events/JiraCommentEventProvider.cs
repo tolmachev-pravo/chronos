@@ -31,6 +31,7 @@ namespace Chronos.Infrastructure.Events
         private readonly ITimeProvider _timeProvider;
         private readonly IJiraExtensionProvider _extensionProvider;
         private readonly IJiraConfiguration _configuration;
+        private readonly IJiraLinkGenerator _linkGenerator;
         private readonly ILogger<JiraCommentEventProvider> _logger;
 
         private EventQuery _query;
@@ -44,6 +45,7 @@ namespace Chronos.Infrastructure.Events
             ITimeProvider timeProvider,
             IJiraExtensionProvider extensionProvider,
             IOptions<JiraConfiguration> configuration,
+            IJiraLinkGenerator linkGenerator,
             ILogger<JiraCommentEventProvider> logger)
         {
             _jiraService = jiraService;
@@ -52,6 +54,7 @@ namespace Chronos.Infrastructure.Events
             _timeProvider = timeProvider;
             _extensionProvider = extensionProvider;
             _configuration = configuration.Value;
+            _linkGenerator = linkGenerator;
             _logger = logger;
         }
 
@@ -89,7 +92,7 @@ namespace Chronos.Infrastructure.Events
                     .Where(item => item.Issue.Key == issue.Key)
                     .OrderBy(item => item.CreatedDate)
                     .ToList()
-                    .ConvertTo(_timeProvider, _userProfile.TimeZoneInfo, Source, _commentWorklogTime)
+                    .ConvertTo(_timeProvider, _userProfile.TimeZoneInfo, Source, _commentWorklogTime, _linkGenerator)
                     .Where(userEvent => userEvent.IsBetween(_query.StartDate, _query.EndDate));
                 result.AddRange(events);
             }

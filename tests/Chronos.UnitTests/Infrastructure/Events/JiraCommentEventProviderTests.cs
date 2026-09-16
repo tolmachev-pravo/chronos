@@ -70,6 +70,7 @@ namespace Chronos.UnitTests.Infrastructure.Events
             _timeProviderMock.Object,
             _extensionProviderMock.Object,
             Options.Create(_configuration),
+            new JiraLinkGenerator(Options.Create(new JiraConfiguration { Url = "https://jira.test" })),
             Mock.Of<ILogger<JiraCommentEventProvider>>());
 
         private static EventQuery Query() => new(
@@ -173,6 +174,7 @@ namespace Chronos.UnitTests.Infrastructure.Events
                 {
                     new IssueCommentDto
                     {
+                        Id = "10501",
                         CreatedDate = new DateTime(2026, 07, 09, 10, 00, 00),
                         Author = CurrentUser,
                         Issue = issue
@@ -189,6 +191,78 @@ namespace Chronos.UnitTests.Infrastructure.Events
             Assert.That(result.Single().Source, Is.EqualTo(EventSource.Comment));
             // The comment worklog time from the extension settings frames the event.
             Assert.That(result.Single().Duration, Is.EqualTo(TimeSpan.FromMinutes(15)));
+        }
+
+        [Test]
+        public async Task GetEventsAsync_Should_CarryTheCommentItself()
+        {
+            // Arrange — issue #156: the row has to be able to show what was written.
+            var issue = new IssueDto { Key = "CASEM-1", Summary = "s", Link = "l", Identifier = "1" };
+            _jiraServiceMock
+                .Setup(mock => mock.GetIssuesAsync(
+                    It.IsAny<IssueSearchOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[] { issue });
+            _jiraServiceMock
+                .Setup(mock => mock.GetIssueCommentsAsync(
+                    It.IsAny<IEnumerable<IssueDto>>(),
+                    It.IsAny<Func<Comment, bool>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[]
+                {
+                    new IssueCommentDto
+                    {
+                        Id = "10501",
+                        CreatedDate = new DateTime(2026, 07, 09, 10, 00, 00),
+                        Author = CurrentUser,
+                        AuthorDisplayName = "Дмитрий Толмачёв",
+                        Body = "Сертификат продлил вручную",
+                        Issue = issue
+                    }
+                });
+
+            // Act
+            var result = (await GetEventsAsync(CreateSut())).ToList();
+
+            // Assert
+            var details = result.Single().Details as CommentEventDetails;
+            Assert.That(details, Is.Not.Null);
+            Assert.That(details.Body, Is.EqualTo("Сертификат продлил вручную"));
+            Assert.That(details.Author, Is.EqualTo("Дмитрий Толмачёв"));
+            Assert.That(details.Link, Is.EqualTo(
+                "https://jira.test/browse/CASEM-1?focusedCommentId=10501"
+                + "&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-10501"));
+        }
+
+        [Test]
+        public async Task GetEventsAsync_Should_NameTheAuthorByUsername_When_JiraSentNoProfile()
+        {
+            // Arrange — AuthorUser is absent on some Jira answers; the username stands in.
+            var issue = new IssueDto { Key = "CASEM-1", Summary = "s", Link = "l", Identifier = "1" };
+            _jiraServiceMock
+                .Setup(mock => mock.GetIssuesAsync(
+                    It.IsAny<IssueSearchOptions>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[] { issue });
+            _jiraServiceMock
+                .Setup(mock => mock.GetIssueCommentsAsync(
+                    It.IsAny<IEnumerable<IssueDto>>(),
+                    It.IsAny<Func<Comment, bool>>(),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new[]
+                {
+                    new IssueCommentDto
+                    {
+                        Id = "10502",
+                        CreatedDate = new DateTime(2026, 07, 09, 10, 00, 00),
+                        Author = CurrentUser,
+                        Issue = issue
+                    }
+                });
+
+            // Act
+            var result = (await GetEventsAsync(CreateSut())).ToList();
+
+            // Assert
+            Assert.That(((CommentEventDetails)result.Single().Details).Author, Is.EqualTo(CurrentUser));
         }
 
         [Test]

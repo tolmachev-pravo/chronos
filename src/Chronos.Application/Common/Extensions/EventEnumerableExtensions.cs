@@ -37,6 +37,8 @@ namespace Chronos.Application.Common.Extensions
 						? dateEvent.CompleteDate
 						: endOfDay;
 
+					// Every field of the event is named here, so a field left out is a
+					// field a multi-day event silently loses. Keep the list exhaustive.
 					yield return new UserEvent
 					{
 						Issue = dateEvent.Issue,
@@ -44,7 +46,8 @@ namespace Chronos.Application.Common.Extensions
 						CompleteDate = estimatedEndDate,
 						Author = dateEvent.Author,
 						Source = dateEvent.Source,
-						Summary = dateEvent.Summary
+						Summary = dateEvent.Summary,
+						Details = dateEvent.Details
 					};
 				}
 				day = day.AddDays(-1);
