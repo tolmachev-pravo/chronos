@@ -15,6 +15,19 @@ namespace Chronos.Web.Components.Worklogs
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
         private bool _isAdding;
+        private bool _detailsShown;
+
+        /// <summary>
+        /// Whether the source had anything to say about this event. Without it the icon
+        /// stays what it has always been. See issue #156.
+        /// </summary>
+        public bool HasDetails => Entity.Details is not null;
+
+        private string ToggleClass => _detailsShown
+            ? "chr-source-toggle chr-source-toggle-open"
+            : "chr-source-toggle";
+
+        private void ToggleDetails() => _detailsShown = !_detailsShown;
 
         private async Task AddAsync()
         {

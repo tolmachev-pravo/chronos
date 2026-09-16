@@ -106,7 +106,11 @@ namespace Chronos.Web.Components.Worklogs
                 Comment = e.Summary,
                 Issue = null,
                 Type = Domain.Models.Worklogs.WorklogType.Actual,
-                Source = Domain.Models.Events.EventSource.Calendar
+                Source = Domain.Models.Events.EventSource.Calendar,
+                // A meeting with no key never became an estimated row, so this template is
+                // the only place its details can reach the page — and it is the row whose
+                // details matter most: nothing else says what the hour was. See #156.
+                Details = e.Details
             };
             template.UpdateRemainingTimeSpent(e.Duration);
             return template;

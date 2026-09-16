@@ -1,43 +1,65 @@
-﻿<MudElement Class="gap-2 d-flex flex-wrap border-none align-center">
-    <MudElement Class="flex-auto d-flex gap-1 align-center" Style="width: 300px">
-        <WorklogMenu Entity="@Entity" Color="@Color" OnCreatedPressed="AddCustomAsync" />
-        <MudIcon Icon="@Icon" Color="@Color" Size="Size.Small" />
-        <WorklogTimeRange StartDate="@Entity.RawStartDate" CompleteDate="@Entity.RawCompleteDate" Color="@Color" />
-        <MudElement Class="pl-2" Style="flex:1;min-width:0;overflow:hidden">
-            <MudButton Href="@Entity.Issue.Link"
-                       Size="Size.Small"
-                       Target="_blank"
-                       Variant="Variant.Text"
-                       Color="Color.Primary">
-                @Entity.Issue.Key
-            </MudButton>
-            @Entity.Issue.Summary
-        </MudElement>
-    </MudElement>
-    <MudElement Class="scalable-time-spent-container flex-none d-flex justify-end">
-        <MudElement Class="static-time-spent-container flex-none d-flex justify-end align-center gap-2">
-            <MudTextField @bind-Value="@Entity.RemainingTimeSpent"
-                          Disabled="false"
-                          Class="chr-input-control"
-                          Variant="Variant.Text"
-                          IconSize="Size.Small" />
-            @if (_isAdding)
+﻿<MudElement Class="chr-worklog-row">
+    <MudElement Class="gap-2 d-flex flex-wrap border-none align-center">
+        <MudElement Class="flex-auto d-flex gap-1 align-center" Style="width: 300px">
+            <WorklogMenu Entity="@Entity" Color="@Color" OnCreatedPressed="AddCustomAsync" />
+            @if (HasDetails)
             {
-                <MudElement Class="d-flex align-center justify-center" Style="width:30px;height:30px">
-                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="@Color" />
-                </MudElement>
+                @* The source icon doubles as the way in: no new control per row, and the
+                   dot in its corner is the only sign there is anything to open. #156 *@
+                <MudIconButton Icon="@Icon"
+                               Color="@Color"
+                               Size="Size.Small"
+                               Class="@ToggleClass"
+                               OnClick="ToggleDetails"
+                               aria-expanded="@_detailsShown" />
             }
             else
             {
-                <MudIconButton Size="Size.Small"
-                           Icon="@Icons.Material.Filled.Add"
-                           Variant="Variant.Filled"
-                           Color="@Color"
-                           OnClick="AddAsync"
-                           Disabled="@Entity.IsEmpty"></MudIconButton>
+                <MudIcon Icon="@Icon" Color="@Color" Size="Size.Small" />
             }
+            <WorklogTimeRange StartDate="@Entity.RawStartDate" CompleteDate="@Entity.RawCompleteDate" Color="@Color" />
+            <MudElement Class="pl-2" Style="flex:1;min-width:0;overflow:hidden">
+                <MudButton Href="@Entity.Issue.Link"
+                           Size="Size.Small"
+                           Target="_blank"
+                           Variant="Variant.Text"
+                           Color="Color.Primary">
+                    @Entity.Issue.Key
+                </MudButton>
+                @Entity.Issue.Summary
+            </MudElement>
+        </MudElement>
+        <MudElement Class="scalable-time-spent-container flex-none d-flex justify-end">
+            <MudElement Class="static-time-spent-container flex-none d-flex justify-end align-center gap-2">
+                <MudTextField @bind-Value="@Entity.RemainingTimeSpent"
+                              Disabled="false"
+                              Class="chr-input-control"
+                              Variant="Variant.Text"
+                              IconSize="Size.Small" />
+                @if (_isAdding)
+                {
+                    <MudElement Class="d-flex align-center justify-center" Style="width:30px;height:30px">
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="@Color" />
+                    </MudElement>
+                }
+                else
+                {
+                    <MudIconButton Size="Size.Small"
+                               Icon="@Icons.Material.Filled.Add"
+                               Variant="Variant.Filled"
+                               Color="@Color"
+                               OnClick="AddAsync"
+                               Disabled="@Entity.IsEmpty"></MudIconButton>
+                }
+            </MudElement>
         </MudElement>
     </MudElement>
+    @if (HasDetails)
+    {
+        <MudCollapse Expanded="_detailsShown">
+            <EventDetailsPanel Details="@Entity.Details" Color="@Color" />
+        </MudCollapse>
+    }
 </MudElement>
 
 
