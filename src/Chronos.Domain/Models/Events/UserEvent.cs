@@ -11,6 +11,7 @@ namespace Chronos.Domain.Models.Events
         public string Author { get; init; }
         public EventSource Source { get; init; }
         public string Summary { get; init; }
+        public IEventDetails Details { get; init; }
 
         public TimeSpan Duration => CompleteDate - StartDate;
 

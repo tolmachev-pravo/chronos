@@ -68,6 +68,42 @@ namespace Chronos.Infrastructure.Extensions.YandexCalendar
 </C:calendar-query>";
         }
 
+
+        private static string NullIfEmpty(string value) =>
+            string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
+        /// <summary>
+        /// How an invitation names a person: a display name when it carried one, otherwise
+        /// the address, which arrives as a mailto URI nobody wants to read. See issue #156.
+        /// </summary>
+        private static string NameOf(Organizer organizer) =>
+            organizer is null ? null : NameOf(organizer.CommonName, organizer.Value);
+
+        private static string NameOf(string commonName, Uri value)
+        {
+            var name = NullIfEmpty(commonName);
+            if (name is not null) return name;
+
+            var address = value?.ToString();
+            if (string.IsNullOrWhiteSpace(address)) return null;
+
+            return address.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase)
+                ? address.Substring("mailto:".Length)
+                : address;
+        }
+
+        private static IReadOnlyList<string> AttendeesOf(CalendarEvent vevent)
+        {
+            var names = new List<string>();
+            foreach (var attendee in vevent.Attendees)
+            {
+                var name = NameOf(attendee?.CommonName, attendee?.Value);
+                if (name is not null) names.Add(name);
+            }
+
+            return names;
+        }
+
         private static IReadOnlyList<YandexCalendarEventDto> ParseCalDavResponse(string xml, DateOnly date)
         {
             var doc = XDocument.Parse(xml);
@@ -96,7 +132,15 @@ namespace Chronos.Infrastructure.Extensions.YandexCalendar
                     var match = JiraKeyRegex.Match(summary + " " + description);
                     var hint = match.Success ? match.Value : null;
 
-                    result.Add(new YandexCalendarEventDto(summary, start, end, hint));
+                    result.Add(new YandexCalendarEventDto(
+                        summary,
+                        start,
+                        end,
+                        hint,
+                        Description: NullIfEmpty(description),
+                        Organizer: NameOf(vevent.Organizer),
+                        Location: NullIfEmpty(vevent.Location),
+                        Attendees: AttendeesOf(vevent)));
                 }
             }
 

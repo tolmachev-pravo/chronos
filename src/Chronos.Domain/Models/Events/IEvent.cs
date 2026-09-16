@@ -23,5 +23,11 @@ namespace Chronos.Domain.Models.Events
         /// description comes from the issue.
         /// </summary>
         string Summary { get; }
+
+        /// <summary>
+        /// What the source knows about this event beyond the interval above. Null is
+        /// normal: a source with nothing to add leaves it unset. See issue #156.
+        /// </summary>
+        IEventDetails Details { get; }
     }
 }

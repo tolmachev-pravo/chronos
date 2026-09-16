@@ -518,5 +518,32 @@ namespace Chronos.UnitTests.Application.Worklogs
                 Assert.That(workingDay.EstimatedWorklogTimeSpent, Is.EqualTo(TimeSpan.FromHours(7)));
             });
         }
+
+        [Test]
+        public void CreateActualByEstimated_Should_NotCarryTheEventDetails()
+        {
+            // Arrange — issue #156: an estimated row knows the comment it came from.
+            var estimated = WorkingDayWorklog.CreateEstimated(
+                new UserEvent
+                {
+                    StartDate = _date.AddHours(10),
+                    CompleteDate = _date.AddHours(11),
+                    Issue = _issues[0],
+                    Author = "user1",
+                    Source = EventSource.Comment,
+                    Details = new CommentEventDetails { Body = "looks good", Link = "https://jira/x" }
+                },
+                _date,
+                _defaultWorkingDaySettings.WorkingStartTime,
+                _defaultWorkingDaySettings.WorkingEndTime);
+
+            // Act
+            var actual = WorkingDayWorklog.CreateActualByEstimated(estimated);
+
+            // Assert — time logged is no longer a trace of activity; what it says about
+            // itself is its comment.
+            Assert.That(estimated.Details, Is.Not.Null);
+            Assert.That(actual.Details, Is.Null);
+        }
     }
 }
