@@ -1,0 +1,73 @@
+<svg viewBox="0 0 720 300" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Строка предложения: клик по иконке источника раскрывает врезку с деталями события"
+     font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+
+  <rect x="0" y="0" width="720" height="300" rx="12" fill="#F7F8FA" stroke="#E4E7EE"/>
+
+  <!-- collapsed row -->
+  <g>
+    <rect x="24" y="28" width="672" height="44" rx="6" fill="#FFFFFF" stroke="#E4E7EE"/>
+
+    <!-- source icon, with the dot that says there is something to open -->
+    <rect x="40" y="39" width="22" height="22" rx="11" fill="#8260E5" opacity="0.12"/>
+    <rect x="46" y="45" width="10" height="9" rx="1.5" fill="#8260E5"/>
+    <circle cx="61" cy="60" r="3.5" fill="#8260E5"/>
+
+    <rect x="76" y="40" width="82" height="20" rx="4" fill="#8260E5" opacity="0.12"/>
+    <text x="117" y="54" font-size="11" fill="#6B4FD8" text-anchor="middle">10:12 → 13:40</text>
+
+    <text x="172" y="54" font-size="12.5" font-weight="600" fill="#6B4FD8">ABC-451</text>
+    <text x="232" y="54" font-size="12.5" fill="#1F2430">Не отправляется отчёт по кнопке «Выгрузить»</text>
+
+    <text x="566" y="54" font-size="12.5" fill="#1F2430">02:15</text>
+    <rect x="612" y="39" width="22" height="22" rx="11" fill="#8260E5"/>
+    <path d="M623 45.5 v11 M617.5 51 h11" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- the click -->
+  <g>
+    <circle cx="51" cy="50" r="17" fill="none" stroke="#8260E5" stroke-width="1.5" opacity="0.45"/>
+    <path d="M51 82 v14" stroke="#8260E5" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <path d="M47 92 l4 5 l4 -5" fill="none" stroke="#8260E5" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- expanded panel -->
+  <g>
+    <rect x="76" y="106" width="620" height="76" rx="6" fill="#FFFFFF" stroke="#E4E7EE"/>
+    <rect x="76" y="106" width="3" height="76" rx="1.5" fill="#8260E5"/>
+
+    <text x="96" y="127" font-size="9.5" letter-spacing="1.2" fill="#8A93A6">ПЕРЕХОД СТАТУСА</text>
+
+    <rect x="96" y="139" width="62" height="20" rx="4" fill="#FFFFFF" stroke="#D8DCE6"/>
+    <text x="127" y="153" font-size="11" fill="#5A6275" text-anchor="middle">Backlog</text>
+    <text x="166" y="153" font-size="12" fill="#8A93A6">→</text>
+
+    <rect x="182" y="139" width="84" height="20" rx="4" fill="#FFFFFF" stroke="#8260E5"/>
+    <text x="224" y="153" font-size="11" font-weight="600" fill="#6B4FD8" text-anchor="middle">In Progress</text>
+    <text x="274" y="153" font-size="12" fill="#8A93A6">→</text>
+
+    <rect x="290" y="139" width="72" height="20" rx="4" fill="#FFFFFF" stroke="#D8DCE6"/>
+    <text x="326" y="153" font-size="11" fill="#5A6275" text-anchor="middle">In Review</text>
+  </g>
+
+  <!-- the other two kinds -->
+  <g>
+    <rect x="76" y="198" width="302" height="74" rx="6" fill="#FFFFFF" stroke="#E4E7EE"/>
+    <rect x="76" y="198" width="3" height="74" rx="1.5" fill="#2F86D6"/>
+    <text x="96" y="219" font-size="9.5" letter-spacing="1.2" fill="#8A93A6">КОММЕНТАРИЙ · АННА КОВАЛЁВА</text>
+    <text x="96" y="238" font-size="11.5" fill="#1F2430">Сертификат продлил вручную, но в</text>
+    <text x="96" y="253" font-size="11.5" fill="#1F2430">пайплайне старый секрет.</text>
+    <text x="96" y="266" font-size="11" font-weight="600" fill="#2F86D6">Открыть комментарий в Jira</text>
+  </g>
+
+  <g>
+    <rect x="394" y="198" width="302" height="74" rx="6" fill="#FFFFFF" stroke="#E4E7EE"/>
+    <rect x="394" y="198" width="3" height="74" rx="1.5" fill="#1FC8A5"/>
+    <text x="414" y="219" font-size="9.5" letter-spacing="1.2" fill="#8A93A6">ВСТРЕЧА</text>
+    <text x="414" y="238" font-size="11.5" fill="#8A93A6">Организатор</text>
+    <text x="500" y="238" font-size="11.5" fill="#1F2430">Анна Ковалёва</text>
+    <text x="414" y="256" font-size="11.5" fill="#8A93A6">Место</text>
+    <text x="500" y="256" font-size="11.5" fill="#1F2430">Переговорка «Сатурн»</text>
+  </g>
+</svg>
