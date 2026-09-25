@@ -89,7 +89,7 @@ namespace Chronos.Web.Components.Worklogs
 
             public static Cell From(WorkingDay day) =>
                 new(day.Date.Date, true, day.IsWeekend, day.ActualWorklogTimeSpent,
-                    day.IsWeekend ? TimeSpan.Zero : day.Settings.WorkingTime, day.RawEstimatedWorklogCount);
+                    day.IsWeekend ? TimeSpan.Zero : day.Settings.WorkingTime, day.OpenSuggestionCount);
 
             private static bool IsWeekendDay(DateTime date) =>
                 date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
