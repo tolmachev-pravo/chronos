@@ -1185,6 +1185,9 @@ body #components-reconnect-modal {
 
 .feat-inline { font-size: .8rem; color: var(--mud-palette-text-secondary); cursor: pointer; white-space: nowrap; }
 .feat-inline--new {
+    border: 0;
+    font: inherit;
+    font-size: .8rem;
     font-weight: 600;
     padding: 2px 10px;
     border-radius: 999px;
