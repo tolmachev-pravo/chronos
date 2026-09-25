@@ -1,33 +1,40 @@
-﻿@page "/"
+@page "/"
 @page "/worklogs"
+@using Chronos.Web.Components.Features
 
-<style>
-    .chr-filter-container {
-        width: 280px;
-    }
+@* One frame for every state: the period column on the left, the days on the right.
+   Only what the frame holds changes, so starting, running and finishing a search never
+   rearranges the page. News takes the right side while it has nothing else to show and
+   shrinks to a chip above the days once they are there. *@
+<div class="chr-worklog-page mb-4">
+    <aside class="chr-worklog-page__side">
+        <WorklogPeriodPanel Selected="_selected" Loaded="_loadedLog?.Period" Days="_items" Log="StatusLog"
+                            IsLoading="IsLoading" Settings="_settings"
+                            OnSelect="Select" OnShow="ShowAsync" OnCancel="Cancel" />
+    </aside>
 
-    @@media (max-width:480px) { /* smartphones, Android phones, landscape iPhone */
-        .chr-filter-container {
-            width: 100%;
+    <div class="chr-worklog-page__main">
+        @if (IsLoading || _loadedLog is not null)
+        {
+            <div class="d-flex justify-end mb-2">
+                <LatestFeaturesViewer Inline="true" />
+            </div>
         }
-    }
-
-    .chr-background-container {
-        background-color: inherit;
-    }
-</style>
-
-<MudOverlay Visible="@Model.InProgress" DarkBackground="true" Absolute="true">
-    <MudProgressCircular Color="Color.Primary" Indeterminate="true"/>
-</MudOverlay>
-
-<MudPaper Class="d-flex flex-wrap gap-4 border-none mb-4 chr-background-container flex-grow-1" Outlined="true">
-    <MudElement Class="chr-filter-container">
-        <WorklogFilter OnSearchPressed="SearchAsync" />
-    </MudElement>
-    <MudPaper Class="flex-1 chr-horizontal-center" Outlined="true">
-        <WorklogList Items="@Model.Items"></WorklogList>
-    </MudPaper>
-</MudPaper>
-
-@code {}
+        <MudPaper Outlined="true">
+            @if (IsLoading)
+            {
+                <WorklogSkeleton Period="_loadingLog.Period" Settings="_settings" />
+            }
+            else if (_loadedLog is not null)
+            {
+                <WorklogList Items="@_items" OnDayChanged="DayChanged" />
+            }
+            else
+            {
+                <div class="pa-4">
+                    <LatestFeaturesViewer FallbackMessage="Выберите период слева и нажмите «Показать» — Chronos соберёт ворклоги и предложения по нему." />
+                </div>
+            }
+        </MudPaper>
+    </div>
+</div>

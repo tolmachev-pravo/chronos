@@ -1,31 +1,77 @@
 @using Chronos.Web.Components.Common
 
-@if (_isLoading)
+@if (!_isReady)
 {
-    <!-- Reading features is fast; render nothing to avoid a flash of fallback content. -->
+    <!-- Features and what this browser has seen are read after the first render; render nothing meanwhile. -->
 }
 else if (_features.Count == 0)
 {
-    <Stub Message="@FallbackMessage" />
+    @if (!Inline)
+    {
+        <Stub Message="@FallbackMessage" />
+    }
+}
+else if (Inline)
+{
+    var unread = Unread;
+    @if (unread.Count > 0)
+    {
+        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+            <ActivatorContent>
+                <span class="d-inline-flex align-center gap-1 feat-inline feat-inline--new">
+                    <MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" Size="Size.Small" />
+                    Новое · @unread.Count
+                </span>
+            </ActivatorContent>
+            <ChildContent>
+                @foreach (var feature in unread.Take(MaxFeatures))
+                {
+                    <MudMenuItem OnClick="@(() => OpenAsync(feature))">
+                        <div class="feat-inline__item">@feature.Metadata.Title</div>
+                        <div class="feat-inline__date">@feature.Metadata.Date.ToString("dd.MM.yyyy")</div>
+                    </MudMenuItem>
+                }
+                <MudDivider />
+                <MudMenuItem Href="/features">Все возможности</MudMenuItem>
+                <MudMenuItem OnClick="MarkSeenAsync">Понятно, скрыть</MudMenuItem>
+            </ChildContent>
+        </MudMenu>
+    }
+    else
+    {
+        <MudLink Href="/features" Class="d-inline-flex align-center gap-1 feat-inline">
+            <MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" Size="Size.Small" />
+            Что нового
+        </MudLink>
+    }
 }
 else
 {
+    var shown = Unread.Count > 0 ? Unread.Take(MaxFeatures).ToList() : _features.Take(MaxFeatures).ToList();
     <div class="feat-promo">
         <div class="feat-promo__head">
             <div>
-                <div class="feat-widget__eyebrow">Новые возможности</div>
+                <div class="feat-widget__eyebrow">
+                    @(Unread.Count > 0 ? $"Новые возможности · {Unread.Count}" : "Новые возможности")
+                </div>
                 <MudText Typo="Typo.h6" Style="font-weight:700" Class="mt-1">Что нового в Chronos</MudText>
             </div>
-            <MudLink Href="/features" Class="feat-promo__all">
-                Все возможности
-                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
-            </MudLink>
+            <div class="d-flex align-center gap-3">
+                @if (Unread.Count > 0)
+                {
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="MarkSeenAsync">Понятно</MudButton>
+                }
+                <MudLink Href="/features" Class="feat-promo__all">
+                    Все возможности
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </MudLink>
+            </div>
         </div>
 
-        <div class="feat-promo__bento mt-4" data-count="@_features.Count">
-            @for (var i = 0; i < _features.Count; i++)
+        <div class="feat-promo__bento mt-4" data-count="@shown.Count">
+            @for (var i = 0; i < shown.Count; i++)
             {
-                <FeatureCard Feature="_features[i]" Featured="@(i == 0)" />
+                <FeatureCard Feature="shown[i]" Featured="@(i == 0)" />
             }
         </div>
     </div>

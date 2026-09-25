@@ -1,0 +1,28 @@
+@using Chronos.Application.Users.Dto
+@* The days of a period are known before any source answers, so they are drawn at once
+   and filled in place when the read finishes — the page does not jump. *@
+<div class="pa-3 d-flex flex-column gap-3">
+    @for (var day = Period.End; day >= Period.Start; day = day.AddDays(-1))
+    {
+        var isWeekend = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+        <div>
+            <div class="d-flex align-center chr-skeleton__head">
+                <span>@day.ToString("ddd, d MMMM", Russian)</span>
+                <MudSpacer />
+                <span class="chr-status__muted">— / @(isWeekend ? "0 ч" : WorkingDayFormat.Duration(WorkingDayFormat.Norm(Settings)))</span>
+            </div>
+            @if (!isWeekend)
+            {
+                <MudSkeleton Height="14px" Class="mt-1" />
+                <MudSkeleton Height="14px" Width="65%" />
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private static readonly System.Globalization.CultureInfo Russian = System.Globalization.CultureInfo.GetCultureInfo("ru-RU");
+
+    [Parameter] public WorklogPeriod Period { get; set; }
+    [Parameter] public UserSettingsDto Settings { get; set; } = UserSettingsDto.Default;
+}

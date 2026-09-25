@@ -1,5 +1,4 @@
 ﻿@using Chronos.Web.Components.Common;
-@using Chronos.Web.Components.Features;
 @using Chronos.Application.Common.Extensions
 
 <style>
@@ -60,7 +59,7 @@
 @if (Items.IsEmpty())
 {
     <MudPaper Class="pa-4 chr-paper" Elevation="0">
-        <LatestFeaturesViewer FallbackMessage="To display a list of actual and estimated worklogs, set the search options and click the 'Search' button" />
+        <Stub Message="За этот период нет ни одного дня." />
     </MudPaper>
 }
 else
@@ -69,7 +68,7 @@ else
         <tbody>
             @foreach (var item in Items)
             {
-                <WorklogDay Entity="@item" />
+                <WorklogDay Entity="@item" OnChanged="OnDayChanged" />
             }
         </tbody>
     </MudSimpleTable>

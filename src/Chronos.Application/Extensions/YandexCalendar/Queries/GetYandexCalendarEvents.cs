@@ -45,7 +45,7 @@ namespace Chronos.Application.Extensions.YandexCalendar.Queries
                 if (settings is null)
                     return Array.Empty<YandexCalendarEventDto>();
 
-                var userProfile = await _userProfileStorage.GetValueAsync(request.Username, ct);
+                var userProfile = await _userProfileStorage.GetOrInitAsync(request.Username, ct);
                 var userTimeZone = userProfile?.TimeZoneInfo ?? TimeZoneInfo.Local;
 
                 var utcEvents = await _calendar.GetEventsAsync(

@@ -1,0 +1,120 @@
+<svg viewBox="0 0 720 440" xmlns="http://www.w3.org/2000/svg" role="img"
+     aria-label="Колонка периода до загрузки и после: дни недели с нормой, кнопка «Показать», затем списанное время, недобор, число ожидающих строк и журнал загрузки"
+     font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+
+  <rect x="0" y="0" width="720" height="440" rx="12" fill="#F7F8FA" stroke="#E4E7EE"/>
+
+  <text x="180" y="30" font-size="12" fill="#8A93A6" text-anchor="middle">До загрузки</text>
+  <text x="540" y="30" font-size="12" fill="#8A93A6" text-anchor="middle">После загрузки</text>
+
+  <!-- ===== before ===== -->
+  <g>
+    <rect x="40" y="42" width="280" height="376" rx="8" fill="#FFFFFF" stroke="#E4E7EE"/>
+
+    <path d="M60 66 l-5 5 l5 5" fill="none" stroke="#8A93A6" stroke-width="1.8" stroke-linecap="round"/>
+    <text x="170" y="76" font-size="14" font-weight="600" fill="#1F2430" text-anchor="middle">21 – 27 сентября</text>
+    <path d="M268 66 l5 5 l-5 5" fill="none" stroke="#8A93A6" stroke-width="1.8" stroke-linecap="round"/>
+    <rect x="287" y="62" width="16" height="16" rx="3" fill="none" stroke="#8A93A6" stroke-width="1.5"/>
+    <path d="M287 67 h16" stroke="#8A93A6" stroke-width="1.5"/>
+
+    <rect x="56" y="94" width="248" height="32" rx="4" fill="#8260E5"/>
+    <path d="M150 104 v12 l10 -6 z" fill="#FFFFFF"/>
+    <text x="168" y="115" font-size="12.5" font-weight="600" fill="#FFFFFF">ПОКАЗАТЬ</text>
+
+    <path d="M56 142 h248" stroke="#E4E7EE"/>
+
+    <g font-size="12">
+      <text x="62" y="168" font-weight="600" fill="#1F2430">Пн 21</text>
+      <rect x="116" y="162" width="120" height="4" rx="2" fill="#E4E7EE"/>
+      <text x="298" y="168" fill="#8A93A6" text-anchor="end">? / 8 ч</text>
+
+      <text x="62" y="198" font-weight="600" fill="#1F2430">Вт 22</text>
+      <rect x="116" y="192" width="120" height="4" rx="2" fill="#E4E7EE"/>
+      <text x="298" y="198" fill="#8A93A6" text-anchor="end">? / 8 ч</text>
+
+      <text x="62" y="228" font-weight="600" fill="#1F2430">Ср 23</text>
+      <rect x="116" y="222" width="120" height="4" rx="2" fill="#E4E7EE"/>
+      <text x="298" y="228" fill="#8A93A6" text-anchor="end">? / 8 ч</text>
+
+      <text x="62" y="258" font-weight="600" fill="#1F2430">Чт 24</text>
+      <rect x="116" y="252" width="120" height="4" rx="2" fill="#E4E7EE"/>
+      <text x="298" y="258" fill="#8A93A6" text-anchor="end">? / 8 ч</text>
+
+      <text x="62" y="288" font-weight="600" fill="#1F2430">Пт 25</text>
+      <rect x="116" y="282" width="120" height="4" rx="2" fill="#E4E7EE"/>
+      <text x="298" y="288" fill="#8A93A6" text-anchor="end">? / 8 ч</text>
+    </g>
+
+    <path d="M56 308 h248" stroke="#E4E7EE"/>
+    <circle cx="66" cy="330" r="7" fill="none" stroke="#8A93A6" stroke-width="1.5"/>
+    <path d="M66 326 v4 l3 2" fill="none" stroke="#8A93A6" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="82" y="334" font-size="12" font-weight="600" fill="#1F2430">10:00–19:00</text>
+    <text x="298" y="334" font-size="11.5" fill="#8260E5" text-anchor="end">Изменить</text>
+    <text x="82" y="352" font-size="11.5" fill="#8A93A6">обед 1 ч · норма 8 ч</text>
+  </g>
+
+  <!-- ===== after ===== -->
+  <g>
+    <rect x="400" y="42" width="280" height="376" rx="8" fill="#FFFFFF" stroke="#E4E7EE"/>
+
+    <path d="M420 66 l-5 5 l5 5" fill="none" stroke="#8A93A6" stroke-width="1.8" stroke-linecap="round"/>
+    <text x="530" y="76" font-size="14" font-weight="600" fill="#1F2430" text-anchor="middle">21 – 27 сентября</text>
+    <path d="M628 66 l5 5 l-5 5" fill="none" stroke="#8A93A6" stroke-width="1.8" stroke-linecap="round"/>
+    <rect x="647" y="62" width="16" height="16" rx="3" fill="none" stroke="#8A93A6" stroke-width="1.5"/>
+    <path d="M647 67 h16" stroke="#8A93A6" stroke-width="1.5"/>
+
+    <text x="418" y="115" font-size="12.5" fill="#8A93A6">Списано <tspan font-weight="600" fill="#1F2430">26 ч</tspan> из 40 ч</text>
+    <path d="M656 104 a6 6 0 1 1 -2 -4" fill="none" stroke="#8A93A6" stroke-width="1.6" stroke-linecap="round"/>
+
+    <path d="M416 142 h248" stroke="#E4E7EE"/>
+
+    <g font-size="12">
+      <text x="422" y="168" font-weight="600" fill="#1F2430">Пн 21</text>
+      <rect x="476" y="162" width="104" height="4" rx="2" fill="#1FC8A5"/>
+      <text x="658" y="168" fill="#8A93A6" text-anchor="end">8 / 8 ч</text>
+
+      <text x="422" y="198" font-weight="600" fill="#1F2430">Вт 22</text>
+      <rect x="476" y="192" width="104" height="4" rx="2" fill="#1FC8A5"/>
+      <text x="658" y="198" fill="#8A93A6" text-anchor="end">8 / 8 ч</text>
+
+      <rect x="416" y="210" width="248" height="26" rx="5" fill="#F5A524" opacity="0.14"/>
+      <text x="422" y="228" font-weight="600" fill="#B26A00">Ср 23</text>
+      <rect x="476" y="222" width="104" height="4" rx="2" fill="#E4E7EE"/>
+      <rect x="476" y="222" width="78" height="4" rx="2" fill="#F5A524"/>
+      <text x="632" y="228" fill="#B26A00" text-anchor="end">6 / 8 ч</text>
+      <rect x="638" y="218" width="20" height="14" rx="7" fill="#F5A524" opacity="0.25"/>
+      <text x="648" y="229" font-size="10" font-weight="700" fill="#B26A00" text-anchor="middle">3</text>
+
+      <text x="422" y="258" font-weight="600" fill="#1F2430">Чт 24</text>
+      <rect x="476" y="252" width="104" height="4" rx="2" fill="#E4E7EE"/>
+      <rect x="476" y="252" width="52" height="4" rx="2" fill="#1FC8A5"/>
+      <text x="632" y="258" fill="#8A93A6" text-anchor="end">4 / 8 ч</text>
+      <rect x="638" y="248" width="20" height="14" rx="7" fill="#F5A524" opacity="0.25"/>
+      <text x="648" y="259" font-size="10" font-weight="700" fill="#B26A00" text-anchor="middle">5</text>
+
+      <rect x="416" y="270" width="248" height="26" rx="5" fill="none" stroke="#8260E5" opacity="0.6"/>
+      <text x="422" y="288" font-weight="600" fill="#1F2430">Пт 25</text>
+      <rect x="476" y="282" width="104" height="4" rx="2" fill="#E4E7EE"/>
+      <text x="632" y="288" fill="#8A93A6" text-anchor="end">0 / 8 ч</text>
+      <rect x="638" y="278" width="20" height="14" rx="7" fill="#F5A524" opacity="0.25"/>
+      <text x="648" y="289" font-size="10" font-weight="700" fill="#B26A00" text-anchor="middle">2</text>
+    </g>
+
+    <path d="M416 308 h248" stroke="#E4E7EE"/>
+    <circle cx="426" cy="330" r="7" fill="none" stroke="#8A93A6" stroke-width="1.5"/>
+    <path d="M426 326 v4 l3 2" fill="none" stroke="#8A93A6" stroke-width="1.5" stroke-linecap="round"/>
+    <text x="442" y="334" font-size="12" font-weight="600" fill="#1F2430">10:00–19:00</text>
+    <text x="442" y="352" font-size="11.5" fill="#8A93A6">обед 1 ч · норма 8 ч</text>
+
+    <rect x="418" y="368" width="14" height="4" rx="1" fill="#8A93A6"/>
+    <rect x="418" y="374" width="14" height="4" rx="1" fill="#8A93A6"/>
+    <rect x="418" y="380" width="14" height="4" rx="1" fill="#8A93A6"/>
+    <text x="442" y="378" font-size="12" font-weight="600" fill="#1F2430">Загружено в 14:32</text>
+    <text x="442" y="396" font-size="11.5" fill="#8A93A6">за 7,1 с · 32 записи</text>
+    <path d="M652 372 l5 5 l5 -5" fill="none" stroke="#8A93A6" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+
+  <!-- the arrow between the two states -->
+  <path d="M332 230 h52" stroke="#8260E5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M376 223 l8 7 l-8 7" fill="none" stroke="#8260E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

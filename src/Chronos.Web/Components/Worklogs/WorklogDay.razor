@@ -1,7 +1,7 @@
 ﻿@using MudBlazor
 @using Chronos.Web.Common
 
-<tr class="chr-table-summary-tr">
+<tr class="chr-table-summary-tr" id="@WorklogDayStrip.AnchorOf(Entity.Date)">
     <td>
         <div class="@DayHeaderClass">
             <WorklogDayMenu Entity="@Entity" OnCreatedPressed="AddWorklogAsync" />

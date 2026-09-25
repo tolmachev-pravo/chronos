@@ -7,6 +7,7 @@ using Chronos.Domain.Models.Users;
 using Chronos.Infrastructure.Jira;
 using System.Threading;
 using System.Threading.Tasks;
+using System;
 
 namespace Chronos.Infrastructure.Worklogs
 {
@@ -32,7 +33,9 @@ namespace Chronos.Infrastructure.Worklogs
         public async Task AddAsync(AddedWorklogDto worklog, CancellationToken cancellationToken = default)
         {
             var user = await _identityService.GetCurrentUserAsync();
-            var userProfile = await _userProfileStorage.GetValueAsync(user.Key, cancellationToken);
+            // Logged in the wrong time zone is worse than not logged: without a profile, stop.
+            var userProfile = await _userProfileStorage.GetOrInitAsync(user.Key, cancellationToken)
+                ?? throw new InvalidOperationException("Не удалось прочитать профиль пользователя из Jira.");
             worklog.StartedAt = _timeProvider.ConvertToServerTimezone(worklog.StartedAt, userProfile.TimeZoneInfo);
             await _jiraService.AddWorklogAsync(worklog);
         }

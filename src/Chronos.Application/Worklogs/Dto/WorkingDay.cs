@@ -77,8 +77,15 @@ namespace Chronos.Application.Worklogs.Dto
             ? Convert.ToInt32(ActualWorklogTimeSpent * 100 / WorklogTimeSpent)
             : 0;
 
-        public int RawEstimatedWorklogCount => EstimatedWorklogs.Count(item => item.RemainingTimeSpent > TimeSpan.Zero);
-        public bool HasRawEstimatedWorklogs => RawEstimatedWorklogCount > 0;
+        /// <summary>
+        /// Rows of the day still waiting for the user: suggestions nothing is logged under
+        /// yet, and meetings without an issue that are not logged. A suggestion counts even
+        /// when the day handed it no time — meetings may have used the norm up — because
+        /// the row is on screen all the same.
+        /// </summary>
+        public int OpenSuggestionCount =>
+            EstimatedWorklogs.Count(item => item.ChildrenTimeSpent == TimeSpan.Zero)
+            + BlockedEvents.Count(blockedEvent => !IsEventLogged(blockedEvent));
 
         /// <summary>
         /// Time blocked by events without an issue that are not yet logged — subtracted from
