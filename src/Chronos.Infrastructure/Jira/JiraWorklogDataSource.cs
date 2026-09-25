@@ -53,7 +53,8 @@ namespace Chronos.Infrastructure.Jira
 			};
 
 			var user = await _identityService.GetCurrentUserAsync();
-			var userProfile = await _userProfileStorage.GetValueAsync(user.Key, cancellationToken);
+			var userProfile = await _userProfileStorage.GetOrInitAsync(user.Key, cancellationToken)
+				?? throw new InvalidOperationException("Не удалось прочитать профиль пользователя из Jira.");
 
 			var worklogFilter = new Func<Worklog, bool>(worklog =>
 				worklog.Author == userProfile.Username

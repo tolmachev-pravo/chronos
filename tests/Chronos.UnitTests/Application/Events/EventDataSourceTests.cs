@@ -205,6 +205,20 @@ namespace Chronos.UnitTests.Application.Events
         }
 
         [Test]
+        public async Task GetEventsAsync_Should_ReportASource_ThatCouldNotBePrepared()
+        {
+            var log = new ProgressLog();
+            var broken = Provider(EventSource.Comment);
+            broken.Setup(provider => provider.PrepareAsync(It.IsAny<EventQuery>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("no profile"));
+
+            await CreateSut(broken.Object).GetEventsAsync(Query() with { Progress = log });
+
+            Assert.That(log.Reports.Single(),
+                Is.EqualTo(new EventSourceProgress(EventSource.Comment, EventSourceState.Failed) { Error = "no profile" }));
+        }
+
+        [Test]
         public async Task GetEventsAsync_Should_ReportEachPreparedSource_AsItStartsAndSettles()
         {
             var log = new ProgressLog();

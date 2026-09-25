@@ -76,6 +76,11 @@ namespace Chronos.Application.Events
                 _logger.LogWarning(exception,
                     "The {Source} event provider could not be prepared; its events are skipped.",
                     provider.Source);
+                // Skipped before it started, but skipped all the same: the load log says so.
+                query.Progress?.Report(new EventSourceProgress(provider.Source, EventSourceState.Failed)
+                {
+                    Error = exception.Message
+                });
                 return false;
             }
         }

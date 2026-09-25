@@ -96,6 +96,43 @@ namespace Chronos.UnitTests.Infrastructure.Events
         }
 
         [Test]
+        public async Task PrepareAsync_Should_LoadTheProfile_When_NoCacheHasIt()
+        {
+            // Arrange — nothing cached until the storage is initialised from Jira, as
+            // after a restart before the layout has done it.
+            var profile = new UserProfile { Username = CurrentUser, TimeZoneId = "Europe/Moscow" };
+            var initialised = false;
+            _userProfileStorageMock
+                .Setup(mock => mock.GetValueAsync(CurrentUser, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(() => initialised ? profile : (UserProfile?)null);
+            _userProfileStorageMock
+                .Setup(mock => mock.ForceInitAsync(CurrentUser, It.IsAny<CancellationToken>()))
+                .Callback(() => initialised = true)
+                .Returns(Task.CompletedTask);
+
+            // Act
+            var events = await GetEventsAsync(CreateSut());
+
+            // Assert
+            Assert.That(events, Is.Empty);
+            _userProfileStorageMock.Verify(
+                mock => mock.ForceInitAsync(CurrentUser, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
+        public void PrepareAsync_Should_Fail_When_TheProfileCannotBeRead()
+        {
+            // Arrange
+            _userProfileStorageMock
+                .Setup(mock => mock.GetValueAsync(CurrentUser, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((UserProfile?)null);
+
+            // Act + Assert — a reason for the load log, not a NullReferenceException
+            // halfway through the fetch.
+            Assert.ThrowsAsync<InvalidOperationException>(() => CreateSut().PrepareAsync(Query()));
+        }
+
+        [Test]
         public async Task GetEventsAsync_Should_UseTheCommentedIssueFunction_When_ScriptRunnerEnabled()
         {
             // Arrange

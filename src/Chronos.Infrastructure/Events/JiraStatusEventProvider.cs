@@ -71,7 +71,12 @@ namespace Chronos.Infrastructure.Events
             }
 
             _query = query;
-            _userProfile = await _userProfileStorage.GetValueAsync(query.Username, cancellationToken);
+            // Every event is matched to the user and placed in their time zone by the
+            // profile; without one the fetch has nothing to go on. Failing here skips the
+            // source with a reason in the load log, instead of a NullReferenceException
+            // in the middle of the fetch.
+            _userProfile = await _userProfileStorage.GetOrInitAsync(query.Username, cancellationToken)
+                ?? throw new InvalidOperationException("Не удалось прочитать профиль пользователя из Jira.");
             return true;
         }
 
