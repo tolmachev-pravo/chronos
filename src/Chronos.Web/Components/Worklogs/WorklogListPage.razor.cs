@@ -86,11 +86,14 @@ namespace Chronos.Web.Components.Worklogs
             _loadingLog = log;
             await RememberKindAsync(_selected);
 
-            // Progress<T> posts each report to the renderer's context, so the log is only
-            // ever touched there. A report of a superseded search is dropped.
-            var progress = new Progress<WorklogCollectionProgress>(report =>
+            // Not Progress<T>: it posts every report, even one made on the renderer's own
+            // context, and the last source settles there — its report was queued behind
+            // the end of the search and dropped, leaving the source spinning in the log.
+            // InvokeAsync runs a report made on the context at once and queues the rest in
+            // order. A report is dropped only once its search is neither running nor shown.
+            var progress = new RendererProgress<WorklogCollectionProgress>(InvokeAsync, report =>
             {
-                if (_search != search)
+                if (log != _loadingLog && log != _loadedLog)
                     return;
                 log.Apply(report);
                 StateHasChanged();
@@ -177,6 +180,20 @@ namespace Chronos.Web.Components.Worklogs
         public void Dispose()
         {
             _search?.Cancel();
+        }
+
+        private sealed class RendererProgress<T> : IProgress<T>
+        {
+            private readonly Func<Action, Task> _invoke;
+            private readonly Action<T> _report;
+
+            public RendererProgress(Func<Action, Task> invoke, Action<T> report)
+            {
+                _invoke = invoke;
+                _report = report;
+            }
+
+            public void Report(T value) => _ = _invoke(() => _report(value));
         }
     }
 }

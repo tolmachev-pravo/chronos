@@ -21,11 +21,13 @@
     }
     else
     {
-        <button type="button" class="d-flex align-center gap-2 chr-status__summary" @onclick="@(() => _open = !_open)"
+        <button type="button" class="d-flex align-start gap-2 chr-status__summary" @onclick="@(() => _open = !_open)"
                 aria-expanded="@_open">
             <MudIcon Icon="@Icons.Material.Outlined.Storage" Size="Size.Small" />
-            <span>Загружено в @Log.StartedAt.ToString("HH:mm")@Duration · @Log.Count @Records(Log.Count)</span>
-            <MudSpacer />
+            <div class="flex-1">
+                <div class="chr-status__title">Загружено в @Log.StartedAt.ToString("HH:mm")</div>
+                <div class="chr-status__muted">@Duration@Log.Count @Records(Log.Count)</div>
+            </div>
             <MudIcon Icon="@(_open ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
         </button>
         @foreach (var failed in Log.Failed)
@@ -75,7 +77,7 @@
 
     private bool _open;
 
-    private string Duration => Log.Duration is { } duration ? $" за {WorklogLoadLog.Seconds(duration)}" : string.Empty;
+    private string Duration => Log.Duration is { } duration ? $"за {WorklogLoadLog.Seconds(duration)} · " : string.Empty;
 
     private static string Records(int count)
     {

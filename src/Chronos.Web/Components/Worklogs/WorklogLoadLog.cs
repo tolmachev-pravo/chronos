@@ -2,6 +2,7 @@ using Chronos.Application.Events;
 using Chronos.Application.Worklogs.Dto;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Chronos.Web.Components.Worklogs
@@ -28,7 +29,12 @@ namespace Chronos.Web.Components.Worklogs
         /// <summary>Wall-clock time of the whole search; set once it finished.</summary>
         public TimeSpan? Duration { get; private set; }
 
-        public IReadOnlyList<WorklogCollectionProgress> Entries => _entries;
+        /// <summary>
+        /// In a fixed order — logged time first, then the event sources — rather than the
+        /// order they happened to start in, so the list does not reshuffle between reads.
+        /// </summary>
+        public IReadOnlyList<WorklogCollectionProgress> Entries =>
+            _entries.OrderBy(entry => entry.Source).ToList();
 
         public int Count => _entries.Sum(entry => entry.Count ?? 0);
 
@@ -57,6 +63,10 @@ namespace Chronos.Web.Components.Worklogs
         };
 
         public static string Seconds(TimeSpan value) =>
-            value.TotalSeconds < 10 ? $"{value.TotalSeconds:0.0} с" : $"{value.TotalSeconds:0} с";
+            value.TotalSeconds < 10
+                ? $"{value.TotalSeconds.ToString("0.0", Russian)} с"
+                : $"{value.TotalSeconds.ToString("0", Russian)} с";
+
+        private static readonly CultureInfo Russian = CultureInfo.GetCultureInfo("ru-RU");
     }
 }

@@ -1180,6 +1180,7 @@ body #components-reconnect-modal {
     font: inherit; color: inherit; text-align: left;
 }
 .chr-status__summary:hover { color: var(--mud-palette-text-primary); }
+.chr-status__title { color: var(--mud-palette-text-primary); font-weight: 500; }
 .chr-skeleton__head { font-size: .88rem; font-weight: 600; text-transform: capitalize; }
 
 .feat-inline { font-size: .8rem; color: var(--mud-palette-text-secondary); cursor: pointer; white-space: nowrap; }
