@@ -17,11 +17,14 @@ else if (Inline)
     @if (unread.Count > 0)
     {
         <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true">
+            @* In MudBlazor 9 custom activator content does not open the menu by itself:
+               it has to call the context. A plain span here made the chip dead. *@
             <ActivatorContent>
-                <span class="d-inline-flex align-center gap-1 feat-inline feat-inline--new">
+                <button type="button" class="d-inline-flex align-center gap-1 feat-inline feat-inline--new"
+                        aria-haspopup="menu" @onclick="@(args => context.ToggleAsync(args))">
                     <MudIcon Icon="@Icons.Material.Outlined.AutoAwesome" Size="Size.Small" />
                     Новое · @unread.Count
-                </span>
+                </button>
             </ActivatorContent>
             <ChildContent>
                 @foreach (var feature in unread.Take(MaxFeatures))

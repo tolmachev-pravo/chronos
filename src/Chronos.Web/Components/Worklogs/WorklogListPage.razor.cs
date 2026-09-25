@@ -1,4 +1,3 @@
-using Blazored.LocalStorage;
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Chronos.Application.Authentication;
@@ -21,19 +20,17 @@ namespace Chronos.Web.Components.Worklogs
     /// </summary>
     public partial class WorklogListPage : ComponentBase, IDisposable
     {
-        /// <summary>
-        /// Which of the offered periods the user read last. Someone who closes the
-        /// previous week every Monday finds it selected, so «Показать» is one click.
-        /// </summary>
-        private const string LastKindStorageKey = "chronos.worklogs.last-period";
-
         [Inject] private IMediator Mediator { get; set; }
         [Inject] private IIdentityService IdentityService { get; set; }
-        [Inject] private ILocalStorageService LocalStorage { get; set; }
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
         private UserSettingsDto _settings = UserSettingsDto.Default;
-        private WorklogPeriod _selected = WorklogPeriod.LastWeek(DateTime.Today);
+
+        /// <summary>
+        /// The current week on every visit: it is the one being filled in, and the one a
+        /// look back starts from.
+        /// </summary>
+        private WorklogPeriod _selected = WorklogPeriod.ThisWeek(DateTime.Today);
 
         /// <summary>The search running now.</summary>
         private WorklogLoadLog _loadingLog;
@@ -61,19 +58,6 @@ namespace Chronos.Web.Components.Worklogs
             }
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (!firstRender)
-                return;
-
-            var remembered = await ReadLastKindAsync();
-            if (remembered == "this-week" && _loadedLog is null && !IsLoading)
-            {
-                _selected = WorklogPeriod.ThisWeek(DateTime.Today);
-                StateHasChanged();
-            }
-        }
-
         private void Select(WorklogPeriod period) => _selected = period;
 
         private async Task ShowAsync()
@@ -84,7 +68,6 @@ namespace Chronos.Web.Components.Worklogs
 
             var log = new WorklogLoadLog(_selected, DateTime.Now);
             _loadingLog = log;
-            await RememberKindAsync(_selected);
 
             // Not Progress<T>: it posts every report, even one made on the renderer's own
             // context, and the last source settles there — its report was queued behind
@@ -150,37 +133,6 @@ namespace Chronos.Web.Components.Worklogs
         /// A day on screen changed in place: the period column reads the same days again.
         /// </summary>
         private void DayChanged(WorkingDay day) => StateHasChanged();
-
-        private async Task<string> ReadLastKindAsync()
-        {
-            try
-            {
-                return await LocalStorage.GetItemAsStringAsync(LastKindStorageKey);
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
-        /// <summary>Only the two offered weeks are remembered: a custom range is a one-off.</summary>
-        private async Task RememberKindAsync(WorklogPeriod period)
-        {
-            var today = DateTime.Today;
-            var kind = period == WorklogPeriod.ThisWeek(today) ? "this-week"
-                : period == WorklogPeriod.LastWeek(today) ? "last-week"
-                : null;
-            if (kind is null)
-                return;
-            try
-            {
-                await LocalStorage.SetItemAsStringAsync(LastKindStorageKey, kind);
-            }
-            catch (Exception)
-            {
-                // Not remembered in this browser; last week stays the default.
-            }
-        }
 
         public void Dispose()
         {
