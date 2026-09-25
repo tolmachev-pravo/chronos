@@ -1,0 +1,105 @@
+@using Chronos.Application.Users.Dto
+@using Chronos.Application.Worklogs.Dto
+@* The left column in every state: the period and the one action that makes sense now,
+   its days as a list that fills in once they are read, the working day they are measured
+   against, and what the last read did. Choosing a period does not read it — a read is
+   slow, so it happens only on «Показать». Only the contents change, never the column. *@
+<MudPaper Outlined="true" Class="pa-3 chr-period-panel">
+    <div class="d-flex align-center">
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" aria-label="Предыдущий период"
+                       Disabled="IsLoading" OnClick="@(() => SelectAsync(Selected.Shift(-1, DateTime.Today)))" />
+        <MudText Typo="Typo.subtitle1" Class="chr-period-panel__label">@Selected.Label</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" aria-label="Следующий период"
+                       Disabled="@(IsLoading || !Selected.CanShiftForward(DateTime.Today))"
+                       OnClick="@(() => SelectAsync(Selected.Shift(1, DateTime.Today)))" />
+        <div class="chr-period-panel__picker">
+            <MudIconButton Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" aria-label="Другой период"
+                           Disabled="IsLoading" OnClick="@(() => _pickerOpen = !_pickerOpen)" />
+            <MudPopover Open="_pickerOpen" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Class="pa-3">
+                <WorklogPeriodPicker Initial="Selected" OnPicked="PickAsync" />
+            </MudPopover>
+        </div>
+        <MudOverlay Visible="_pickerOpen" OnClick="@(() => _pickerOpen = false)" AutoClose="true" />
+    </div>
+
+    <div class="mt-2 d-flex align-center chr-period-panel__action">
+        @if (IsLoading)
+        {
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" FullWidth="true" OnClick="OnCancel">Отменить</MudButton>
+        }
+        else if (IsShown)
+        {
+            <MudText Typo="Typo.body2" Class="chr-working-day">
+                Списано <b class="chr-period-panel__logged">@Hours(Logged)</b> из @Hours(Planned)
+            </MudText>
+            <MudSpacer />
+            <MudIconButton Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" aria-label="Обновить"
+                           OnClick="OnShow" />
+        }
+        else
+        {
+            @* Tonal, not filled: a saturated button in a quiet column looked like the only
+               thing on the page. It is still the one coloured control here. *@
+            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" FullWidth="true"
+                       Class="chr-period-panel__show" StartIcon="@Icons.Material.Filled.PlayArrow"
+                       OnClick="OnShow">Показать</MudButton>
+        }
+    </div>
+
+    <MudDivider Class="my-2" />
+    <WorklogDayStrip Period="Selected" Days="@(IsShown ? Days : null)" Settings="Settings" />
+
+    <MudDivider Class="my-2" />
+    <WorkingDayLine Settings="Settings" />
+
+    @if (Log is not null)
+    {
+        <WorklogLoadStatus Log="Log" IsLoading="IsLoading" Selected="Selected" />
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public WorklogPeriod Selected { get; set; }
+
+    /// <summary>The period whose days are on screen, if any.</summary>
+    [Parameter] public WorklogPeriod Loaded { get; set; }
+
+    /// <summary>The days on screen, for the list and the logged-against-norm total.</summary>
+    [Parameter] public IEnumerable<WorkingDay> Days { get; set; }
+
+    /// <summary>The search running now, or the one whose days are on screen.</summary>
+    [Parameter] public WorklogLoadLog Log { get; set; }
+
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public UserSettingsDto Settings { get; set; } = UserSettingsDto.Default;
+    [Parameter] public EventCallback<WorklogPeriod> OnSelect { get; set; }
+    [Parameter] public EventCallback OnShow { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private bool _pickerOpen;
+
+    /// <summary>The selected period is the one on screen: the action re-reads it.</summary>
+    private bool IsShown => Loaded is not null && Loaded == Selected && Days is not null;
+
+    private TimeSpan Logged => Days.Aggregate(TimeSpan.Zero, (sum, day) => sum + day.ActualWorklogTimeSpent);
+
+    /// <summary>Weekends hold no norm: time logged on them still counts as logged.</summary>
+    private TimeSpan Planned => Days
+        .Where(day => !day.IsWeekend)
+        .Aggregate(TimeSpan.Zero, (sum, day) => sum + day.Settings.WorkingTime);
+
+    private static string Hours(TimeSpan value) =>
+        value.TotalHours == Math.Floor(value.TotalHours)
+            ? $"{(int)value.TotalHours} ч"
+            : $"{value.TotalHours:0.#} ч";
+
+    private Task SelectAsync(WorklogPeriod period) => OnSelect.InvokeAsync(period);
+
+    /// <summary>A period picked from the calendar is asked for explicitly: read it at once.</summary>
+    private async Task PickAsync(WorklogPeriod period)
+    {
+        _pickerOpen = false;
+        await OnSelect.InvokeAsync(period);
+        await OnShow.InvokeAsync();
+    }
+}

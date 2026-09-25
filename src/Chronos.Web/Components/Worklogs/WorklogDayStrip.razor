@@ -1,0 +1,55 @@
+@* The days of the selected period, drawn before anything is read: a period's days and
+   their norm are known up front. Once the period is on screen each day fills in with
+   what is logged and what is still suggested, so an unclosed day shows without scrolling
+   the list, and a click takes the list to it. A week reads as a list; anything longer
+   would not fit the column as one, so it becomes a small calendar. *@
+@if (IsCalendar)
+{
+    <div class="chr-day-calendar">
+        @foreach (var weekday in Weekdays)
+        {
+            <span class="chr-day-calendar__weekday">@weekday</span>
+        }
+        @for (var i = 0; i < LeadingBlanks; i++)
+        {
+            <span></span>
+        }
+        @foreach (var cell in Cells)
+        {
+            <button type="button" class="@cell.Class" disabled="@(!cell.IsLoaded)"
+                    title="@($"{cell.Title}: {cell.Hours}")" @onclick="@(() => ScrollToAsync(cell.Date))">
+                @cell.Date.Day
+            </button>
+        }
+    </div>
+}
+else
+{
+    <div class="chr-day-list">
+        @foreach (var cell in Cells)
+        {
+            <button type="button" class="@cell.Class" disabled="@(!cell.IsLoaded)"
+                    title="@cell.Title" @onclick="@(() => ScrollToAsync(cell.Date))">
+                <span class="chr-day-strip__date">@cell.Date.ToString("ddd d", Russian)</span>
+                @if (cell.IsWeekend)
+                {
+                    <span class="chr-day-strip__hint">@cell.Hours</span>
+                }
+                else
+                {
+                    <span class="chr-day-strip__track"><span class="chr-day-strip__fill" style="width:@(cell.Percent)%"></span></span>
+                }
+                <span class="chr-day-strip__hours">
+                    @if (!cell.IsWeekend)
+                    {
+                        @cell.Hours
+                    }
+                    @if (cell.Suggestions > 0)
+                    {
+                        <span class="chr-day-strip__suggestions" title="@($"{cell.Suggestions} {Suggestions(cell.Suggestions)}")">@cell.Suggestions</span>
+                    }
+                </span>
+            </button>
+        }
+    </div>
+}

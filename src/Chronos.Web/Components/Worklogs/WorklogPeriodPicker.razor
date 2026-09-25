@@ -1,0 +1,11 @@
+@* The rarer case of «другой период»: any range, with the month one click away. *@
+<div class="chr-period-picker">
+    <MudDateRangePicker @bind-DateRange="_range" PickerVariant="PickerVariant.Static"
+                        FirstDayOfWeek="DayOfWeek.Monday" MaxDate="@Today" Culture="@Russian" />
+    <div class="d-flex align-center gap-2 mt-2">
+        <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="PickMonthAsync">Весь месяц</MudButton>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                   Disabled="@(!CanPick)" OnClick="PickRangeAsync">Показать</MudButton>
+    </div>
+</div>

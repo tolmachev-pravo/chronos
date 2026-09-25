@@ -1131,3 +1131,120 @@ body #components-reconnect-modal {
     .chr-rc__spinner { animation-duration: 2s; }
 }
 
+
+/* ------------------------------------------------------------
+   Worklog page: one frame for every state — the period column
+   on the left (period, days, working day, load log) and the days
+   (or their skeleton, or the news) on the right.
+   ------------------------------------------------------------ */
+.chr-worklog-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    align-items: start;
+    flex-grow: 1;
+}
+@media (min-width: 900px) {
+    .chr-worklog-page { grid-template-columns: 280px minmax(0, 1fr); }
+    /* The column is the navigation of a long list: it stays in view while the days scroll. */
+    .chr-worklog-page__side { position: sticky; top: 80px; }
+}
+.chr-worklog-page__main { min-width: 0; }
+
+.chr-working-day { font-size: .8rem; color: var(--mud-palette-text-secondary); }
+.chr-period-panel__label { font-weight: 600 !important; flex: 1; text-align: center; }
+.chr-period-panel__picker { position: relative; }
+.chr-period-panel__action { min-height: 32px; }
+.chr-period-panel__logged { color: var(--mud-palette-text-primary); font-weight: 600; }
+.chr-period-panel__show {
+    text-transform: none !important;
+    font-weight: 600 !important;
+    background: rgba(var(--mud-palette-primary-rgb), .1) !important;
+}
+.chr-period-panel__show:hover { background: rgba(var(--mud-palette-primary-rgb), .18) !important; }
+
+.chr-status { font-size: .78rem; color: var(--mud-palette-text-secondary); }
+.chr-status__row { min-height: 24px; }
+.chr-status__muted { color: var(--mud-palette-text-secondary); opacity: .8; }
+.chr-status__source--completed { color: var(--mud-palette-text-secondary); }
+.chr-status__source--failed { color: var(--mud-palette-warning-darken); }
+.chr-status__error { font-size: .72rem; opacity: .8; margin-left: 26px; word-break: break-word; }
+.chr-status__spinner { width: 14px !important; height: 14px !important; }
+.chr-status__summary {
+    width: 100%;
+    background: none; border: 0; padding: 4px 0; cursor: pointer;
+    font: inherit; color: inherit; text-align: left;
+}
+.chr-status__summary:hover { color: var(--mud-palette-text-primary); }
+.chr-skeleton__head { font-size: .88rem; font-weight: 600; text-transform: capitalize; }
+
+.feat-inline { font-size: .8rem; color: var(--mud-palette-text-secondary); cursor: pointer; white-space: nowrap; }
+.feat-inline--new {
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    color: var(--mud-palette-primary);
+    background: rgba(var(--mud-palette-primary-rgb), .12);
+}
+.feat-inline__item { font-weight: 600; }
+.feat-inline__date { font-size: .75rem; opacity: .65; }
+
+/* Days of the selected period in the column: a list for a week, a calendar otherwise. */
+.chr-day-list { display: flex; flex-direction: column; gap: 2px; }
+.chr-day-strip__day {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: none;
+    font: inherit;
+    font-size: .78rem;
+    color: var(--mud-palette-text-secondary);
+    text-align: left;
+    cursor: pointer;
+}
+.chr-day-strip__day:disabled { cursor: default; }
+.chr-day-strip__day:not(:disabled):hover { background: rgba(var(--mud-palette-primary-rgb), .06); }
+.chr-day-strip__date { font-weight: 600; color: var(--mud-palette-text-primary); text-transform: capitalize; }
+.chr-day-strip__hint { font-size: .72rem; }
+.chr-day-strip__hours { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.chr-day-strip__suggestions {
+    font-size: .68rem; font-weight: 700;
+    min-width: 16px; padding: 0 4px; border-radius: 8px; text-align: center;
+    color: var(--mud-palette-warning-darken);
+    background: rgba(var(--mud-palette-warning-rgb), .18);
+}
+.chr-day-strip__track {
+    display: block;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--mud-palette-lines-default);
+    overflow: hidden;
+}
+.chr-day-strip__fill { display: block; height: 100%; background: var(--mud-palette-success); }
+.chr-day-strip__day--weekend { opacity: .65; }
+.chr-day-strip__day--short { background: rgba(var(--mud-palette-warning-rgb), .12); color: var(--mud-palette-warning-darken); }
+.chr-day-strip__day--short .chr-day-strip__fill { background: var(--mud-palette-warning); }
+.chr-day-strip__day--today { border-color: rgba(var(--mud-palette-primary-rgb), .55); }
+
+.chr-day-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 3px;
+    font-size: .75rem;
+}
+.chr-day-calendar__weekday { text-align: center; font-size: .68rem; color: var(--mud-palette-text-secondary); opacity: .7; }
+.chr-day-calendar .chr-day-strip__day {
+    display: block;
+    padding: 5px 0;
+    text-align: center;
+    font-weight: 600;
+    color: var(--mud-palette-text-primary);
+    background: rgba(var(--mud-palette-text-primary-rgb, 0, 0, 0), .04);
+}
+.chr-day-calendar .chr-day-strip__day--closed { background: rgba(var(--mud-palette-success-rgb), .18); }
+.chr-day-calendar .chr-day-strip__day--short { background: rgba(var(--mud-palette-warning-rgb), .22); color: var(--mud-palette-warning-darken); }
+.chr-day-calendar .chr-day-strip__day--weekend { background: none; font-weight: 400; }

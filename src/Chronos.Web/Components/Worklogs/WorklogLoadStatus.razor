@@ -1,0 +1,88 @@
+@using Chronos.Application.Events
+@* What the last read did, at the foot of the period column. While a period is read it
+   lists the sources as they settle; afterwards it sums the read up and opens its log —
+   the only place a skipped source shows up as skipped rather than as empty. *@
+<div class="chr-status mt-2">
+    @if (IsLoading)
+    {
+        <div class="chr-status__muted mb-1">Собираем данные…</div>
+        @foreach (var entry in Log.Entries)
+        {
+            <div class="d-flex align-center gap-2 chr-status__row chr-status__source--@entry.State.ToString().ToLowerInvariant()">
+                <SourceIcon State="entry.State" />
+                <span>@WorklogLoadLog.Title(entry.Source)</span>
+                <MudSpacer />
+                @if (entry.Count is not null)
+                {
+                    <span class="chr-status__muted">@entry.Count</span>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <button type="button" class="d-flex align-center gap-2 chr-status__summary" @onclick="@(() => _open = !_open)"
+                aria-expanded="@_open">
+            <MudIcon Icon="@Icons.Material.Outlined.Storage" Size="Size.Small" />
+            <span>Загружено в @Log.StartedAt.ToString("HH:mm")@Duration · @Log.Count @Records(Log.Count)</span>
+            <MudSpacer />
+            <MudIcon Icon="@(_open ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" />
+        </button>
+        @foreach (var failed in Log.Failed)
+        {
+            <div class="d-flex align-center gap-1 chr-status__source--failed">
+                <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" />
+                @WorklogLoadLog.Title(failed.Source): нет ответа
+            </div>
+        }
+        @if (Selected is not null && Selected != Log.Period)
+        {
+            <div class="chr-status__muted">На экране — @Log.Period.Label</div>
+        }
+        @if (_open)
+        {
+            <div class="chr-status__log mt-1">
+                @foreach (var entry in Log.Entries)
+                {
+                    <div class="chr-status__row">
+                        <div class="d-flex align-center gap-2">
+                            <SourceIcon State="entry.State" />
+                            <span>@WorklogLoadLog.Title(entry.Source)</span>
+                            <MudSpacer />
+                            <span class="chr-status__muted">
+                                @(entry.Count?.ToString() ?? "—") · @(entry.Elapsed is { } elapsed ? WorklogLoadLog.Seconds(elapsed) : "—")
+                            </span>
+                        </div>
+                        @if (entry.State == EventSourceState.Failed)
+                        {
+                            <div class="chr-status__error">@entry.Error</div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    /// <summary>The search running now, or the one whose days are on screen.</summary>
+    [Parameter] public WorklogLoadLog Log { get; set; }
+
+    [Parameter] public bool IsLoading { get; set; }
+
+    /// <summary>The period in the column; named here when it is not the one on screen.</summary>
+    [Parameter] public WorklogPeriod Selected { get; set; }
+
+    private bool _open;
+
+    private string Duration => Log.Duration is { } duration ? $" за {WorklogLoadLog.Seconds(duration)}" : string.Empty;
+
+    private static string Records(int count)
+    {
+        var tens = count % 100;
+        var units = count % 10;
+        if (tens is >= 11 and <= 14 || units is 0 or >= 5)
+            return "записей";
+        return units == 1 ? "запись" : "записи";
+    }
+}

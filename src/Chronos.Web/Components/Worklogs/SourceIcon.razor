@@ -1,0 +1,17 @@
+@using Chronos.Application.Events
+@switch (State)
+{
+    case EventSourceState.Completed:
+        <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Success" />
+        break;
+    case EventSourceState.Failed:
+        <MudIcon Icon="@Icons.Material.Outlined.WarningAmber" Size="Size.Small" Color="Color.Warning" />
+        break;
+    default:
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="chr-status__spinner" />
+        break;
+}
+
+@code {
+    [Parameter] public EventSourceState State { get; set; }
+}
