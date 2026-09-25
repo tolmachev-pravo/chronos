@@ -1152,16 +1152,20 @@ body #components-reconnect-modal {
 .chr-worklog-page__main { min-width: 0; }
 
 .chr-working-day { font-size: .8rem; color: var(--mud-palette-text-secondary); }
-.chr-period-panel__label { font-weight: 600 !important; flex: 1; text-align: center; }
+.chr-working-day__hours { color: var(--mud-palette-text-primary); font-weight: 500; }
+/* One line whatever the period: the label is kept short, and cut rather than wrapped. */
+.chr-period-panel__label {
+    font-weight: 600 !important;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 .chr-period-panel__picker { position: relative; }
 .chr-period-panel__action { min-height: 32px; }
 .chr-period-panel__logged { color: var(--mud-palette-text-primary); font-weight: 600; }
-.chr-period-panel__show {
-    text-transform: none !important;
-    font-weight: 600 !important;
-    background: rgba(var(--mud-palette-primary-rgb), .1) !important;
-}
-.chr-period-panel__show:hover { background: rgba(var(--mud-palette-primary-rgb), .18) !important; }
 
 .chr-status { font-size: .78rem; color: var(--mud-palette-text-secondary); }
 .chr-status__row { min-height: 24px; }

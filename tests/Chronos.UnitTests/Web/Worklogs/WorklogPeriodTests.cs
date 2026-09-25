@@ -75,7 +75,21 @@ namespace Chronos.UnitTests.Web.Worklogs
         {
             var period = WorklogPeriod.WeekOf(new DateTime(2026, 9, 29), new DateTime(2026, 10, 10));
 
-            Assert.That(period.Label, Is.EqualTo("28 сентября – 4 октября"));
+            Assert.That(period.Label, Is.EqualTo("28 сен – 4 окт"));
+        }
+
+        [Test]
+        public void Label_Should_NameTheYears_When_TheWeekCrossesThem()
+        {
+            var period = WorklogPeriod.WeekOf(new DateTime(2026, 12, 31), new DateTime(2027, 1, 10));
+
+            Assert.That(period.Label, Is.EqualTo("28 дек 26 – 3 янв 27"));
+        }
+
+        [Test]
+        public void Label_Should_NameTheMonth_ForAMonth()
+        {
+            Assert.That(WorklogPeriod.ThisMonth(Today).Label, Is.EqualTo("Сентябрь 2026"));
         }
 
         [Test]

@@ -10,9 +10,13 @@ namespace Chronos.Web.Components.Worklogs
     /// </summary>
     public static class WorkingDayFormat
     {
-        /// <summary>«09:00–19:00 · обед 2 ч»</summary>
+        /// <summary>«09:00–19:00»</summary>
         public static string Hours(UserSettingsDto settings) =>
-            $"{Time(settings.WorkingStartTime)}–{Time(settings.WorkingEndTime)} · обед {Duration(settings.LunchTime)}";
+            $"{Time(settings.WorkingStartTime)}–{Time(settings.WorkingEndTime)}";
+
+        /// <summary>«обед 2 ч · норма 8 ч»</summary>
+        public static string LunchAndNorm(UserSettingsDto settings) =>
+            $"обед {Duration(settings.LunchTime)} · норма {Duration(Norm(settings))}";
 
         /// <summary>
         /// The hours a working day is expected to hold. Nobody works out «09:00–19:00

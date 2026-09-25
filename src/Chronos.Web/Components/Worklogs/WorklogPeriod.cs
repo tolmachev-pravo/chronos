@@ -50,22 +50,37 @@ namespace Chronos.Web.Components.Worklogs
 
         public bool Contains(DateTime day) => day.Date >= Start && day.Date <= End;
 
-        /// <summary>«15 – 21 сентября», «29 сентября – 5 октября», «сентябрь 2026».</summary>
+        /// <summary>
+        /// Short month names for a range that crosses months: the full genitive names
+        /// («31 августа – 6 сентября») do not fit the period column on one line.
+        /// </summary>
+        private static readonly string[] ShortMonths =
+            { "янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек" };
+
+        /// <summary>
+        /// «15 – 21 сентября», «31 авг – 6 сен», «Сентябрь 2026». Always short enough for
+        /// one line of the period column.
+        /// </summary>
         public string Label
         {
             get
             {
                 if (Kind == WorklogPeriodKind.Month)
-                    return Start.ToString("MMMM yyyy", Russian);
+                {
+                    var month = Russian.DateTimeFormat.GetMonthName(Start.Month);
+                    return $"{char.ToUpper(month[0], Russian)}{month[1..]} {Start.Year}";
+                }
                 if (Start == End)
                     return Start.ToString("d MMMM", Russian);
                 if (Start.Year != End.Year)
-                    return $"{Start.ToString("d MMMM yyyy", Russian)} – {End.ToString("d MMMM yyyy", Russian)}";
+                    return $"{Short(Start)} {Start:yy} – {Short(End)} {End:yy}";
                 if (Start.Month != End.Month)
-                    return $"{Start.ToString("d MMMM", Russian)} – {End.ToString("d MMMM", Russian)}";
+                    return $"{Short(Start)} – {Short(End)}";
                 return $"{Start.Day} – {End.ToString("d MMMM", Russian)}";
             }
         }
+
+        private static string Short(DateTime day) => $"{day.Day} {ShortMonths[day.Month - 1]}";
 
         public GetWorklogCollection.Query ToQuery() => new()
         {

@@ -1,19 +1,18 @@
 @using Chronos.Application.Users.Dto
 @* The working day from the profile, with its norm: the number every day of the result
-   is measured against (issue #241). *@
-<div class="d-flex align-center gap-2 chr-working-day">
+   is measured against (issue #241). The hours on one line, what they hold on the next. *@
+<div class="d-flex align-start gap-2 chr-working-day">
     <MudIcon Icon="@Icons.Material.Outlined.Schedule" Size="Size.Small" />
-    <span>@WorkingDayFormat.Hours(Settings) · норма @WorkingDayFormat.Duration(WorkingDayFormat.Norm(Settings))</span>
-    @if (!Compact)
-    {
-        <MudSpacer />
-    }
-    <MudLink Href="/profile" Typo="Typo.caption">Изменить</MudLink>
+    <div class="flex-1">
+        <div class="d-flex align-center">
+            <span class="chr-working-day__hours">@WorkingDayFormat.Hours(Settings)</span>
+            <MudSpacer />
+            <MudLink Href="/profile" Typo="Typo.caption">Изменить</MudLink>
+        </div>
+        <div>@WorkingDayFormat.LunchAndNorm(Settings)</div>
+    </div>
 </div>
 
 @code {
     [Parameter] public UserSettingsDto Settings { get; set; } = UserSettingsDto.Default;
-
-    /// <summary>Keeps the link next to the text instead of pushing it to the edge.</summary>
-    [Parameter] public bool Compact { get; set; }
 }
