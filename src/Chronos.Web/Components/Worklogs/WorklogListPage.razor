@@ -27,7 +27,7 @@
             }
             else if (_loadedLog is not null)
             {
-                <WorklogList Items="@_items" />
+                <WorklogList Items="@_items" OnDayChanged="DayChanged" />
             }
             else
             {

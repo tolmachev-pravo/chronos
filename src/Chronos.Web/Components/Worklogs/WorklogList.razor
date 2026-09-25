@@ -68,7 +68,7 @@ else
         <tbody>
             @foreach (var item in Items)
             {
-                <WorklogDay Entity="@item" />
+                <WorklogDay Entity="@item" OnChanged="OnDayChanged" />
             }
         </tbody>
     </MudSimpleTable>

@@ -10,6 +10,9 @@ namespace Chronos.Web.Components.Worklogs
 
         [Parameter] public IEnumerable<WorkingDay> Items { get; set; }
 
+        /// <summary>Raised when a day changed in place, after a worklog was added to it.</summary>
+        [Parameter] public EventCallback<WorkingDay> OnDayChanged { get; set; }
+
         private class ComponentModel
         {
             public static ComponentModel Create()

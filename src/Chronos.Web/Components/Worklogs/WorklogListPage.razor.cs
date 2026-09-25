@@ -146,6 +146,11 @@ namespace Chronos.Web.Components.Worklogs
 
         private void Cancel() => _search?.Cancel();
 
+        /// <summary>
+        /// A day on screen changed in place: the period column reads the same days again.
+        /// </summary>
+        private void DayChanged(WorkingDay day) => StateHasChanged();
+
         private async Task<string> ReadLastKindAsync()
         {
             try

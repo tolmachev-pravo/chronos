@@ -16,6 +16,13 @@ namespace Chronos.Web.Components.Worklogs
     {
         [Parameter] public WorkingDay Entity { get; set; } = default!;
 
+        /// <summary>
+        /// Raised once a worklog is added to the day. The day changes itself in place, so
+        /// nothing above it would notice otherwise — the period column's total and its day
+        /// list would keep the numbers from the read.
+        /// </summary>
+        [Parameter] public EventCallback<WorkingDay> OnChanged { get; set; }
+
         [Inject] private IMediator Mediator { get; set; } = default!;
         [Inject] private ISnackbar Snackbar { get; set; } = default!;
         [Inject] private IDialogService DialogService { get; set; } = default!;
@@ -128,6 +135,7 @@ namespace Chronos.Web.Components.Worklogs
                     config => { config.ActionColor = Color.Success; });
                 RebuildDayRows();
                 StateHasChanged();
+                await OnChanged.InvokeAsync(Entity);
             }
             catch (Exception e)
             {
