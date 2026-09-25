@@ -19,6 +19,11 @@ namespace Chronos.Application.Events.Queries
         {
             public DateTime StartDate { get; set; }
             public DateTime EndDate { get; set; }
+
+            /// <summary>
+            /// Optional listener for each source as it starts and settles.
+            /// </summary>
+            public IProgress<EventSourceProgress> Progress { get; set; }
         }
 
         public class QueryHandler : IRequestHandler<Query, IEnumerable<IEvent>>
@@ -40,7 +45,10 @@ namespace Chronos.Application.Events.Queries
             {
                 var user = await _identityService.GetCurrentUserAsync();
                 return await _eventDataSource.GetEventsAsync(
-                    new EventQuery(user?.Username, request.StartDate, request.EndDate),
+                    new EventQuery(user?.Username, request.StartDate, request.EndDate)
+                    {
+                        Progress = request.Progress
+                    },
                     cancellationToken);
             }
         }

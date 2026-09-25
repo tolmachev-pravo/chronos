@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Chronos.Application.Authentication;
 using Chronos.Application.Common.Extensions;
+using Chronos.Application.Events;
 using Chronos.Application.Events.Queries;
 using Chronos.Application.Users.Dto;
 using Chronos.Application.Users.Queries;
@@ -9,6 +10,7 @@ using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Worklogs;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +27,12 @@ namespace Chronos.Application.Worklogs.Queries
         {
             public DateTime StartDate { get; set; }
             public DateTime EndDate { get; set; }
+
+            /// <summary>
+            /// Optional listener for each source as it starts and settles, so a caller that
+            /// waits on the whole period can show what it is still waiting for.
+            /// </summary>
+            public IProgress<WorklogCollectionProgress> Progress { get; set; }
         }
 
         public class Model
@@ -73,19 +81,18 @@ namespace Chronos.Application.Worklogs.Queries
                 // PerformanceBehavior's per-request allocation stats are not representative
                 // while these run concurrently; the event orchestrator records its own
                 // per-provider measures. See issue #258.
+                var progress = query.Progress;
                 var eventsTask = _mediator.Send(
                     new GetUserEvents.Query()
                     {
                         StartDate = query.StartDate,
-                        EndDate = query.EndDate
+                        EndDate = query.EndDate,
+                        Progress = progress is null
+                            ? null
+                            : new Relay<EventSourceProgress>(value => progress.Report(WorklogCollectionProgress.From(value)))
                     }, cancellationToken);
 
-                var issueWorklogsTask = _mediator.Send(
-                    new GetIssueWorklogs.Query()
-                    {
-                        StartDate = query.StartDate,
-                        EndDate = query.EndDate
-                    }, cancellationToken);
+                var issueWorklogsTask = ReadIssueWorklogsAsync(query, cancellationToken);
 
                 await Task.WhenAll(eventsTask, issueWorklogsTask);
 
@@ -110,6 +117,57 @@ namespace Chronos.Application.Worklogs.Queries
                 }
 
                 return days;
+            }
+
+            /// <summary>
+            /// The logged time, reported as one more source. Unlike an event source it is
+            /// not optional: when it fails the whole collection fails.
+            /// </summary>
+            private async Task<IEnumerable<IWorklog>> ReadIssueWorklogsAsync(
+                Query query,
+                CancellationToken cancellationToken)
+            {
+                query.Progress?.Report(new WorklogCollectionProgress(
+                    WorklogCollectionSource.Worklogs, EventSourceState.Started));
+                var startTimestamp = Stopwatch.GetTimestamp();
+                try
+                {
+                    var worklogs = (await _mediator.Send(
+                        new GetIssueWorklogs.Query()
+                        {
+                            StartDate = query.StartDate,
+                            EndDate = query.EndDate
+                        }, cancellationToken)).ToList();
+                    query.Progress?.Report(new WorklogCollectionProgress(
+                        WorklogCollectionSource.Worklogs, EventSourceState.Completed)
+                    {
+                        Count = worklogs.Count,
+                        Elapsed = Stopwatch.GetElapsedTime(startTimestamp)
+                    });
+                    return worklogs;
+                }
+                catch (Exception exception) when (exception is not OperationCanceledException)
+                {
+                    query.Progress?.Report(new WorklogCollectionProgress(
+                        WorklogCollectionSource.Worklogs, EventSourceState.Failed)
+                    {
+                        Elapsed = Stopwatch.GetElapsedTime(startTimestamp),
+                        Error = exception.Message
+                    });
+                    throw;
+                }
+            }
+
+            /// <summary>
+            /// Forwards reports synchronously. Progress&lt;T&gt; would post each one to the
+            /// captured context; translating on the spot and letting the caller's own
+            /// IProgress decide where it lands keeps the order of reports.
+            /// </summary>
+            private sealed class Relay<T> : IProgress<T>
+            {
+                private readonly Action<T> _report;
+                public Relay(Action<T> report) => _report = report;
+                public void Report(T value) => _report(value);
             }
 
             private static IEnumerable<WorkingDay> CalculateDays(

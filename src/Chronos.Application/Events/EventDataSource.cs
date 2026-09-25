@@ -46,8 +46,13 @@ namespace Chronos.Application.Events
                 }
             }
 
+            foreach (var provider in prepared)
+            {
+                query.Progress?.Report(new EventSourceProgress(provider.Source, EventSourceState.Started));
+            }
+
             var results = await Task.WhenAll(
-                prepared.Select(provider => FetchAsync(provider, cancellationToken)));
+                prepared.Select(provider => FetchAsync(provider, query.Progress, cancellationToken)));
 
             return results.SelectMany(events => events).ToList();
         }
@@ -84,13 +89,20 @@ namespace Chronos.Application.Events
         /// </summary>
         private async Task<IEnumerable<IEvent>> FetchAsync(
             IEventProvider provider,
+            IProgress<EventSourceProgress> progress,
             CancellationToken cancellationToken)
         {
             var startTimestamp = Stopwatch.GetTimestamp();
             var startAllocatedBytes = GC.GetTotalAllocatedBytes(precise: false);
             try
             {
-                return await provider.GetEventsAsync(cancellationToken);
+                var events = (await provider.GetEventsAsync(cancellationToken)).ToList();
+                progress?.Report(new EventSourceProgress(provider.Source, EventSourceState.Completed)
+                {
+                    Count = events.Count,
+                    Elapsed = Stopwatch.GetElapsedTime(startTimestamp)
+                });
+                return events;
             }
             catch (AuthenticationException)
             {
@@ -105,6 +117,11 @@ namespace Chronos.Application.Events
                 _logger.LogWarning(exception,
                     "The {Source} event provider failed; its events are skipped.",
                     provider.Source);
+                progress?.Report(new EventSourceProgress(provider.Source, EventSourceState.Failed)
+                {
+                    Elapsed = Stopwatch.GetElapsedTime(startTimestamp),
+                    Error = exception.Message
+                });
                 return Enumerable.Empty<IEvent>();
             }
             finally

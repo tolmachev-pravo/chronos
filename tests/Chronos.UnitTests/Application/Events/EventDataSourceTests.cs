@@ -189,5 +189,48 @@ namespace Chronos.UnitTests.Application.Events
                 stats => stats.Record(It.IsAny<string>(), It.IsAny<TimeSpan>(), It.IsAny<long>()),
                 Times.Exactly(2));
         }
+            /// <summary>
+        /// Collects reports synchronously; Progress&lt;T&gt; would post them elsewhere.
+        /// </summary>
+        private sealed class ProgressLog : IProgress<EventSourceProgress>
+        {
+            public List<EventSourceProgress> Reports { get; } = new();
+            public void Report(EventSourceProgress value)
+            {
+                lock (Reports)
+                {
+                    Reports.Add(value);
+                }
+            }
+        }
+
+        [Test]
+        public async Task GetEventsAsync_Should_ReportEachPreparedSource_AsItStartsAndSettles()
+        {
+            var log = new ProgressLog();
+            var assignee = Provider(EventSource.Assignee);
+            var disabled = Provider(EventSource.Comment, prepared: false);
+            var failing = Provider(EventSource.Calendar);
+            failing.Setup(provider => provider.GetEventsAsync(It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("calendar is down"));
+
+            await CreateSut(assignee.Object, disabled.Object, failing.Object)
+                .GetEventsAsync(Query() with { Progress = log });
+
+            Assert.That(log.Reports.Select(report => (report.Source, report.State)), Is.EquivalentTo(new[]
+            {
+                (EventSource.Assignee, EventSourceState.Started),
+                (EventSource.Calendar, EventSourceState.Started),
+                (EventSource.Assignee, EventSourceState.Completed),
+                (EventSource.Calendar, EventSourceState.Failed),
+            }));
+            var completed = log.Reports.Single(report => report.State == EventSourceState.Completed);
+            Assert.That(completed.Count, Is.EqualTo(1));
+            Assert.That(completed.Elapsed, Is.Not.Null);
+            var failed = log.Reports.Single(report => report.State == EventSourceState.Failed);
+            Assert.That(failed.Error, Is.EqualTo("calendar is down"));
+            Assert.That(log.Reports.Take(2).All(report => report.State == EventSourceState.Started),
+                "every source is announced before any of them is fetched");
+        }
     }
 }
