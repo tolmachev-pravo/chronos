@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 270" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect x="1" y="1" width="718" height="268" rx="14" fill="#F7F8FA" stroke="#E4E7EE"/>
+
+  <!-- By weekday -->
+  <text x="24" y="36" font-size="14" font-weight="600" fill="#1F2430">По дням недели</text>
+  <rect x="24" y="48" width="208" height="22" rx="7" fill="#E9ECF2"/>
+  <rect x="26" y="50" width="102" height="18" rx="5" fill="#FFFFFF"/>
+  <text x="77" y="63" font-size="11" fill="#1F2430" text-anchor="middle">Календарь</text>
+  <text x="180" y="63" font-size="11" fill="#8A93A6" text-anchor="middle">Работа в Jira</text>
+  <g font-size="10" fill="#8A93A6" text-anchor="middle">
+    <text x="62" y="90">10</text>
+    <text x="91" y="90">11</text>
+    <text x="120" y="90">12</text>
+    <text x="149" y="90">13</text>
+    <text x="178" y="90">14</text>
+    <text x="207" y="90">15</text>
+  </g>
+  <text x="24" y="113" font-size="11" fill="#8A93A6">пн</text>
+  <rect x="49" y="98" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="78" y="98" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.8"/>
+  <rect x="107" y="98" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.2"/>
+  <rect x="136" y="98" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="165" y="98" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="194" y="98" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.3"/>
+  <text x="24" y="139" font-size="11" fill="#8A93A6">вт</text>
+  <rect x="49" y="124" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="78" y="124" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.2"/>
+  <rect x="107" y="124" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="136" y="124" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.6"/>
+  <rect x="165" y="124" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="194" y="124" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <text x="24" y="165" font-size="11" fill="#8A93A6">ср</text>
+  <rect x="49" y="150" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.2"/>
+  <rect x="78" y="150" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.9"/>
+  <rect x="107" y="150" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.7"/>
+  <rect x="136" y="150" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="165" y="150" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.5"/>
+  <rect x="194" y="150" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.2"/>
+  <text x="24" y="191" font-size="11" fill="#8A93A6">чт</text>
+  <rect x="49" y="176" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="78" y="176" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.2"/>
+  <rect x="107" y="176" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="136" y="176" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="165" y="176" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.2"/>
+  <rect x="194" y="176" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <text x="24" y="217" font-size="11" fill="#8A93A6">пт</text>
+  <rect x="49" y="202" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="78" y="202" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.3"/>
+  <rect x="107" y="202" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="136" y="202" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.1"/>
+  <rect x="165" y="202" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.4"/>
+  <rect x="194" y="202" width="26" height="21" rx="3" fill="#2EB8A6" fill-opacity="0.9"/>
+  <text x="24" y="252" font-size="11" fill="#8A93A6">ярче — чаще занят этот час</text>
+
+  <line x1="252" y1="24" x2="252" y2="246" stroke="#E4E7EE"/>
+
+  <!-- Timeline -->
+  <text x="272" y="36" font-size="14" font-weight="600" fill="#1F2430">Лента дня</text>
+  <g font-size="11" fill="#8A93A6">
+    <text x="272" y="76">пн</text><text x="272" y="110">вт</text><text x="272" y="144">ср</text><text x="272" y="178">чт</text><text x="272" y="212">пт</text>
+  </g>
+  <g>
+    <rect x="296" y="62" width="180" height="20" rx="4" fill="#E9ECF2"/>
+    <rect x="296" y="62" width="14" height="20" rx="3" fill="#2EB8A6" fill-opacity=".3" stroke="#2EB8A6" stroke-dasharray="3 2"/>
+    <rect x="312" y="62" width="90" height="20" rx="3" fill="#8260E5"/>
+    <rect x="420" y="62" width="50" height="20" rx="3" fill="#8260E5"/>
+
+    <rect x="296" y="96" width="180" height="20" rx="4" fill="#E9ECF2"/>
+    <rect x="320" y="96" width="30" height="20" rx="3" fill="#2EB8A6"/>
+    <rect x="352" y="96" width="70" height="20" rx="3" fill="#8260E5"/>
+    <rect x="426" y="96" width="20" height="20" rx="3" fill="#3B9BE0" fill-opacity=".3" stroke="#3B9BE0" stroke-dasharray="3 2"/>
+
+    <rect x="296" y="130" width="180" height="20" rx="4" fill="#E9ECF2"/>
+    <rect x="300" y="130" width="120" height="20" rx="3" fill="#8260E5"/>
+    <rect x="424" y="130" width="46" height="20" rx="3" fill="#B06AD9"/>
+
+    <rect x="296" y="164" width="180" height="20" rx="4" fill="#E9ECF2"/>
+    <rect x="310" y="164" width="60" height="20" rx="3" fill="#8260E5"/>
+    <rect x="390" y="164" width="40" height="20" rx="3" fill="#9AA1AE"/>
+
+    <rect x="296" y="198" width="180" height="20" rx="4" fill="#E9ECF2"/>
+    <rect x="310" y="198" width="40" height="20" rx="3" fill="#8260E5"/>
+    <rect x="440" y="198" width="30" height="20" rx="3" fill="#2EB8A6" fill-opacity=".3" stroke="#2EB8A6" stroke-dasharray="3 2"/>
+  </g>
+  <g font-size="11" fill="#1F2430" text-anchor="end">
+    <text x="498" y="76">3</text><text x="498" y="110">4</text><text x="498" y="144">2</text><text x="498" y="178">2</text><text x="498" y="212">2</text>
+  </g>
+  <g font-size="11" fill="#8A93A6">
+    <rect x="296" y="243" width="10" height="10" rx="2" fill="#8260E5"/><text x="310" y="252">Jira</text>
+    <rect x="342" y="243" width="10" height="10" rx="2" fill="#2EB8A6"/><text x="356" y="252">календарь</text>
+    <rect x="422" y="243" width="10" height="10" rx="2" fill="#2EB8A6" fill-opacity=".3" stroke="#2EB8A6" stroke-dasharray="2 1"/><text x="436" y="252">не списано</text>
+  </g>
+
+  <line x1="520" y1="24" x2="520" y2="246" stroke="#E4E7EE"/>
+
+  <!-- By issue -->
+  <text x="540" y="36" font-size="14" font-weight="600" fill="#1F2430">По задачам</text>
+  <g font-size="12">
+    <text x="540" y="70" fill="#8260E5">PROJ-173</text><text x="696" y="70" fill="#1F2430" text-anchor="end">9,5 ч</text>
+    <text x="540" y="120" fill="#8260E5">PROJ-298</text><text x="696" y="120" fill="#1F2430" text-anchor="end">6 ч</text>
+    <text x="540" y="170" fill="#8260E5">PROJ-301</text><text x="696" y="170" fill="#1F2430" text-anchor="end">4,5 ч</text>
+  </g>
+  <g>
+    <rect x="540" y="78" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".85"/>
+    <rect x="571" y="78" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".55"/>
+    <rect x="602" y="78" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".3" stroke="#1FC8A5" stroke-dasharray="2 1"/>
+    <rect x="633" y="78" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".85"/>
+    <rect x="664" y="78" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".4"/>
+
+    <rect x="540" y="128" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".7"/>
+    <rect x="571" y="128" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".45"/>
+    <rect x="602" y="128" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".6"/>
+    <rect x="633" y="128" width="28" height="10" rx="2" fill="#E9ECF2"/>
+    <rect x="664" y="128" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".5"/>
+
+    <rect x="540" y="178" width="28" height="10" rx="2" fill="#E9ECF2"/>
+    <rect x="571" y="178" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".4"/>
+    <rect x="602" y="178" width="28" height="10" rx="2" fill="#E9ECF2"/>
+    <rect x="633" y="178" width="28" height="10" rx="2" fill="#1FC8A5" fill-opacity=".9"/>
+    <rect x="664" y="178" width="28" height="10" rx="2" fill="#E9ECF2"/>
+  </g>
+  <text x="540" y="222" font-size="11" fill="#8A93A6">клетка — день периода,</text>
+  <text x="540" y="238" font-size="11" fill="#8A93A6">ярче — больше часов</text>
+</svg>
