@@ -1,0 +1,79 @@
+@* The issues that took the most logged time, each with a strip of the period's days:
+   whether it was done in a day or dragged through the week. *@
+<MudPaper Outlined="true" Class="chr-summary__card">
+    <div class="chr-summary__head">
+        <MudText Typo="Typo.subtitle1">По задачам</MudText>
+        @if (Summary.Days.Count > 0)
+        {
+            <span class="chr-summary__muted">
+                @(IsWeek
+                    ? $"{SummaryFormat.Weekday(Summary.Days[0].Date)} — {SummaryFormat.Weekday(Summary.Days[^1].Date)}"
+                    : $"{Summary.Days[0].Date:dd.MM} — {Summary.Days[^1].Date:dd.MM}")
+            </span>
+        }
+    </div>
+
+    @if (Summary.Issues.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Class="chr-summary__note">По задачам за этот период ничего не списано.</MudText>
+    }
+    @foreach (var issue in Summary.Issues.Take(Limit))
+    {
+        <div class="chr-summary-issue">
+            <div class="chr-summary-issue__head">
+                <span class="chr-summary-issue__title">
+                    @if (issue.Link is not null)
+                    {
+                        <MudLink Href="@issue.Link" Target="_blank" Typo="Typo.body2">@issue.Key</MudLink>
+                    }
+                    else
+                    {
+                        <span>@issue.Key</span>
+                    }
+                    <span class="chr-summary__muted">@issue.Title</span>
+                </span>
+                <span class="chr-summary-issue__hours">@SummaryFormat.Hours(issue.Logged)</span>
+            </div>
+            <div class="chr-summary-issue__days">
+                @foreach (var day in issue.Days)
+                {
+                    <span class="@DayClass(day)" style="@DayStyle(day)" title="@DayTooltip(day)"></span>
+                }
+            </div>
+        </div>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public WorklogSummary Summary { get; set; }
+
+    [Parameter] public bool IsWeek { get; set; }
+
+    private const int Limit = 6;
+
+    /// <summary>A new week starts a little apart, so a month reads week by week.</summary>
+    private static string DayClass(SummaryIssueDay day)
+    {
+        var classes = "chr-summary-issue__day";
+        if (day.Date.DayOfWeek == DayOfWeek.Monday)
+            classes += " chr-summary-issue__day--monday";
+        if (day.Logged == TimeSpan.Zero && day.Suggested > TimeSpan.Zero)
+            classes += " chr-summary-issue__day--suggested";
+        return classes;
+    }
+
+    /// <summary>The more hours that day, the fuller the colour; four hours and up is full.</summary>
+    private static string DayStyle(SummaryIssueDay day) =>
+        day.Logged > TimeSpan.Zero
+            ? $"--chr-heat: {(0.3 + Math.Min(1, day.Logged.TotalHours / 4) * 0.7).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}"
+            : "";
+
+    private static string DayTooltip(SummaryIssueDay day)
+    {
+        var date = SummaryFormat.Date(day.Date);
+        if (day.Logged == TimeSpan.Zero && day.Suggested == TimeSpan.Zero)
+            return $"{date}: нет активности";
+        var text = $"{date}: {SummaryFormat.Hours(day.Logged)}";
+        return day.Suggested > TimeSpan.Zero ? $"{text} + подсказка {SummaryFormat.Hours(day.Suggested)}" : text;
+    }
+}

@@ -1256,3 +1256,142 @@ body #components-reconnect-modal {
 .chr-day-calendar .chr-day-strip__day--closed { background: rgba(var(--mud-palette-success-rgb), .18); }
 .chr-day-calendar .chr-day-strip__day--short { background: rgba(var(--mud-palette-warning-rgb), .22); color: var(--mud-palette-warning-darken); }
 .chr-day-calendar .chr-day-strip__day--weekend { background: none; font-weight: 400; }
+
+/* The summary of a period (issue #173). */
+/* A quiet switch: a pale track, the chosen item lifted a little. It sits next to the days
+   and must not pull the eye away from them. */
+.chr-segmented.mud-toggle-group {
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(var(--mud-palette-text-primary-rgb, 0, 0, 0), .05);
+}
+.chr-segmented .mud-toggle-item {
+    min-width: 32px;
+    padding: 3px 10px;
+    border: none !important;
+    border-radius: 6px !important;
+    background: transparent !important;
+    color: var(--mud-palette-text-secondary) !important;
+    text-transform: none;
+    font-weight: 400;
+}
+/* MudBlazor paints the chosen item with the group's colour; the switch stays grey. */
+.chr-segmented .mud-toggle-item.chr-segmented__on {
+    background: var(--mud-palette-surface) !important;
+    color: var(--mud-palette-text-primary) !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+}
+.chr-segmented--wide.mud-toggle-group { display: flex; width: 100%; }
+.chr-segmented--wide .mud-toggle-item { flex: 1; }
+
+.chr-summary { display: flex; flex-direction: column; gap: 12px; }
+.chr-summary__card { padding: 16px 20px; }
+.chr-summary__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    margin-bottom: 12px;
+}
+.chr-summary__legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .75rem; color: var(--mud-palette-text-secondary); }
+.chr-summary__legend > span { display: inline-flex; align-items: center; gap: 4px; }
+.chr-summary__swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: rgb(var(--chr-kind-rgb)); }
+.chr-summary__note { margin-top: 12px; color: var(--mud-palette-text-secondary); }
+.chr-summary__muted { color: var(--mud-palette-text-secondary); }
+.chr-summary__pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+
+.chr-summary__metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
+.chr-summary__metric {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px;
+    border-radius: var(--mud-default-borderradius);
+    background: rgba(var(--mud-palette-text-primary-rgb, 0, 0, 0), .04);
+}
+.chr-summary__metric-label { font-size: .75rem; color: var(--mud-palette-text-secondary); }
+.chr-summary__metric-value { font-size: 1.35rem; font-weight: 500; }
+.chr-summary__metric-value--accent { color: var(--mud-palette-primary); }
+
+/* What each stretch of time was spent on; everything drawn in a kind's colour reads it from here. */
+.chr-summary-kind--work { --chr-kind-rgb: var(--mud-palette-primary-rgb); }
+.chr-summary-kind--testing { --chr-kind-rgb: var(--mud-palette-secondary-rgb); }
+.chr-summary-kind--comment { --chr-kind-rgb: var(--mud-palette-info-rgb); }
+.chr-summary-kind--calendar { --chr-kind-rgb: var(--mud-palette-tertiary-rgb); }
+.chr-summary-kind--manual { --chr-kind-rgb: 136, 135, 128; }
+
+.chr-summary-timeline {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 48px;
+    gap: 6px 8px;
+    align-items: center;
+}
+.chr-summary-timeline__ticks { position: relative; height: 14px; font-size: .7rem; color: var(--mud-palette-text-secondary); }
+.chr-summary-timeline__ticks > span { position: absolute; transform: translateX(-50%); }
+.chr-summary-timeline__label { font-size: .8rem; color: var(--mud-palette-text-secondary); }
+.chr-summary-timeline__side { text-align: right; font-size: .8rem; }
+.chr-summary-timeline__ticks + .chr-summary-timeline__side { font-size: .7rem; color: var(--mud-palette-text-secondary); }
+.chr-summary-timeline__track {
+    position: relative;
+    height: 22px;
+    border-radius: 4px;
+    background: rgba(var(--mud-palette-text-primary-rgb, 0, 0, 0), .04);
+    overflow: hidden;
+}
+.chr-summary-segment {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-radius: 3px;
+    border: 1px solid var(--mud-palette-surface);
+    background: rgb(var(--chr-kind-rgb));
+}
+.chr-summary-segment--suggestion,
+.chr-summary__swatch.chr-summary-segment--suggestion {
+    background: rgba(var(--chr-kind-rgb), .25);
+    outline: 1px dashed rgb(var(--chr-kind-rgb));
+    outline-offset: -1px;
+}
+
+.chr-summary-heat { display: grid; gap: 3px; align-items: center; }
+.chr-summary-heat__hour { text-align: center; font-size: .7rem; color: var(--mud-palette-text-secondary); }
+.chr-summary-heat__cell { display: block; height: 26px; border-radius: 3px; }
+.chr-summary-heat--calendar { background: rgba(var(--mud-palette-tertiary-rgb), var(--chr-heat)); }
+.chr-summary-heat--work { background: rgba(var(--mud-palette-primary-rgb), var(--chr-heat)); }
+.chr-summary-heat__scale {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: .7rem;
+    color: var(--mud-palette-text-secondary);
+}
+.chr-summary-heat__scale .chr-summary-heat__cell { width: 14px; height: 10px; }
+
+.chr-summary-issue { margin-bottom: 12px; }
+.chr-summary-issue__head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 4px; font-size: .85rem; }
+.chr-summary-issue__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Blazor drops the whitespace between the key and the title, so the gap is drawn here. */
+.chr-summary-issue__title > .chr-summary__muted { margin-left: 6px; }
+.chr-summary-issue__hours { flex-shrink: 0; white-space: nowrap; }
+.chr-summary-issue__days { display: flex; gap: 2px; }
+.chr-summary-issue__day {
+    flex: 1;
+    height: 10px;
+    border-radius: 2px;
+    background: rgba(var(--mud-palette-text-primary-rgb, 0, 0, 0), .06);
+}
+.chr-summary-issue__day[style*="--chr-heat"] { background: rgba(var(--mud-palette-success-rgb), var(--chr-heat)); }
+.chr-summary-issue__day--suggested { background: rgba(var(--mud-palette-success-rgb), .3); outline: 1px dashed var(--mud-palette-success); outline-offset: -1px; }
+.chr-summary-issue__day--monday:not(:first-child) { margin-left: 4px; }
+
+.chr-summary-sources__bar { display: flex; height: 12px; border-radius: 4px; overflow: hidden; margin-bottom: 12px; }
+.chr-summary-sources__bar > span { background: rgb(var(--chr-kind-rgb)); }
+.chr-summary-sources__row { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-size: .85rem; }
+.chr-summary-sources__icon { color: rgb(var(--chr-kind-rgb)); }
+.chr-summary-sources__name { flex: 1; }
+.chr-summary-sources__hours { min-width: 52px; text-align: right; }

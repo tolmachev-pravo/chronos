@@ -1,6 +1,7 @@
 @page "/"
 @page "/worklogs"
 @using Chronos.Web.Components.Features
+@using Chronos.Web.Components.Worklogs.Summary
 
 @* One frame for every state: the period column on the left, the days on the right.
    Only what the frame holds changes, so starting, running and finishing a search never
@@ -16,25 +17,47 @@
     <div class="chr-worklog-page__main">
         @if (IsLoading || _loadedLog is not null)
         {
-            <div class="d-flex justify-end mb-2">
+            <div class="d-flex align-center mb-2">
+                @if (!IsLoading)
+                {
+                    @* Quiet on purpose: the days are what the page is about, the switch is a way
+                       to look at them. *@
+                    <MudToggleGroup T="WorklogView" @bind-Value="_view" Size="Size.Small" Outlined="false" Delimiters="false"
+                                    Color="Color.Default" CheckMark="false" SelectedClass="chr-segmented__on" Class="chr-segmented">
+                        <MudToggleItem Value="WorklogView.List" title="Ворклоги" aria-label="Ворклоги">
+                            <MudIcon Icon="@Icons.Material.Outlined.ViewList" Size="Size.Small" />
+                        </MudToggleItem>
+                        <MudToggleItem Value="WorklogView.Summary" title="Сводка" aria-label="Сводка">
+                            <MudIcon Icon="@Icons.Material.Outlined.Insights" Size="Size.Small" />
+                        </MudToggleItem>
+                    </MudToggleGroup>
+                }
+                <MudSpacer />
                 <LatestFeaturesViewer Inline="true" />
             </div>
         }
-        <MudPaper Outlined="true">
-            @if (IsLoading)
-            {
-                <WorklogSkeleton Period="_loadingLog.Period" Settings="_settings" />
-            }
-            else if (_loadedLog is not null)
-            {
-                <WorklogList Items="@_items" OnDayChanged="DayChanged" />
-            }
-            else
-            {
-                <div class="pa-4">
-                    <LatestFeaturesViewer FallbackMessage="Выберите период слева и нажмите «Показать» — Chronos соберёт ворклоги и предложения по нему." />
-                </div>
-            }
-        </MudPaper>
+        @if (!IsLoading && _loadedLog is not null && _view == WorklogView.Summary)
+        {
+            <WorklogSummaryView Days="@_items" Period="_loadedLog.Period" />
+        }
+        else
+        {
+            <MudPaper Outlined="true">
+                @if (IsLoading)
+                {
+                    <WorklogSkeleton Period="_loadingLog.Period" Settings="_settings" />
+                }
+                else if (_loadedLog is not null)
+                {
+                    <WorklogList Items="@_items" OnDayChanged="DayChanged" />
+                }
+                else
+                {
+                    <div class="pa-4">
+                        <LatestFeaturesViewer FallbackMessage="Выберите период слева и нажмите «Показать» — Chronos соберёт ворклоги и предложения по нему." />
+                    </div>
+                }
+            </MudPaper>
+        }
     </div>
 </div>
