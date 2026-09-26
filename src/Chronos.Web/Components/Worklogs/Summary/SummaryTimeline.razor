@@ -1,0 +1,80 @@
+@* Each day of the week as a strip of its working hours: what was logged when, and the
+   calendar events and comments still waiting to be logged. Work and testing suggestions are
+   spread over the day rather than placed at a time, so they are not on the strip. *@
+<MudPaper Outlined="true" Class="chr-summary__card">
+    <div class="chr-summary__head">
+        <MudText Typo="Typo.subtitle1">Лента дня</MudText>
+        <div class="chr-summary__legend">
+            @foreach (var kind in Kinds)
+            {
+                <span><i class="chr-summary__swatch @SummaryFormat.Class(kind)"></i>@SummaryFormat.Name(kind)</span>
+            }
+            <span><i class="chr-summary__swatch chr-summary-kind--calendar chr-summary-segment--suggestion"></i>Не списано</span>
+        </div>
+    </div>
+
+    <div class="chr-summary-timeline">
+        <span></span>
+        <div class="chr-summary-timeline__ticks">
+            @foreach (var hour in Ticks)
+            {
+                <span style="left: @Position(TimeSpan.FromHours(hour))">@hour</span>
+            }
+        </div>
+        <span class="chr-summary-timeline__side">задачи</span>
+
+        @foreach (var day in Summary.Days)
+        {
+            <span class="chr-summary-timeline__label" title="@SummaryFormat.Date(day.Date)">@SummaryFormat.Weekday(day.Date)</span>
+            <div class="chr-summary-timeline__track">
+                @foreach (var segment in day.Segments)
+                {
+                    <span class="chr-summary-segment @SummaryFormat.Class(segment.Kind) @(segment.IsSuggestion ? "chr-summary-segment--suggestion" : "")"
+                          style="left: @Position(segment.Start); width: @Width(segment.Length)"
+                          title="@Tooltip(segment)"></span>
+                }
+            </div>
+            <span class="chr-summary-timeline__side" title="Задач за день">@day.IssueKeys.Count</span>
+        }
+    </div>
+</MudPaper>
+
+@code {
+    [Parameter] public WorklogSummary Summary { get; set; }
+
+    private static readonly SummaryKind[] AllKinds =
+        { SummaryKind.Work, SummaryKind.Testing, SummaryKind.Comment, SummaryKind.Calendar, SummaryKind.Manual };
+
+    /// <summary>Only the kinds the week has: a legend of what is not there is noise.</summary>
+    private IEnumerable<SummaryKind> Kinds => AllKinds
+        .Where(kind => Summary.Days.Any(day => day.Segments.Any(segment => segment.Kind == kind)));
+
+    private TimeSpan Start => Summary.Days.Select(day => day.WindowStart).DefaultIfEmpty(TimeSpan.FromHours(9)).Min();
+
+    private TimeSpan End => Summary.Days.Select(day => day.WindowEnd).DefaultIfEmpty(TimeSpan.FromHours(18)).Max();
+
+    /// <summary>Every other whole hour inside the working day.</summary>
+    private IEnumerable<int> Ticks
+    {
+        get
+        {
+            var first = (int)Math.Ceiling(Start.TotalHours);
+            var last = (int)Math.Floor(End.TotalHours);
+            for (var hour = first; hour <= last; hour += 2)
+                yield return hour;
+        }
+    }
+
+    private string Position(TimeSpan time) => Percent(time - Start);
+
+    private string Width(TimeSpan length) => Percent(length);
+
+    private string Percent(TimeSpan value) =>
+        End > Start
+            ? $"{(value / (End - Start) * 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}%"
+            : "0";
+
+    private static string Tooltip(SummarySegment segment) =>
+        $"{SummaryFormat.Time(segment.Start)}–{SummaryFormat.Time(segment.End)} · {segment.Title ?? SummaryFormat.Name(segment.Kind)}"
+        + (segment.IsSuggestion ? " · не списано" : "");
+}

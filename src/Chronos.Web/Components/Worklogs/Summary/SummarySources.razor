@@ -1,0 +1,35 @@
+@* The logged time by what it was logged for. A worklog takes the source of the event it
+   was logged under; one no event explains was logged by hand. *@
+<MudPaper Outlined="true" Class="chr-summary__card">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">По источникам</MudText>
+
+    @if (Summary.Logged == TimeSpan.Zero)
+    {
+        <MudText Typo="Typo.body2" Class="chr-summary__note">За этот период ничего не списано.</MudText>
+    }
+    else
+    {
+        <div class="chr-summary-sources__bar">
+            @foreach (var source in Summary.Sources)
+            {
+                <span class="@SummaryFormat.Class(source.Kind)" style="width: @Width(source)" title="@SummaryFormat.Name(source.Kind)"></span>
+            }
+        </div>
+        @foreach (var source in Summary.Sources)
+        {
+            <div class="chr-summary-sources__row">
+                <MudIcon Icon="@SummaryFormat.Icon(source.Kind)" Size="Size.Small" Class="@($"chr-summary-sources__icon {SummaryFormat.Class(source.Kind)}")" />
+                <span class="chr-summary-sources__name">@SummaryFormat.Name(source.Kind)</span>
+                <span class="chr-summary__muted">@SummaryFormat.Percent(source.Logged / Summary.Logged)</span>
+                <span class="chr-summary-sources__hours">@SummaryFormat.Hours(source.Logged)</span>
+            </div>
+        }
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public WorklogSummary Summary { get; set; }
+
+    private string Width(SummarySource source) =>
+        $"{(source.Logged / Summary.Logged * 100).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}%";
+}

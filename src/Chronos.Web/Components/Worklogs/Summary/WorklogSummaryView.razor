@@ -1,0 +1,54 @@
+@using Chronos.Application.Worklogs.Dto
+@* The period on screen, read as where its time went rather than as rows to log. Built
+   from the days already read, so switching to it costs nothing; a week shows each of
+   its days, anything longer shows the weekdays averaged. See issue #173. *@
+<div class="chr-summary">
+    <div class="chr-summary__metrics">
+        <div class="chr-summary__metric">
+            <span class="chr-summary__metric-label" title="Сколько часов не хватает, чтобы закрыть норму каждого дня периода">До нормы</span>
+            <span class="chr-summary__metric-value">@SummaryFormat.Hours(_summary.Shortfall)</span>
+        </div>
+        <div class="chr-summary__metric">
+            <span class="chr-summary__metric-label">Ждут списания</span>
+            <span class="chr-summary__metric-value chr-summary__metric-value--accent">@SummaryFormat.Hours(_summary.Suggested)</span>
+        </div>
+        <div class="chr-summary__metric">
+            <span class="chr-summary__metric-label">Задач</span>
+            <span class="chr-summary__metric-value">@_summary.IssueCount</span>
+        </div>
+        <div class="chr-summary__metric">
+            <span class="chr-summary__metric-label">Из календаря</span>
+            <span class="chr-summary__metric-value">@SummaryFormat.Percent(_summary.CalendarShare)</span>
+        </div>
+    </div>
+
+
+    @if (IsWeek)
+    {
+        <SummaryTimeline Summary="_summary" />
+    }
+    else
+    {
+        <SummaryHeatMap Summary="_summary" />
+    }
+
+    <div class="chr-summary__pair">
+        <SummaryIssues Summary="_summary" IsWeek="IsWeek" />
+        <SummarySources Summary="_summary" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public IEnumerable<WorkingDay> Days { get; set; }
+
+    [Parameter] public WorklogPeriod Period { get; set; }
+
+    private WorklogSummary _summary = WorklogSummary.Create(null);
+
+    /// <summary>The same line the period column draws between a list and a calendar.</summary>
+    private bool IsWeek => Period is null || (Period.End - Period.Start).Days < 7;
+
+    // Rebuilt on every render: a day changes in place once something is logged under it,
+    // and the summary must follow it the way the period column does.
+    protected override void OnParametersSet() => _summary = WorklogSummary.Create(Days);
+}

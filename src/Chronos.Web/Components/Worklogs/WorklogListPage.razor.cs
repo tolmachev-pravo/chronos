@@ -41,6 +41,12 @@ namespace Chronos.Web.Components.Worklogs
 
         private CancellationTokenSource _search;
 
+        /// <summary>
+        /// Rows to log or where the time went. Kept across searches: someone reading the
+        /// summary steps to the previous week to compare, not to log. See issue #173.
+        /// </summary>
+        private WorklogView _view = WorklogView.List;
+
         private bool IsLoading => _loadingLog is not null;
 
         private WorklogLoadLog StatusLog => _loadingLog ?? _loadedLog;
@@ -137,6 +143,12 @@ namespace Chronos.Web.Components.Worklogs
         public void Dispose()
         {
             _search?.Cancel();
+        }
+
+        private enum WorklogView
+        {
+            List,
+            Summary
         }
 
         private sealed class RendererProgress<T> : IProgress<T>

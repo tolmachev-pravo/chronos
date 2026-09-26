@@ -1,0 +1,94 @@
+@* A month of days does not fit as strips; it reads as the usual week instead — weekday
+   by hour, how much of that hour is usually taken by the calendar or by Jira work. *@
+<MudPaper Outlined="true" Class="chr-summary__card">
+    <MudText Typo="Typo.subtitle1" Class="mb-2">По дням недели</MudText>
+    <MudToggleGroup T="bool" Value="_calendar" ValueChanged="Show" Size="Size.Small" Outlined="false" Delimiters="false"
+                    Color="Color.Default" CheckMark="false" SelectedClass="chr-segmented__on" Class="chr-segmented chr-segmented--wide mb-3">
+        <MudToggleItem Value="true">
+            <MudIcon Icon="@SummaryFormat.Icon(SummaryKind.Calendar)" Size="Size.Small" Class="mr-2" />Календарь
+        </MudToggleItem>
+        <MudToggleItem Value="false">
+            <MudIcon Icon="@SummaryFormat.Icon(SummaryKind.Work)" Size="Size.Small" Class="mr-2" />Работа в Jira
+        </MudToggleItem>
+    </MudToggleGroup>
+
+    @if (Map.Hours == 0)
+    {
+        <MudText Typo="Typo.body2" Class="chr-summary__note">За этот период нет рабочих дней.</MudText>
+    }
+    else
+    {
+        <div class="chr-summary-heat" style="grid-template-columns: 24px repeat(@Map.Hours, minmax(0, 1fr))">
+            <span></span>
+            @for (var hour = 0; hour < Map.Hours; hour++)
+            {
+                <span class="chr-summary-heat__hour">@(Map.FirstHour + hour)</span>
+            }
+            @for (var weekday = 0; weekday < 5; weekday++)
+            {
+                <span class="chr-summary-timeline__label">@SummaryFormat.Weekday(weekday)</span>
+                @for (var hour = 0; hour < Map.Hours; hour++)
+                {
+                    var value = Map.Cells[weekday, hour];
+                    <span class="chr-summary-heat__cell @(_calendar ? "chr-summary-heat--calendar" : "chr-summary-heat--work")"
+                          style="--chr-heat: @Alpha(value)"
+                          title="@SummaryFormat.Weekday(weekday), @(Map.FirstHour + hour):00 — @(_calendar ? "календарь" : "работа в Jira") в среднем @SummaryFormat.Percent(value) часа"></span>
+                }
+            }
+        </div>
+        <div class="chr-summary-heat__scale">
+            реже
+            @foreach (var step in new[] { .1, .3, .5, .7, .9 })
+            {
+                <span class="chr-summary-heat__cell @(_calendar ? "chr-summary-heat--calendar" : "chr-summary-heat--work")" style="--chr-heat: @Alpha(step)"></span>
+            }
+            чаще
+        </div>
+        <MudText Typo="Typo.body2" Class="chr-summary__note">
+            @if (Peak is { } peak)
+            {
+                <text>Пик @(_calendar ? "календаря" : "работы") — @SummaryFormat.Weekday(peak.Weekday), @(Map.FirstHour + peak.Hour):00. </text>
+            }
+            В среднем за день: задач @SummaryFormat.Number(Summary.AverageIssueCount), в календаре @SummaryFormat.Hours(Summary.AverageCalendar).
+        </MudText>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public WorklogSummary Summary { get; set; }
+
+    private bool _calendar = true;
+
+    private SummaryHeatGrid Map { get; set; } = new(0, 0, new double[5, 0]);
+
+    protected override void OnParametersSet() => Map = Summary.HeatMap(_calendar);
+
+    private void Show(bool calendar)
+    {
+        _calendar = calendar;
+        Map = Summary.HeatMap(calendar);
+    }
+
+    /// <summary>The busiest cell, if any hour is busy at all.</summary>
+    private (int Weekday, int Hour)? Peak
+    {
+        get
+        {
+            var map = Map;
+            (int, int)? peak = null;
+            var best = 0d;
+            for (var weekday = 0; weekday < 5; weekday++)
+                for (var hour = 0; hour < map.Hours; hour++)
+                    if (map.Cells[weekday, hour] > best)
+                    {
+                        best = map.Cells[weekday, hour];
+                        peak = (weekday, hour);
+                    }
+            return peak;
+        }
+    }
+
+    /// <summary>An empty hour still shows as a cell, a full one is the full colour.</summary>
+    private static string Alpha(double value) =>
+        (0.06 + value * 0.9).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}
