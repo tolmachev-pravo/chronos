@@ -49,23 +49,10 @@ namespace Chronos.Web.Components.Features
         private int PageCount => (_rest.Count + _columns - 1) / _columns;
 
         /// <summary>
-        /// Below this viewport height the page gives up a line of card preview, so that a
-        /// maximized window on a 1080p screen shows the whole page without scrolling.
-        /// Matches the max-height media query on .feat-hero in custom.css.
-        /// </summary>
-        private const int CompactHeight = 1000;
-
-        /// <summary>A preview line of a card (.9rem x 1.5 = 21.6px), rounded up.</summary>
-        private const int PreviewLineHeight = 22;
-
-        /// <summary>The viewport is lower than <see cref="CompactHeight"/>.</summary>
-        private bool _isCompact;
-
-        /// <summary>
         /// Lines of preview text a card shows. A single card spans the whole row and fits the
-        /// teaser in fewer lines, so that layout also needs less height; so does a low window.
+        /// teaser in fewer lines, so that layout also needs less height.
         /// </summary>
-        private int PreviewLines => _columns == 1 || _isCompact ? 4 : 5;
+        private int PreviewLines => _columns == 1 ? 4 : 5;
 
         /// <summary>
         /// MudCarousel positions its slides absolutely, so the track needs an explicit height.
@@ -76,7 +63,7 @@ namespace Chronos.Web.Components.Features
         /// little slack for font metrics: a card that runs out of room does not scroll or grow,
         /// it clips the preview mid-line.
         /// </summary>
-        private int TrackHeight => _columns == 1 ? 344 : 286 + PreviewLines * PreviewLineHeight;
+        private int TrackHeight => _columns == 1 ? 344 : 396;
 
         /// <summary>
         /// Overlaid arrows on a one-card slide leave the card no width on a phone, and a bullet
@@ -146,16 +133,13 @@ namespace Chronos.Web.Components.Features
 
         public Task NotifyBrowserViewportChangeAsync(BrowserViewportEventArgs browserViewportEventArgs)
         {
-            var size = browserViewportEventArgs.BrowserWindowSize;
-            var columns = ColumnsFor(size.Width);
-            var isCompact = size.Height < CompactHeight;
-            if (columns == _columns && isCompact == _isCompact)
+            var columns = ColumnsFor(browserViewportEventArgs.BrowserWindowSize.Width);
+            if (columns == _columns)
             {
                 return Task.CompletedTask;
             }
 
             _columns = columns;
-            _isCompact = isCompact;
 
             // Fewer columns means more slides and vice versa; keep the selection in range.
             if (PageCount > 0)

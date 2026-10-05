@@ -568,7 +568,7 @@
 }
 .feat-card__date-icon { opacity: .55; }
 .feat-page__skeleton { border-radius: 16px; }
-/* Heights of the hero and of a carousel card they stand in for; the compact sizes follow
+/* Heights of the hero and of a carousel card they stand in for; the compact hero follows
    the max-height media query next to .feat-hero. Two classes, since .mud-skeleton loads
    later and sets a height of its own. */
 .feat-page__skeleton.feat-page__skeleton--hero { height: 300px; }
@@ -578,9 +578,6 @@
 }
 @media (min-width: 1000px) and (max-height: 999.98px) {
     .feat-page__skeleton.feat-page__skeleton--hero { height: 300px; }
-}
-@media (max-height: 999.98px) {
-    .feat-page__skeleton.feat-page__skeleton--card { height: 326px; }
 }
 
 /* Latest-features promo shown in the worklog empty state */
@@ -861,9 +858,8 @@
     }
 }
 
-/* A maximized window on a 1080p screen leaves ~930px of viewport: tighten the banner so
-   the carousel below it fits without scrolling. The cards give up a preview line at the
-   same height (see CompactHeight in FeaturesPage.razor.cs). */
+/* A maximized window on a 1080p screen leaves ~900-950px of viewport: tighten the banner
+   so the carousel below it fits without scrolling. */
 @media (min-width: 1000px) and (max-height: 999.98px) {
     .feat-hero {
         padding: 28px 46px;
