@@ -708,6 +708,17 @@
 .feat-carousel {
     background: transparent;
 }
+/* MudCarousel draws its arrows and bullets for a slide over a picture: the carousel's
+   colour (.mud-inherit-text, !important) at .75 opacity (set inline). Over the bare page
+   that is white on white in the light theme, so they take the palette's icon colour
+   instead. The current bullet is a filled dot, the others are rings. */
+.feat-carousel .feat-carousel__control {
+    color: var(--mud-palette-action-default) !important;
+    opacity: 1 !important;
+}
+.feat-carousel .feat-carousel__control:hover {
+    color: var(--mud-palette-primary) !important;
+}
 .feat-carousel__page {
     /* Explicit columns instead of auto-fill: the count has to match the slice. */
     grid-template-columns: repeat(var(--feat-cols, 1), minmax(0, 1fr));
