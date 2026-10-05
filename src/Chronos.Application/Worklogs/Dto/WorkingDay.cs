@@ -1,4 +1,5 @@
-﻿using Chronos.Application.Common.Extensions;
+﻿using Chronos.Application.Calendar;
+using Chronos.Application.Common.Extensions;
 using Chronos.Domain.Models.Events;
 using Chronos.Domain.Models.Worklogs;
 using System;
@@ -30,17 +31,32 @@ namespace Chronos.Application.Worklogs.Dto
         public WorkingDay(
             DateTime date,
             WorkingDaySettings settings,
-            IList<WorkingDayWorklog>? worklogs = null)
+            IList<WorkingDayWorklog>? worklogs = null,
+            WorkingCalendarDay? calendar = null)
         {
             Date = date;
             Settings = settings;
             Worklogs = worklogs ?? new List<WorkingDayWorklog>();
+            Calendar = calendar ?? WorkingCalendarDay.ByWeekday(date);
         }
 
         /// <summary>
-        /// Determines that day is weekend
+        /// What the day is for the user — a working day, a short one, a weekend, a holiday
+        /// or an absence. Without a calendar it is told by its weekday. See issue #310.
         /// </summary>
-        public bool IsWeekend => Date.DayOfWeek == DayOfWeek.Saturday || Date.DayOfWeek == DayOfWeek.Sunday;
+        public WorkingCalendarDay Calendar { get; }
+
+        public WorkingDayKind Kind => Calendar.Kind;
+
+        /// <summary>A day the user is expected to work, whatever its length.</summary>
+        public bool IsWorking => Calendar.IsWorking;
+
+        /// <summary>
+        /// The time the day is expected to hold: the user's working day, an hour less
+        /// before a holiday, nothing on a day off. Time logged on a day off is still shown
+        /// and counted as logged; there is just no shortfall to fill.
+        /// </summary>
+        public TimeSpan Norm => Calendar.NormOf(Settings.WorkingTime);
 
         /// <summary>
         /// Actual worklogs.
@@ -170,7 +186,7 @@ namespace Chronos.Application.Worklogs.Dto
             // Fixed events and blocked events reduce the pool available for proportional events.
             // Raw time is used for fixed events — they may fall outside working hours but still consume time.
             var fixedRawTimeSpent = fixedTimeUnmatched.Select(w => w.RawTimeSpent).Sum();
-            var remainingDayTimeSpent = Settings.WorkingTime
+            var remainingDayTimeSpent = Norm
                 - ActualWorklogs.TimeSpent()
                 - BlockedEventsTime
                 - fixedRawTimeSpent;

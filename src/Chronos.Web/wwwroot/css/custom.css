@@ -339,6 +339,39 @@
     overflow-wrap: anywhere;
 }
 
+/* The user's absences (issue #310): a short form over a list of intervals. */
+.prf-absence-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+    align-items: end;
+}
+.prf-absence-form__dates,
+.prf-absence-form__add { grid-column: 1 / -1; }
+.prf-absence-form__add { justify-self: end; }
+
+.prf-absences {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.prf-absence {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 6px 8px 12px;
+    border-radius: 10px;
+    border-left: 3px solid var(--mud-palette-info);
+    background: rgba(var(--mud-palette-info-rgb), .07);
+}
+.prf-absence--past { opacity: .6; }
+.prf-absence__body { flex: 1; min-width: 0; font-size: .875rem; }
+.prf-absence__title { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.prf-absence__comment { font-size: .8rem; opacity: .7; overflow-wrap: anywhere; }
+
 .chr-worklog-day-chips-container {
     width: 375px
 }
@@ -1304,6 +1337,11 @@ body #components-reconnect-modal {
 .chr-day-calendar .chr-day-strip__day--closed { background: rgba(var(--mud-palette-success-rgb), .18); }
 .chr-day-calendar .chr-day-strip__day--short { background: rgba(var(--mud-palette-warning-rgb), .22); color: var(--mud-palette-warning-darken); }
 .chr-day-calendar .chr-day-strip__day--weekend { background: none; font-weight: 400; }
+/* Days off that are not plain weekends say so by colour (issue #310). */
+.chr-day-strip__day--holiday { color: var(--mud-palette-warning-darken); }
+.chr-day-strip__day--absence { color: var(--mud-palette-info-darken); }
+.chr-day-calendar .chr-day-strip__day--holiday { background: rgba(var(--mud-palette-warning-rgb), .14); color: var(--mud-palette-warning-darken); }
+.chr-day-calendar .chr-day-strip__day--absence { background: rgba(var(--mud-palette-info-rgb), .14); color: var(--mud-palette-info-darken); }
 
 /* The summary of a period (issue #173). */
 /* A quiet switch: a pale track, the chosen item lifted a little. It sits next to the days

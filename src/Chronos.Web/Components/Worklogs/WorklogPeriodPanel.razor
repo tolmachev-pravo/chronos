@@ -1,3 +1,4 @@
+@using Chronos.Application.Calendar
 @using Chronos.Application.Users.Dto
 @using Chronos.Application.Worklogs.Dto
 @* The left column in every state: the period and the one action that makes sense now,
@@ -44,7 +45,7 @@
     </div>
 
     <MudDivider Class="my-2" />
-    <WorklogDayStrip Period="Selected" Days="@(IsShown ? Days : null)" Settings="Settings" />
+    <WorklogDayStrip Period="Selected" Days="@(IsShown ? Days : null)" Settings="Settings" Calendar="Calendar" />
 
     <MudDivider Class="my-2" />
     <WorkingDayLine Settings="Settings" />
@@ -69,6 +70,9 @@
 
     [Parameter] public bool IsLoading { get; set; }
     [Parameter] public UserSettingsDto Settings { get; set; } = UserSettingsDto.Default;
+
+    /// <summary>What each day of the selected period is, known before the period is read.</summary>
+    [Parameter] public IReadOnlyDictionary<DateTime, WorkingCalendarDay> Calendar { get; set; }
     [Parameter] public EventCallback<WorklogPeriod> OnSelect { get; set; }
     [Parameter] public EventCallback OnShow { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
@@ -80,10 +84,11 @@
 
     private TimeSpan Logged => Days.Aggregate(TimeSpan.Zero, (sum, day) => sum + day.ActualWorklogTimeSpent);
 
-    /// <summary>Weekends hold no norm: time logged on them still counts as logged.</summary>
-    private TimeSpan Planned => Days
-        .Where(day => !day.IsWeekend)
-        .Aggregate(TimeSpan.Zero, (sum, day) => sum + day.Settings.WorkingTime);
+    /// <summary>
+    /// Days off — weekends, holidays, absences — hold no norm, and a day before a holiday
+    /// holds an hour less. Time logged on a day off still counts as logged.
+    /// </summary>
+    private TimeSpan Planned => Days.Aggregate(TimeSpan.Zero, (sum, day) => sum + day.Norm);
 
     private static string Hours(TimeSpan value) =>
         value.TotalHours == Math.Floor(value.TotalHours)

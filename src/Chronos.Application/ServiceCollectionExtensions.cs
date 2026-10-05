@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.Extensions.DependencyInjection;
+using Chronos.Application.Calendar;
 using Chronos.Application.Common.Behaviors;
 using Chronos.Application.Events;
 using Chronos.Application.Storage;
@@ -29,6 +30,10 @@ namespace Chronos.Application
 			// providers themselves are registered in the infrastructure layer, so nothing
 			// here names a source. See issue #299.
 			services.AddTransient<IEventDataSource, EventDataSource>();
+
+			// What a day is for a user: their absences over the production calendar over
+			// the weekday rule. See issue #310.
+			services.AddTransient<IWorkingCalendar, WorkingCalendar>();
 
 			services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
 			services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());

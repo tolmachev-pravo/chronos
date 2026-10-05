@@ -31,7 +31,7 @@ else
             <button type="button" class="@cell.Class" disabled="@(!cell.IsLoaded)"
                     title="@cell.Title" @onclick="@(() => ScrollToAsync(cell.Date))">
                 <span class="chr-day-strip__date">@cell.Date.ToString("ddd d", Russian)</span>
-                @if (cell.IsWeekend)
+                @if (cell.IsDayOff)
                 {
                     <span class="chr-day-strip__hint">@cell.Hours</span>
                 }
@@ -40,7 +40,7 @@ else
                     <span class="chr-day-strip__track"><span class="chr-day-strip__fill" style="width:@(cell.Percent)%"></span></span>
                 }
                 <span class="chr-day-strip__hours">
-                    @if (!cell.IsWeekend)
+                    @if (!cell.IsDayOff)
                     {
                         @cell.Hours
                     }

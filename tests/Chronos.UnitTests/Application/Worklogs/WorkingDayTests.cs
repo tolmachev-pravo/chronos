@@ -15,7 +15,8 @@ namespace Chronos.UnitTests.Application.Worklogs
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
-            _date = DateTime.Now.Date;
+            // A Tuesday: a weekend holds no norm, and these tests are about a working day.
+            _date = new DateTime(2026, 6, 2);
             _defaultWorkingDaySettings = new WorkingDaySettings(
                 workingStartTime: TimeSpan.FromHours(9),
                 workingEndTime: TimeSpan.FromHours(18),

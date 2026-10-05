@@ -1,17 +1,18 @@
+@using Chronos.Application.Calendar
 @using Chronos.Application.Users.Dto
 @* The days of a period are known before any source answers, so they are drawn at once
    and filled in place when the read finishes — the page does not jump. *@
 <div class="pa-3 d-flex flex-column gap-3">
     @for (var day = Period.End; day >= Period.Start; day = day.AddDays(-1))
     {
-        var isWeekend = day.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+        var calendarDay = Calendar?.GetValueOrDefault(day) ?? WorkingCalendarDay.ByWeekday(day);
         <div>
             <div class="d-flex align-center chr-skeleton__head">
                 <span>@day.ToString("ddd, d MMMM", Russian)</span>
                 <MudSpacer />
-                <span class="chr-status__muted">— / @(isWeekend ? "0 ч" : WorkingDayFormat.Duration(WorkingDayFormat.Norm(Settings)))</span>
+                <span class="chr-status__muted">— / @(calendarDay.IsWorking ? WorkingDayFormat.Duration(calendarDay.NormOf(WorkingDayFormat.Norm(Settings))) : WorkingDayLabel.Short(calendarDay))</span>
             </div>
-            @if (!isWeekend)
+            @if (calendarDay.IsWorking)
             {
                 <MudSkeleton Height="14px" Class="mt-1" />
                 <MudSkeleton Height="14px" Width="65%" />
@@ -25,4 +26,7 @@
 
     [Parameter] public WorklogPeriod Period { get; set; }
     [Parameter] public UserSettingsDto Settings { get; set; } = UserSettingsDto.Default;
+
+    /// <summary>What each day is, so a holiday is not drawn as a working day. See issue #310.</summary>
+    [Parameter] public IReadOnlyDictionary<DateTime, WorkingCalendarDay> Calendar { get; set; }
 }

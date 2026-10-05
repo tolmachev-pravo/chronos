@@ -1,0 +1,61 @@
+@using Chronos.Application.Calendar.Dto
+@using Chronos.Domain.Entities.Calendar
+@using Chronos.Web.Components.Worklogs
+@* The user's own days off (issue #310): a vacation is entered once, from its first day to
+   its last, and every day inside it stops asking to be filled. *@
+<MudPaper Elevation="0" Class="prf-card">
+    <div class="prf-card__head">
+        <div class="prf-card__icon">
+            <MudIcon Icon="@Icons.Material.Filled.BeachAccess" />
+        </div>
+        <div>
+            <MudText Typo="Typo.h6" Style="font-weight:600">Отсутствия</MudText>
+            <MudText Typo="Typo.caption" Style="opacity:.6">
+                Отпуск, больничный и отгулы — норма этих дней равна нулю
+            </MudText>
+        </div>
+    </div>
+
+    <div class="prf-absence-form mt-4">
+        <MudDateRangePicker @bind-DateRange="_range" Label="Даты" Culture="@Russian"
+                            FirstDayOfWeek="DayOfWeek.Monday" AutoClose="true" Class="prf-absence-form__dates" />
+        <MudSelect T="AbsenceKind" @bind-Value="_kind" Label="Вид" Class="prf-absence-form__kind">
+            @foreach (var kind in Enum.GetValues<AbsenceKind>())
+            {
+                <MudSelectItem T="AbsenceKind" Value="@kind">@WorkingDayLabel.Absence(kind)</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField @bind-Value="_comment" Label="Комментарий" MaxLength="200" Class="prf-absence-form__comment" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+                   Disabled="@(!CanAdd)" OnClick="AddAsync" Class="prf-absence-form__add">
+            Добавить
+        </MudButton>
+    </div>
+
+    @if (_absences.Count == 0)
+    {
+        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-4">Отсутствий пока нет.</MudText>
+    }
+    else
+    {
+        <ul class="prf-absences mt-4">
+            @foreach (var absence in _absences)
+            {
+                <li class="@($"prf-absence{(absence.EndDate < DateTime.Today ? " prf-absence--past" : null)}")">
+                    <div class="prf-absence__body">
+                        <div class="prf-absence__title">
+                            <b>@WorkingDayLabel.Absence(absence.Kind)</b>
+                            <span>@Range(absence)</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(absence.Comment))
+                        {
+                            <div class="prf-absence__comment">@absence.Comment</div>
+                        }
+                    </div>
+                    <MudIconButton Icon="@Icons.Material.Outlined.Delete" Size="Size.Small" aria-label="Удалить"
+                                   OnClick="@(() => DeleteAsync(absence))" />
+                </li>
+            }
+        </ul>
+    }
+</MudPaper>

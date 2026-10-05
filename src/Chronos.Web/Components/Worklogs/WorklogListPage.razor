@@ -10,8 +10,8 @@
 <div class="chr-worklog-page mb-4">
     <aside class="chr-worklog-page__side">
         <WorklogPeriodPanel Selected="_selected" Loaded="_loadedLog?.Period" Days="_items" Log="StatusLog"
-                            IsLoading="IsLoading" Settings="_settings"
-                            OnSelect="Select" OnShow="ShowAsync" OnCancel="Cancel" />
+                            IsLoading="IsLoading" Settings="_settings" Calendar="_calendar"
+                            OnSelect="SelectAsync" OnShow="ShowAsync" OnCancel="Cancel" />
     </aside>
 
     <div class="chr-worklog-page__main">
@@ -45,7 +45,7 @@
             <MudPaper Outlined="true">
                 @if (IsLoading)
                 {
-                    <WorklogSkeleton Period="_loadingLog.Period" Settings="_settings" />
+                    <WorklogSkeleton Period="_loadingLog.Period" Settings="_settings" Calendar="_calendar" />
                 }
                 else if (_loadedLog is not null)
                 {
