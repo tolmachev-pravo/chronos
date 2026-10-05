@@ -339,38 +339,122 @@
     overflow-wrap: anywhere;
 }
 
-/* The user's absences (issue #310): a short form over a list of intervals. */
-.prf-absence-form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px 16px;
-    align-items: end;
-}
-.prf-absence-form__dates,
-.prf-absence-form__add { grid-column: 1 / -1; }
-.prf-absence-form__add { justify-self: end; }
+/* The year of absences (issue #310): twelve months beside a balance and a list. */
+.prf-tabs .mud-tabs-tabbar { border-bottom: 1px solid var(--mud-palette-lines-default); }
+.abs-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+@media (max-width: 960px) { .abs-layout { grid-template-columns: 1fr; } }
+.abs-side { display: flex; flex-direction: column; gap: 20px; }
 
-.prf-absences {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+.abs-toolbar { display: flex; align-items: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.abs-toolbar__hint { margin-left: 10px; opacity: .6; }
+
+.abs-year {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px 16px;
+    user-select: none;
 }
-.prf-absence {
+@media (max-width: 1280px) { .abs-year { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .abs-year { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.abs-month__name { font-size: .8rem; font-weight: 600; margin-bottom: 6px; }
+.abs-month__grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
+.abs-weekday { font-size: .62rem; text-align: center; color: var(--mud-palette-text-secondary); opacity: .7; }
+
+.abs-day {
+    position: relative;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    font-size: .7rem;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.abs-day:hover { box-shadow: inset 0 0 0 1px var(--mud-palette-primary); }
+.abs-day--off { color: var(--mud-palette-text-disabled); }
+.abs-day--holiday { background: rgba(var(--mud-palette-warning-rgb), .16); color: var(--mud-palette-warning-darken); font-weight: 600; }
+.abs-day--short::after {
+    content: "";
+    position: absolute;
+    left: 25%; right: 25%; bottom: 2px;
+    border-bottom: 2px dotted var(--mud-palette-warning);
+}
+.abs-day--today { box-shadow: inset 0 0 0 1.5px var(--mud-palette-primary); font-weight: 700; }
+.abs-day--vacation, .abs-day--sick, .abs-day--dayoff { color: #fff; font-weight: 500; }
+.abs-day--vacation { background: var(--mud-palette-info); }
+.abs-day--sick { background: var(--mud-palette-error); }
+.abs-day--dayoff { background: var(--mud-palette-success); }
+.abs-day--selected { background: var(--mud-palette-primary) !important; color: #fff !important; }
+
+.abs-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 16px; font-size: .75rem; color: var(--mud-palette-text-secondary); }
+.abs-legend__swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; }
+.abs-legend__swatch--holiday { background: rgba(var(--mud-palette-warning-rgb), .25); }
+.abs-legend__swatch--short { border-bottom: 2px dotted var(--mud-palette-warning); border-radius: 0; }
+.abs-legend__swatch--vacation { background: var(--mud-palette-info); }
+.abs-legend__swatch--sick { background: var(--mud-palette-error); }
+.abs-legend__swatch--dayoff { background: var(--mud-palette-success); }
+
+.abs-balance__left { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+.abs-balance__left b { font-size: 2rem; line-height: 1.1; }
+.abs-balance__left span { opacity: .6; font-size: .875rem; }
+.abs-balance__bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin: 10px 0 8px; background: var(--mud-palette-lines-default); }
+.abs-balance__taken { background: var(--mud-palette-info); }
+.abs-balance__planned {
+    background: repeating-linear-gradient(135deg, var(--mud-palette-info) 0 4px, rgba(var(--mud-palette-info-rgb), .45) 4px 8px);
+}
+.abs-balance__facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .75rem; color: var(--mud-palette-text-secondary); }
+.abs-balance__facts b { color: var(--mud-palette-text-primary); }
+
+.abs-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.abs-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 6px 8px 12px;
+    gap: 6px;
+    padding: 8px 4px 8px 12px;
     border-radius: 10px;
-    border-left: 3px solid var(--mud-palette-info);
-    background: rgba(var(--mud-palette-info-rgb), .07);
+    border-left: 3px solid;
+    cursor: pointer;
 }
-.prf-absence--past { opacity: .6; }
-.prf-absence__body { flex: 1; min-width: 0; font-size: .875rem; }
-.prf-absence__title { display: flex; flex-wrap: wrap; gap: 4px 8px; }
-.prf-absence__comment { font-size: .8rem; opacity: .7; overflow-wrap: anywhere; }
+.abs-item--vacation { border-color: var(--mud-palette-info); background: rgba(var(--mud-palette-info-rgb), .08); }
+.abs-item--sick { border-color: var(--mud-palette-error); background: rgba(var(--mud-palette-error-rgb), .08); }
+.abs-item--dayoff { border-color: var(--mud-palette-success); background: rgba(var(--mud-palette-success-rgb), .08); }
+.abs-item--past { opacity: .55; }
+.abs-item__body { flex: 1; min-width: 0; }
+.abs-item__title { font-size: .875rem; font-weight: 500; overflow-wrap: anywhere; }
+.abs-item__dates { font-size: .75rem; color: var(--mud-palette-text-secondary); }
+
+/* Below MudBlazor's popovers (z-index 1200), so the date pickers inside open over it. */
+.abs-composer__backdrop { position: fixed; inset: 0; z-index: 1099; }
+.abs-composer {
+    position: fixed;
+    z-index: 1100;
+    visibility: hidden;
+    width: 340px;
+    max-width: calc(100vw - 24px);
+    padding: 18px;
+    border-radius: 14px;
+    background: var(--mud-palette-surface);
+    box-shadow: 0 12px 40px rgba(20, 20, 50, .25);
+}
+.abs-composer__kinds { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+.abs-kind {
+    border: 1px solid var(--mud-palette-lines-default);
+    background: none;
+    color: var(--mud-palette-text-primary);
+    border-radius: 16px;
+    padding: 5px 12px;
+    font: inherit;
+    font-size: .8rem;
+    cursor: pointer;
+}
+.abs-kind--on { color: #fff; border-color: transparent; }
+.abs-kind--vacation.abs-kind--on { background: var(--mud-palette-info); }
+.abs-kind--sick.abs-kind--on { background: var(--mud-palette-error); }
+.abs-kind--dayoff.abs-kind--on { background: var(--mud-palette-success); }
+.abs-composer__dates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* Two lines kept for the counts whatever the kind, so the buttons below never move. */
+.abs-composer__cost { display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px 12px; min-height: 2.9em; margin-top: 10px; font-size: .75rem; color: var(--mud-palette-text-secondary); }
+.abs-composer__cost b { color: var(--mud-palette-text-primary); }
+.abs-composer__actions { display: flex; align-items: center; gap: 4px; margin-top: 14px; }
 
 .chr-worklog-day-chips-container {
     width: 375px

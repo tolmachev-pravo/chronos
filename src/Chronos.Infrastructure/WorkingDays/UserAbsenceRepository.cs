@@ -48,6 +48,19 @@ namespace Chronos.Infrastructure.WorkingDays
             await _db.SaveChangesAsync(ct);
         }
 
+        public async Task<bool> UpdateAsync(UserAbsence absence, CancellationToken ct = default)
+        {
+            var updated = await _db.Set<UserAbsence>()
+                .Where(stored => stored.Id == absence.Id && stored.Username == absence.Username)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(stored => stored.StartDate, absence.StartDate)
+                    .SetProperty(stored => stored.EndDate, absence.EndDate)
+                    .SetProperty(stored => stored.Kind, absence.Kind)
+                    .SetProperty(stored => stored.Comment, absence.Comment)
+                    .SetProperty(stored => stored.UpdatedAt, absence.UpdatedAt), ct);
+            return updated > 0;
+        }
+
         public async Task<bool> DeleteAsync(string username, Guid id, CancellationToken ct = default)
         {
             var deleted = await _db.Set<UserAbsence>()

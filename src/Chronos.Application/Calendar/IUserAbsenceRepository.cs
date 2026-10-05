@@ -16,6 +16,9 @@ namespace Chronos.Application.Calendar
 
         Task AddAsync(UserAbsence absence, CancellationToken ct = default);
 
+        /// <summary>Saves a changed absence of the user; false when there is no such absence.</summary>
+        Task<bool> UpdateAsync(UserAbsence absence, CancellationToken ct = default);
+
         /// <summary>Removes the absence if it is the user's; false when there is no such absence.</summary>
         Task<bool> DeleteAsync(string username, Guid id, CancellationToken ct = default);
     }

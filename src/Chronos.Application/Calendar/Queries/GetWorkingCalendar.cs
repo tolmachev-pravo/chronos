@@ -12,7 +12,8 @@ namespace Chronos.Application.Calendar.Queries
     /// </summary>
     public class GetWorkingCalendar
     {
-        public record Query(string Username, DateTime From, DateTime To)
+        /// <param name="IncludeAbsences">False to leave the user's absences out. See <see cref="IWorkingCalendar"/>.</param>
+        public record Query(string Username, DateTime From, DateTime To, bool IncludeAbsences = true)
             : IRequest<IReadOnlyDictionary<DateTime, WorkingCalendarDay>>;
 
         public class Handler : IRequestHandler<Query, IReadOnlyDictionary<DateTime, WorkingCalendarDay>>
@@ -26,7 +27,7 @@ namespace Chronos.Application.Calendar.Queries
 
             public Task<IReadOnlyDictionary<DateTime, WorkingCalendarDay>> Handle(
                 Query request, CancellationToken cancellationToken) =>
-                _calendar.GetDaysAsync(request.Username, request.From, request.To, cancellationToken);
+                _calendar.GetDaysAsync(request.Username, request.From, request.To, cancellationToken, request.IncludeAbsences);
         }
     }
 }

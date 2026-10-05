@@ -4,6 +4,8 @@ using Microsoft.Extensions.Options;
 using MudBlazor;
 using Chronos.Infrastructure.Jira;
 using Chronos.Application.Authentication;
+using Chronos.Application.Calendar.Dto;
+using Chronos.Application.Calendar.Queries;
 using Chronos.Application.Storage;
 using Chronos.Application.Users.Commands;
 using Chronos.Application.Users.Dto;
@@ -11,6 +13,8 @@ using Chronos.Application.Users.Queries;
 using Chronos.Domain.Models.Users;
 using Chronos.Web.Shared;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Globalization;
 using System.Threading.Tasks;
 
@@ -36,6 +40,30 @@ namespace Chronos.Web.Components.Profile
         [Inject] private IStorage<string, UserProfile> UserProfileStorage { get; set; }
         [Inject] private ISnackbar Snackbar { get; set; }
         [Inject] private IOptions<JiraConfiguration> JiraConfiguration { get; set; }
+        [Inject] private NavigationManager Navigation { get; set; }
+
+        /// <summary>«absences» opens the year of absences; anything else, the settings.</summary>
+        [Parameter] public string Tab { get; set; }
+
+        private const string AbsencesTab = "absences";
+
+        /// <summary>
+        /// The open tab, kept in the address so a link — or a reload — lands on the same one.
+        /// </summary>
+        private int ActiveTab
+        {
+            get => Tab == AbsencesTab ? 1 : 0;
+            set
+            {
+                Tab = value == 1 ? AbsencesTab : null;
+                Navigation.NavigateTo(
+                    Navigation.GetUriWithQueryParameter("tab", Tab),
+                    new NavigationOptions { ReplaceHistoryEntry = true });
+            }
+        }
+
+        /// <summary>Absences still ahead, counted on the tab so they are not forgotten.</summary>
+        private int UpcomingAbsences { get; set; }
 
         private string Username { get; set; } = string.Empty;
         private string _avatar = string.Empty;
@@ -64,6 +92,7 @@ namespace Chronos.Web.Components.Profile
                 Username = user?.Username ?? string.Empty;
                 _signedInWithToken = !string.IsNullOrEmpty(user?.PersonalAccessToken);
                 ApplySettings(await Mediator.Send(new GetUserSettings.Query(Username)));
+                AbsencesChanged(await Mediator.Send(new GetUserAbsences.Query(Username)));
             }
             catch (Exception e)
             {
@@ -176,6 +205,9 @@ namespace Chronos.Web.Components.Profile
                 ErrorHandler.ProcessError(e);
             }
         }
+
+        private void AbsencesChanged(IReadOnlyList<UserAbsenceDto> absences) =>
+            UpcomingAbsences = absences.Count(absence => absence.EndDate >= DateTime.Today);
 
         private void ApplySettings(UserSettingsDto settings)
         {

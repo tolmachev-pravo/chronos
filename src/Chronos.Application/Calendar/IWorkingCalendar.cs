@@ -12,7 +12,11 @@ namespace Chronos.Application.Calendar
     public interface IWorkingCalendar
     {
         /// <summary>Every day from <paramref name="from"/> to <paramref name="to"/>, both inclusive.</summary>
+        /// <param name="includeAbsences">
+        /// False to see the days as the calendar has them, under the user's absences — what
+        /// planning a vacation needs: which of its days are holidays anyway.
+        /// </param>
         Task<IReadOnlyDictionary<DateTime, WorkingCalendarDay>> GetDaysAsync(
-            string username, DateTime from, DateTime to, CancellationToken ct = default);
+            string username, DateTime from, DateTime to, CancellationToken ct = default, bool includeAbsences = true);
     }
 }

@@ -1,3 +1,4 @@
+using Chronos.Application.Calendar;
 using Chronos.Domain.Entities.Calendar;
 using System;
 using System.Collections.Generic;
@@ -20,25 +21,6 @@ namespace Chronos.Infrastructure.WorkingDays
     public static class XmlCalendarParser
     {
         private static readonly CultureInfo Russian = CultureInfo.GetCultureInfo("ru-RU");
-
-        /// <summary>The public holidays of the Labour Code, art. 112, by month and day.</summary>
-        private static readonly Dictionary<(int Month, int Day), string> HolidayNames = new()
-        {
-            [(1, 1)] = "Новогодние каникулы",
-            [(1, 2)] = "Новогодние каникулы",
-            [(1, 3)] = "Новогодние каникулы",
-            [(1, 4)] = "Новогодние каникулы",
-            [(1, 5)] = "Новогодние каникулы",
-            [(1, 6)] = "Новогодние каникулы",
-            [(1, 7)] = "Рождество Христово",
-            [(1, 8)] = "Новогодние каникулы",
-            [(2, 23)] = "День защитника Отечества",
-            [(3, 8)] = "Международный женский день",
-            [(5, 1)] = "Праздник Весны и Труда",
-            [(5, 9)] = "День Победы",
-            [(6, 12)] = "День России",
-            [(11, 4)] = "День народного единства",
-        };
 
         public static IReadOnlyList<CalendarDay> Parse(string json)
         {
@@ -67,7 +49,7 @@ namespace Chronos.Infrastructure.WorkingDays
             {
                 var isWeekend = date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
                 var isListed = listed.TryGetValue(date, out var mark);
-                var name = HolidayNames.GetValueOrDefault((date.Month, date.Day));
+                var name = PublicHolidays.NameOf(date);
 
                 if (isListed && mark == '*')
                 {

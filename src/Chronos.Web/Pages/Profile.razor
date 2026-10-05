@@ -1,4 +1,9 @@
 @page "/profile"
 @using Chronos.Web.Components.Profile
 
-<ProfilePage />
+<ProfilePage Tab="@Tab" />
+
+@code {
+    /// <summary>Which tab to open: «absences» for the year of absences. See issue #310.</summary>
+    [SupplyParameterFromQuery] public string Tab { get; set; }
+}

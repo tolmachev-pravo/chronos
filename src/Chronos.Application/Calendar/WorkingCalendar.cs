@@ -31,7 +31,7 @@ namespace Chronos.Application.Calendar
         }
 
         public async Task<IReadOnlyDictionary<DateTime, WorkingCalendarDay>> GetDaysAsync(
-            string username, DateTime from, DateTime to, CancellationToken ct = default)
+            string username, DateTime from, DateTime to, CancellationToken ct = default, bool includeAbsences = true)
         {
             var first = from.Date;
             var last = to.Date;
@@ -40,7 +40,7 @@ namespace Chronos.Application.Calendar
                 .GroupBy(day => day.Date.Date)
                 .ToDictionary(group => group.Key, group => group.First());
 
-            IReadOnlyList<UserAbsence> absences = string.IsNullOrEmpty(username)
+            IReadOnlyList<UserAbsence> absences = string.IsNullOrEmpty(username) || !includeAbsences
                 ? Array.Empty<UserAbsence>()
                 : await _absences.GetAsync(username, first, last, ct);
 

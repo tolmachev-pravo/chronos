@@ -119,6 +119,40 @@ namespace Chronos.UnitTests.Infrastructure.WorkingDays
         }
 
         [Test]
+        public async Task UpdateAsync_ChangesOnlyTheUsersOwnAbsence()
+        {
+            var absence = Absence("john", new DateTime(2026, 7, 14), new DateTime(2026, 7, 27));
+            using (var context = new ApplicationDbContext(_options))
+            {
+                await new UserAbsenceRepository(context).AddAsync(absence);
+            }
+
+            using (var context = new ApplicationDbContext(_options))
+            {
+                var repository = new UserAbsenceRepository(context);
+                var foreign = Absence("jane", new DateTime(2026, 8, 1), new DateTime(2026, 8, 2));
+                foreign.Id = absence.Id;
+                Assert.That(await repository.UpdateAsync(foreign), Is.False);
+
+                var changed = Absence("john", new DateTime(2026, 7, 20), new DateTime(2026, 7, 31));
+                changed.Id = absence.Id;
+                changed.Kind = AbsenceKind.SickLeave;
+                changed.Comment = "Простуда";
+                Assert.That(await repository.UpdateAsync(changed), Is.True);
+            }
+
+            using var assertContext = new ApplicationDbContext(_options);
+            var stored = (await new UserAbsenceRepository(assertContext).ListAsync("john")).Single();
+            Assert.Multiple(() =>
+            {
+                Assert.That(stored.StartDate, Is.EqualTo(new DateTime(2026, 7, 20)));
+                Assert.That(stored.EndDate, Is.EqualTo(new DateTime(2026, 7, 31)));
+                Assert.That(stored.Kind, Is.EqualTo(AbsenceKind.SickLeave));
+                Assert.That(stored.Comment, Is.EqualTo("Простуда"));
+            });
+        }
+
+        [Test]
         public async Task DeleteAsync_RemovesOnlyTheUsersOwnAbsence()
         {
             var absence = Absence("john", new DateTime(2026, 7, 14), new DateTime(2026, 7, 27));

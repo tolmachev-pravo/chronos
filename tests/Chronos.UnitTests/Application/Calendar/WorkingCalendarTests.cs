@@ -122,6 +122,24 @@ namespace Chronos.UnitTests.Application.Calendar
         }
 
         [Test]
+        public async Task GetDaysAsync_WithoutAbsences_ShowsTheCalendarUnderneath()
+        {
+            SetUpCalendar(new CalendarDay { Date = new DateTime(2026, 6, 12), Kind = CalendarDayKind.Holiday, Title = "День России" });
+            SetUpAbsences(new UserAbsence
+            {
+                Username = "john",
+                StartDate = new DateTime(2026, 6, 10),
+                EndDate = new DateTime(2026, 6, 14),
+                Kind = AbsenceKind.Vacation
+            });
+
+            var days = await _sut.GetDaysAsync("john", new DateTime(2026, 6, 11), new DateTime(2026, 6, 12), includeAbsences: false);
+
+            Assert.That(days[new DateTime(2026, 6, 11)].Kind, Is.EqualTo(WorkingDayKind.Workday));
+            Assert.That(days[new DateTime(2026, 6, 12)].Kind, Is.EqualTo(WorkingDayKind.Holiday));
+        }
+
+        [Test]
         public async Task GetDaysAsync_WithoutUser_DoesNotAskForAbsences()
         {
             var days = await _sut.GetDaysAsync(null!, new DateTime(2026, 6, 1), new DateTime(2026, 6, 1));
