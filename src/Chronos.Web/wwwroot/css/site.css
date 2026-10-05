@@ -175,6 +175,30 @@ app {
     border-left-color: var(--mud-palette-error);
     background: rgba(var(--mud-palette-error-rgb), 0.07);
 }
+/* A holiday and the user's own absence are days off too, but each says what it is
+   (issue #310): the colour tells them from a weekend, the label names them. */
+.chr-day-header-holiday {
+    border-left-color: var(--mud-palette-warning);
+    background: rgba(var(--mud-palette-warning-rgb), 0.08);
+}
+.chr-day-header-absence {
+    border-left-color: var(--mud-palette-info);
+    background: rgba(var(--mud-palette-info-rgb), 0.08);
+}
+
+.chr-day-kind {
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: 240px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.8;
+}
+.chr-day-header-holiday .chr-day-kind { color: var(--mud-palette-warning-darken); opacity: 1; }
+.chr-day-header-absence .chr-day-kind { color: var(--mud-palette-info-darken); opacity: 1; }
 
 .chr-day-date { flex-shrink: 0; min-width: 96px; }
 .chr-day-date-main { font-size: 14px; font-weight: 500; line-height: 1.3; }
@@ -194,6 +218,8 @@ app {
 .chr-day-header-done .chr-day-bar-fill { background: var(--mud-palette-success); }
 .chr-day-header-progress .chr-day-bar-fill { background: var(--mud-palette-primary); }
 .chr-day-header-weekend .chr-day-bar-fill { background: var(--mud-palette-error); }
+.chr-day-header-holiday .chr-day-bar-fill { background: var(--mud-palette-warning); }
+.chr-day-header-absence .chr-day-bar-fill { background: var(--mud-palette-info); }
 
 .chr-day-bar-label {
     font-size: 11px;

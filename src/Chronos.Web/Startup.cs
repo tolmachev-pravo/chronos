@@ -24,6 +24,8 @@ using Chronos.Web.Components.Markdown;
 using Chronos.Web.Components.Releases;
 using Chronos.Web.Logging;
 using Chronos.Web.Mcp;
+using Chronos.Web.WorkingDays;
+using Chronos.Infrastructure.WorkingDays;
 using System;
 using Thinktecture.Blazor.AsyncClipboard;
 
@@ -108,6 +110,11 @@ namespace Chronos.Web
             {
                 services.AddMockInfrastructureLayer();
             }
+
+            // Production calendar (issue #310): read from xmlcalendar.ru into our own table
+            // in the background.
+            services.Configure<ProductionCalendarOptions>(Configuration.GetSection(ProductionCalendarOptions.SectionName));
+            services.AddHostedService<ProductionCalendarImportService>();
 
             // Authentication
             services.AddHttpContextAccessor();

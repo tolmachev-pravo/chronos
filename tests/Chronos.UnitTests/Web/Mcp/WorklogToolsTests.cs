@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using Moq;
 using Chronos.Application.Authentication;
+using Chronos.Application.Calendar;
+using Chronos.Domain.Entities.Calendar;
 using Chronos.Application.Issues;
 using Chronos.Application.Storage;
 using Chronos.Application.Users.Dto;
@@ -180,6 +182,29 @@ namespace Chronos.UnitTests.Web.Mcp
             Assert.That(days[0].Events.Single().Details, Is.Null);
         }
 
+        [TestCase(WorkingDayKind.ShortDay, null, "short_day", null, 420)]
+        [TestCase(WorkingDayKind.Holiday, null, "holiday", null, 0)]
+        [TestCase(WorkingDayKind.Absence, AbsenceKind.SickLeave, "absence", "sick_leave", 0)]
+        public async Task GetWorklogCollection_Should_TellWhatTheDayIs(
+            WorkingDayKind kind, AbsenceKind? absence, string expectedKind, string? expectedAbsence, int expectedPlanned)
+        {
+            SetUpWorklogCollection(new WorkingDay(
+                date: _date,
+                settings: new WorkingDaySettings(
+                    workingStartTime: TimeSpan.FromHours(10),
+                    workingEndTime: TimeSpan.FromHours(19),
+                    lunchTime: TimeSpan.FromHours(1)),
+                calendar: new WorkingCalendarDay(_date, kind, "title", absence)));
+
+            var day = (await _tools.GetWorklogCollection(_date, _date)).Single();
+
+            Assert.That(day.DayKind, Is.EqualTo(expectedKind));
+            Assert.That(day.Absence, Is.EqualTo(expectedAbsence));
+            Assert.That(day.DayTitle, Is.EqualTo("title"));
+            Assert.That(day.IsWorking, Is.EqualTo(kind == WorkingDayKind.ShortDay));
+            Assert.That(day.PlannedMinutes, Is.EqualTo(expectedPlanned));
+        }
+
         [Test]
         public async Task GetWorklogCollection_Should_TellTheDay_AsEventsAndWorklogs()
         {
@@ -192,6 +217,9 @@ namespace Chronos.UnitTests.Web.Mcp
             Assert.That(days, Has.Count.EqualTo(1));
             var day = days[0];
             Assert.That(day.PlannedMinutes, Is.EqualTo(480));
+            Assert.That(day.IsWorking, Is.True);
+            Assert.That(day.DayKind, Is.EqualTo("workday"));
+            Assert.That(day.Absence, Is.Null);
             Assert.That(day.LoggedMinutes, Is.EqualTo(180));
             Assert.That(day.SuggestedMinutes, Is.EqualTo(300));
             Assert.That(day.Events.Single().IssueKey, Is.EqualTo("CH-2"));

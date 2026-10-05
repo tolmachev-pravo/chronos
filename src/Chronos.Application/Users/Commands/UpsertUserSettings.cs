@@ -33,6 +33,7 @@ namespace Chronos.Application.Users.Commands
                 entity.WorkingStartTime = request.Settings.WorkingStartTime;
                 entity.WorkingEndTime = request.Settings.WorkingEndTime;
                 entity.LunchTime = request.Settings.LunchTime;
+                entity.ShortenPreHolidayDays = request.Settings.ShortenPreHolidayDays;
                 entity.UpdatedAt = DateTime.UtcNow;
 
                 await _repository.UpsertAsync(entity, cancellationToken);

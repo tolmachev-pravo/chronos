@@ -61,7 +61,7 @@ namespace Chronos.UnitTests.Application.Users
 
             await CreateHandler().Handle(
                 new UpsertUserSettings.Command("alice", new UserSettingsDto(
-                    TimeSpan.FromHours(8), TimeSpan.FromHours(17), TimeSpan.Zero)),
+                    TimeSpan.FromHours(8), TimeSpan.FromHours(17), TimeSpan.Zero, ShortenPreHolidayDays: false)),
                 CancellationToken.None);
 
             Assert.That(saved.Value, Is.SameAs(existing));
@@ -71,6 +71,7 @@ namespace Chronos.UnitTests.Application.Users
                 Assert.That(saved.Value.WorkingStartTime, Is.EqualTo(TimeSpan.FromHours(8)));
                 Assert.That(saved.Value.WorkingEndTime, Is.EqualTo(TimeSpan.FromHours(17)));
                 Assert.That(saved.Value.LunchTime, Is.EqualTo(TimeSpan.Zero));
+                Assert.That(saved.Value.ShortenPreHolidayDays, Is.False);
                 Assert.That(saved.Value.UpdatedAt, Is.Not.Null);
             });
         }

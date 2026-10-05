@@ -1,5 +1,7 @@
 ﻿using MediatR;
 using Chronos.Application.Authentication;
+using Chronos.Application.Calendar;
+using Chronos.Application.Calendar.Queries;
 using Chronos.Application.Common.Extensions;
 using Chronos.Application.Events;
 using Chronos.Application.Events.Queries;
@@ -77,6 +79,13 @@ namespace Chronos.Application.Worklogs.Queries
                 var userSettings = await _mediator.Send(
                     new GetUserSettings.Query(user?.Username), cancellationToken);
 
+                // What each day is — a holiday, a working Saturday, the user's vacation —
+                // asked once for the whole period. It sets the norm the day's estimates are
+                // spread over. See issue #310.
+                var calendar = await _mediator.Send(
+                    new GetWorkingCalendar.Query(user?.Username, query.StartDate, query.EndDate),
+                    cancellationToken);
+
                 // Events and worklogs are fetched concurrently to cut wall-clock. Trade-off:
                 // PerformanceBehavior's per-request allocation stats are not representative
                 // while these run concurrently; the event orchestrator records its own
@@ -109,7 +118,7 @@ namespace Chronos.Application.Worklogs.Queries
                         group => group.Key,
                         group => (IReadOnlyList<IEvent>)group.ToList());
 
-                var days = CalculateDays(issueWorklogs, keyedEvents, query, userSettings).ToList();
+                var days = CalculateDays(issueWorklogs, keyedEvents, query, userSettings, calendar).ToList();
                 foreach (var day in days)
                 {
                     day.BlockedEvents = blockedEventsByDay.GetValueOrDefault(day.Date) ?? new List<IEvent>();
@@ -174,7 +183,8 @@ namespace Chronos.Application.Worklogs.Queries
                 IEnumerable<IWorklog> issueWorklogs,
                 IEnumerable<IEvent> events,
                 Query query,
-                UserSettingsDto userSettings)
+                UserSettingsDto userSettings,
+                IReadOnlyDictionary<DateTime, WorkingCalendarDay> calendar)
             {
                 var day = query.EndDate.Date;
                 var splitedEvents = events.SplitByDays(
@@ -207,7 +217,8 @@ namespace Chronos.Application.Worklogs.Queries
                             workingStartTime: userSettings.WorkingStartTime,
                             workingEndTime: userSettings.WorkingEndTime,
                             lunchTime: userSettings.LunchTime),
-                        worklogs: dailyWorklogs);
+                        worklogs: dailyWorklogs,
+                        calendar: calendar?.GetValueOrDefault(day));
 
                     day = day.AddDays(-1);
                 }

@@ -66,9 +66,9 @@ namespace Chronos.Web.Components.Worklogs.Summary
             var days = (workingDays ?? Enumerable.Empty<WorkingDay>())
                 .OrderBy(day => day.Date)
                 .Select(SummaryDay.Create)
-                // A weekend is left out unless something happened on it: an empty column
-                // for every Saturday would only push the working days apart.
-                .Where(day => !day.IsWeekend || day.Logged > TimeSpan.Zero || day.Suggested > TimeSpan.Zero)
+                // A day off is left out unless something happened on it: an empty column
+                // for every Saturday or holiday would only push the working days apart.
+                .Where(day => day.IsWorking || day.Logged > TimeSpan.Zero || day.Suggested > TimeSpan.Zero)
                 .ToList();
 
             var issues = days
@@ -97,7 +97,7 @@ namespace Chronos.Web.Components.Worklogs.Summary
         }
 
         /// <summary>The working days: what averages and the heat map are taken over.</summary>
-        public IEnumerable<SummaryDay> WorkingDays => Days.Where(day => !day.IsWeekend);
+        public IEnumerable<SummaryDay> WorkingDays => Days.Where(day => day.IsWorking);
 
         public double AverageIssueCount => WorkingDays.Any() ? WorkingDays.Average(day => day.IssueKeys.Count) : 0;
 
@@ -187,7 +187,8 @@ namespace Chronos.Web.Components.Worklogs.Summary
     public sealed class SummaryDay
     {
         public DateTime Date { get; private init; }
-        public bool IsWeekend { get; private init; }
+        /// <summary>A day the user is expected to work — not a weekend, holiday or absence. See issue #310.</summary>
+        public bool IsWorking { get; private init; }
 
         /// <summary>Monday is 0.</summary>
         public int Weekday => ((int)Date.DayOfWeek + 6) % 7;
@@ -296,8 +297,8 @@ namespace Chronos.Web.Components.Worklogs.Summary
             return new SummaryDay
             {
                 Date = day.Date.Date,
-                IsWeekend = day.IsWeekend,
-                Norm = day.IsWeekend ? TimeSpan.Zero : day.Settings.WorkingTime,
+                IsWorking = day.IsWorking,
+                Norm = day.Norm,
                 Logged = day.ActualWorklogTimeSpent,
                 Suggested = day.EstimatedWorklogTimeSpent,
                 WindowStart = windowStart,

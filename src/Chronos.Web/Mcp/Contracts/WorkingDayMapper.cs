@@ -3,6 +3,7 @@ using Chronos.Domain.Models.Events;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Chronos.Web.Mcp.Contracts
 {
@@ -30,8 +31,11 @@ namespace Chronos.Web.Mcp.Contracts
 
             return new WorkingDayView(
                 Date: day.Date,
-                IsWeekend: day.IsWeekend,
-                PlannedMinutes: Minutes(day.Settings.WorkingTime),
+                IsWorking: day.IsWorking,
+                DayKind: Name(day.Kind),
+                Absence: day.Calendar.Absence is { } absence ? Name(absence) : null,
+                DayTitle: day.Calendar.Title,
+                PlannedMinutes: Minutes(day.Norm),
                 LoggedMinutes: Minutes(day.ActualWorklogTimeSpent),
                 SuggestedMinutes: Minutes(day.EstimatedWorklogTimeSpent),
                 BlockedMinutes: Minutes(day.BlockedEventsTime),
@@ -160,6 +164,10 @@ namespace Chronos.Web.Mcp.Contracts
         private static string NextId(int index) => $"e{index + 1}";
 
         private static string Name(EventSource? source) => source?.ToString().ToLowerInvariant();
+
+        /// <summary>ShortDay → short_day, SickLeave → sick_leave.</summary>
+        private static string Name(Enum value) =>
+            Regex.Replace(value.ToString(), "(?<=[a-z])([A-Z])", "_$1").ToLowerInvariant();
 
         private static int Minutes(TimeSpan time) => (int)Math.Round(time.TotalMinutes);
     }

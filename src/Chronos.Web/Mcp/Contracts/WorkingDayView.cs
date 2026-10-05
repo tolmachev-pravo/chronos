@@ -17,9 +17,22 @@ namespace Chronos.Web.Mcp.Contracts
     /// eight hours offers less than eight: those minutes are spent, but nothing can be logged
     /// against them until somebody names an issue.
     /// </param>
+    /// <param name="IsWorking">
+    /// Whether the user is expected to work that day. A day off — a weekend, a holiday, a
+    /// vacation — plans nothing, so there is nothing to suggest logging on it; whatever is
+    /// logged there is still listed. See issue #310.
+    /// </param>
+    /// <param name="DayKind">
+    /// workday, short_day (an hour shorter, before a holiday), weekend, holiday or absence.
+    /// </param>
+    /// <param name="Absence">vacation, sick_leave or day_off on an absence; null otherwise.</param>
+    /// <param name="DayTitle">The holiday's name or the absence's comment, when there is one.</param>
     public record WorkingDayView(
         DateTime Date,
-        bool IsWeekend,
+        bool IsWorking,
+        string DayKind,
+        string Absence,
+        string DayTitle,
         int PlannedMinutes,
         int LoggedMinutes,
         int SuggestedMinutes,

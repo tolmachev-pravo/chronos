@@ -2,6 +2,9 @@
 using Moq;
 using NUnit.Framework;
 using Chronos.Application.Authentication;
+using Chronos.Application.Calendar;
+using Chronos.Application.Calendar.Queries;
+using Chronos.Domain.Entities.Calendar;
 using Chronos.Application.Events.Queries;
 using Chronos.Application.Users.Dto;
 using Chronos.Application.Users.Queries;
@@ -243,6 +246,38 @@ namespace Chronos.UnitTests.Application.Worklogs.Queries
                 Assert.That(day.Settings.WorkingEndTime, Is.EqualTo(TimeSpan.FromHours(18)));
                 Assert.That(day.Settings.LunchTime, Is.EqualTo(TimeSpan.FromMinutes(30)));
                 Assert.That(day.Settings.WorkingTime, Is.EqualTo(TimeSpan.FromHours(8.5)));
+            });
+        }
+
+        [Test]
+        public async Task Handle_TakesWhatEachDayIsFromTheWorkingCalendar()
+        {
+            var query = new GetWorklogCollection.Query
+            {
+                StartDate = new DateTime(2026, 6, 11),
+                EndDate = new DateTime(2026, 6, 12)
+            };
+            _mediatorMock
+                .Setup(x => x.Send(
+                    It.Is<GetWorkingCalendar.Query>(calendar => calendar.Username == "user1"
+                        && calendar.From == query.StartDate
+                        && calendar.To == query.EndDate),
+                    It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new Dictionary<DateTime, WorkingCalendarDay>
+                {
+                    [new DateTime(2026, 6, 11)] = new(new DateTime(2026, 6, 11), WorkingDayKind.Absence, "Море", AbsenceKind.Vacation),
+                    [new DateTime(2026, 6, 12)] = new(new DateTime(2026, 6, 12), WorkingDayKind.Holiday, "День России")
+                });
+
+            var result = await _sut.Handle(query);
+
+            var days = result.WorkingDays.ToDictionary(day => day.Date);
+            Assert.Multiple(() =>
+            {
+                Assert.That(days[new DateTime(2026, 6, 11)].Kind, Is.EqualTo(WorkingDayKind.Absence));
+                Assert.That(days[new DateTime(2026, 6, 12)].Kind, Is.EqualTo(WorkingDayKind.Holiday));
+                Assert.That(days[new DateTime(2026, 6, 12)].Calendar.Title, Is.EqualTo("День России"));
+                Assert.That(days.Values.Select(day => day.Norm), Has.All.EqualTo(TimeSpan.Zero));
             });
         }
     }

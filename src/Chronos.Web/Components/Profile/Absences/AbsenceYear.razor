@@ -1,0 +1,185 @@
+@using Chronos.Application.Calendar.Dto
+@using Chronos.Domain.Entities.Calendar
+@using Chronos.Web.Components.Worklogs
+@* The year of absences (issue #310): twelve months at once, holidays and short days
+   already marked by the production calendar, the user's absences painted over them. *@
+<div class="abs-layout">
+    <MudPaper Elevation="0" Class="prf-card abs-year-card">
+        <div class="abs-toolbar">
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronLeft" Size="Size.Small" aria-label="Предыдущий год"
+                           OnClick="@(() => ShiftYearAsync(-1))" />
+            <MudText Typo="Typo.h6" Style="font-weight:700">@_year</MudText>
+            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" aria-label="Следующий год"
+                           OnClick="@(() => ShiftYearAsync(1))" />
+            <MudText Typo="Typo.caption" Class="abs-toolbar__hint">
+                Протяните по дням, чтобы добавить отпуск, больничный или отгул
+            </MudText>
+        </div>
+
+        <div class="abs-year" @ref="_grid">
+            @for (var month = 1; month <= 12; month++)
+            {
+                var first = new DateTime(_year, month, 1);
+                <div class="abs-month">
+                    <div class="abs-month__name">@MonthName(_year, month)</div>
+                    <div class="abs-month__grid">
+                        @foreach (var weekday in Weekdays)
+                        {
+                            <span class="abs-weekday">@weekday</span>
+                        }
+                        @for (var i = 0; i < LeadingBlanks(first); i++)
+                        {
+                            <span></span>
+                        }
+                        @for (var date = first; date.Month == month; date = date.AddDays(1))
+                        {
+                            <span class="@DayClass(date)" data-date="@date.ToString("yyyy-MM-dd")" title="@DayTitle(date)">@date.Day</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="abs-legend">
+            <span><i class="abs-legend__swatch abs-legend__swatch--holiday"></i>праздник</span>
+            <span><i class="abs-legend__swatch abs-legend__swatch--short"></i>сокращённый день</span>
+            <span><i class="abs-legend__swatch abs-legend__swatch--vacation"></i>отпуск</span>
+            <span><i class="abs-legend__swatch abs-legend__swatch--sick"></i>больничный</span>
+            <span><i class="abs-legend__swatch abs-legend__swatch--dayoff"></i>отгул</span>
+        </div>
+    </MudPaper>
+
+    <div class="abs-side">
+        <MudPaper Elevation="0" Class="prf-card">
+            <MudText Typo="Typo.caption" Style="opacity:.6">Отпуск @_year</MudText>
+            <div class="abs-balance__left">
+                <b>@Balance.Left</b>
+                <span>осталось из @AbsencePlan.YearlyVacationDays</span>
+            </div>
+            <div class="abs-balance__bar">
+                <div class="abs-balance__taken" style="@($"width:{Share(Balance.Taken)}%")"></div>
+                <div class="abs-balance__planned" style="@($"width:{Share(Balance.Planned)}%")"></div>
+            </div>
+            <div class="abs-balance__facts">
+                <span>отгулял <b>@Balance.Taken</b></span>
+                <span>запланировано <b>@Balance.Planned</b></span>
+                @if (Balance.SickDays > 0)
+                {
+                    <span>больничный <b>@Balance.SickDays</b></span>
+                }
+            </div>
+            <MudText Typo="Typo.caption" Style="opacity:.6;display:block" Class="mt-2">
+                Праздники внутри отпуска не тратят его дни.
+            </MudText>
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="prf-card">
+            <MudText Typo="Typo.caption" Style="opacity:.6" Class="mb-2">Отсутствия @_year</MudText>
+            @if (!YearAbsences.Any())
+            {
+                <MudText Typo="Typo.body2" Style="opacity:.6">Пока ничего.</MudText>
+            }
+            else
+            {
+                <ul class="abs-list">
+                    @foreach (var absence in YearAbsences)
+                    {
+                        var cost = _plan.CostOf(absence.StartDate, absence.EndDate);
+                        <li class="@($"abs-item abs-item--{KindClass(absence.Kind)}{(absence.EndDate < Today ? " abs-item--past" : null)}")"
+                            @onclick="@(args => OpenFromList(absence, args))">
+                            <div class="abs-item__body">
+                                <div class="abs-item__title">@Describe(absence)</div>
+                                <div class="abs-item__dates">
+                                    @Range(absence.StartDate, absence.EndDate) · @Days(cost.CalendarDays)
+                                    @if (absence.Kind == AbsenceKind.Vacation && cost.PublicHolidays > 0)
+                                    {
+                                        <text>, праздников не в счёт: @cost.PublicHolidays</text>
+                                    }
+                                </div>
+                            </div>
+                            @* Removing is not opening: the click stops here. *@
+                            <span @onclick:stopPropagation="true">
+                                <MudIconButton Icon="@Icons.Material.Outlined.Close" Size="Size.Small" aria-label="Удалить"
+                                               OnClick="@(() => DeleteAsync(absence))" />
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+        </MudPaper>
+    </div>
+</div>
+
+@if (_composer is not null)
+{
+    var cost = _composer.CanSave ? _plan.CostOf(_composer.Start.Value, _composer.End.Value) : null;
+    var overlapping = Overlapping(_composer);
+    <div class="abs-composer__backdrop" @onclick="CloseComposerAsync"></div>
+    <div class="abs-composer" @ref="_composerElement" @onkeydown="@(args => args.Key == "Escape" ? CloseComposerAsync() : Task.CompletedTask)">
+        <MudText Typo="Typo.subtitle1" Style="font-weight:600">
+            @(_composer.Existing is null ? "Новое отсутствие" : "Отсутствие")
+        </MudText>
+
+        <div class="abs-composer__kinds">
+            @foreach (var kind in Enum.GetValues<AbsenceKind>())
+            {
+                var current = kind;
+                <button type="button" class="@($"abs-kind abs-kind--{KindClass(current)}{(_composer.Kind == current ? " abs-kind--on" : null)}")"
+                        @onclick="@(() => _composer.Kind = current)">
+                    @WorkingDayLabel.Absence(current)
+                </button>
+            }
+        </div>
+
+        <div class="abs-composer__dates">
+            <MudDatePicker @bind-Date="_composer.Start" Label="С" Culture="@Russian" FirstDayOfWeek="DayOfWeek.Monday"
+                           DateFormat="dd.MM.yyyy" AutoClose="true" />
+            <MudDatePicker @bind-Date="_composer.End" Label="По" Culture="@Russian" FirstDayOfWeek="DayOfWeek.Monday"
+                           DateFormat="dd.MM.yyyy" AutoClose="true" />
+        </div>
+
+        <MudTextField @bind-Value="_composer.Comment" Label="Комментарий" Placeholder="Например, «Море»" MaxLength="200"
+                      Immediate="true" OnKeyDown="@(args => args.Key == "Enter" ? SaveAsync() : Task.CompletedTask)" />
+
+        @if (cost is not null)
+        {
+            <div class="abs-composer__cost">
+                <span><b>@Days(cost.CalendarDays)</b></span>
+                <span><b>@cost.WorkingDays</b> рабочих пропустите</span>
+                @if (_composer.Kind == AbsenceKind.Vacation)
+                {
+                    <span>из отпуска уйдёт <b>@cost.VacationDays</b></span>
+                    @if (cost.PublicHolidays > 0)
+                    {
+                        <span>праздников не в счёт: <b>@cost.PublicHolidays</b></span>
+                    }
+                }
+            </div>
+        }
+        @if (overlapping is not null)
+        {
+            <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">
+                Пересекается: @Describe(overlapping), @Range(overlapping.StartDate, overlapping.EndDate)
+            </MudAlert>
+        }
+
+        <div class="abs-composer__actions">
+            @if (_composer.Existing is not null)
+            {
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="@(() => DeleteAsync(_composer.Existing))">Удалить</MudButton>
+            }
+            <MudSpacer />
+            <MudButton Variant="Variant.Text" OnClick="CloseComposerAsync">Отмена</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" DropShadow="false"
+                       Disabled="@(!_composer.CanSave || overlapping is not null)" OnClick="SaveAsync">
+                @(_composer.Existing is null ? "Добавить" : "Сохранить")
+            </MudButton>
+        </div>
+    </div>
+}
+
+@code {
+    private static string Share(int days) =>
+        (Math.Min(days, AbsencePlan.YearlyVacationDays) * 100.0 / AbsencePlan.YearlyVacationDays)
+            .ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+}

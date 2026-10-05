@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Chronos.Domain.Entities.Blog;
+using Chronos.Domain.Entities.Calendar;
 using Chronos.Domain.Entities.Notifications;
 using Chronos.Domain.Entities.Extensions;
 using Chronos.Domain.Entities.Users;
@@ -25,6 +26,8 @@ namespace Chronos.Infrastructure.Data.Contexts
 		public DbSet<Article> Articles { get; set; }
 		public DbSet<UserExtension> UserExtensions { get; set; }
 		public DbSet<UserSettings> UserSettings { get; set; }
+		public DbSet<CalendarDay> CalendarDays { get; set; }
+		public DbSet<UserAbsence> UserAbsences { get; set; }
 
 		public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = new CancellationToken())
 		{

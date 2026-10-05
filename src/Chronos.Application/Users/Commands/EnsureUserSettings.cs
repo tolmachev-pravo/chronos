@@ -47,6 +47,7 @@ namespace Chronos.Application.Users.Commands
                         WorkingStartTime = settings.WorkingStartTime,
                         WorkingEndTime = settings.WorkingEndTime,
                         LunchTime = settings.LunchTime,
+                        ShortenPreHolidayDays = settings.ShortenPreHolidayDays,
                         CreatedAt = DateTime.UtcNow
                     },
                     cancellationToken);

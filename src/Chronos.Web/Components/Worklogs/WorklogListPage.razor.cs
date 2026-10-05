@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Components;
 using Chronos.Application.Authentication;
+using Chronos.Application.Calendar;
+using Chronos.Application.Calendar.Queries;
 using Chronos.Application.Users.Dto;
 using Chronos.Application.Users.Queries;
 using Chronos.Application.Worklogs.Dto;
@@ -25,6 +27,14 @@ namespace Chronos.Web.Components.Worklogs
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
         private UserSettingsDto _settings = UserSettingsDto.Default;
+        private string _username;
+
+        /// <summary>
+        /// What each day of the selected period is: read from our own tables as soon as the
+        /// period is chosen, so the day list shows holidays and absences before the slow read
+        /// of the period itself. See issue #310.
+        /// </summary>
+        private IReadOnlyDictionary<DateTime, WorkingCalendarDay> _calendar;
 
         /// <summary>
         /// The current week on every visit: it is the one being filled in, and the one a
@@ -56,15 +66,38 @@ namespace Chronos.Web.Components.Worklogs
             try
             {
                 var user = await IdentityService.GetCurrentUserAsync();
-                _settings = await Mediator.Send(new GetUserSettings.Query(user?.Username));
+                _username = user?.Username;
+                _settings = await Mediator.Send(new GetUserSettings.Query(_username));
             }
             catch (Exception e)
             {
                 ErrorHandler.ProcessError(e);
             }
+
+            await ReadCalendarAsync(_selected);
         }
 
-        private void Select(WorklogPeriod period) => _selected = period;
+        private async Task SelectAsync(WorklogPeriod period)
+        {
+            _selected = period;
+            await ReadCalendarAsync(period);
+        }
+
+        private async Task ReadCalendarAsync(WorklogPeriod period)
+        {
+            try
+            {
+                var calendar = await Mediator.Send(new GetWorkingCalendar.Query(_username, period.Start, period.End));
+                if (_selected == period)
+                    _calendar = calendar;
+            }
+            catch (Exception e)
+            {
+                // Without it the days are told by their weekday, as they always were.
+                _calendar = null;
+                ErrorHandler.ProcessError(e);
+            }
+        }
 
         private async Task ShowAsync()
         {

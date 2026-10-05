@@ -2,7 +2,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using System;
 using Chronos.Application.Articles;
+using Chronos.Application.Calendar;
+using Chronos.Infrastructure.WorkingDays;
 using Chronos.Application.Authentication;
 using Chronos.Application.Issues;
 using Chronos.Application.Storage;
@@ -97,6 +101,16 @@ namespace Chronos.Infrastructure
 
 			services.AddTransient<IUserRepository, UserRepository>();
 			services.AddTransient<IUserSettingsRepository, UserSettingsRepository>();
+
+			// Non-working days (issue #310): the production calendar shared by everyone and
+			// each user's own absences.
+			services.AddTransient<ICalendarDayRepository, CalendarDayRepository>();
+			services.AddTransient<IUserAbsenceRepository, UserAbsenceRepository>();
+			services.AddHttpClient<IProductionCalendarSource, XmlCalendarSource>((provider, client) =>
+			{
+				var options = provider.GetRequiredService<IOptions<ProductionCalendarOptions>>().Value;
+				client.Timeout = TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds));
+			});
 
 			services.AddDataProtection()
 				.PersistKeysToFileSystem(new System.IO.DirectoryInfo(

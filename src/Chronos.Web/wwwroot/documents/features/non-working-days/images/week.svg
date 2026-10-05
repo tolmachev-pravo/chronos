@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 340" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <rect x="1" y="1" width="638" height="338" rx="16" fill="#F7F8FA" stroke="#E4E7EE" stroke-width="2"/>
+
+  <text x="32" y="44" font-size="16" font-weight="700" fill="#1F2430">8 – 14 июня</text>
+  <text x="32" y="68" font-size="13" fill="#8A93A6">Списано 31 ч из 31 ч</text>
+
+  <!-- Working days -->
+  <g font-size="13">
+    <text x="32" y="104" font-weight="600" fill="#1F2430">Пн 8</text>
+    <rect x="96" y="96" width="300" height="6" rx="3" fill="#1FC8A5"/>
+    <text x="608" y="104" text-anchor="end" fill="#1F2430">8 / 8 ч</text>
+
+    <text x="32" y="138" font-weight="600" fill="#1F2430">Вт 9</text>
+    <rect x="96" y="130" width="300" height="6" rx="3" fill="#1FC8A5"/>
+    <text x="608" y="138" text-anchor="end" fill="#1F2430">8 / 8 ч</text>
+
+    <text x="32" y="172" font-weight="600" fill="#1F2430">Ср 10</text>
+    <rect x="96" y="164" width="300" height="6" rx="3" fill="#1FC8A5"/>
+    <text x="608" y="172" text-anchor="end" fill="#1F2430">8 / 8 ч</text>
+
+    <!-- Short day -->
+    <text x="32" y="206" font-weight="600" fill="#1F2430">Чт 11</text>
+    <rect x="96" y="198" width="300" height="6" rx="3" fill="#1FC8A5"/>
+    <text x="412" y="206" fill="#8260E5">сокращённый день</text>
+    <text x="608" y="206" text-anchor="end" fill="#1F2430">7 / 7 ч</text>
+
+    <!-- Holiday -->
+    <rect x="20" y="222" width="600" height="30" rx="8" fill="#FFF4E0"/>
+    <text x="32" y="242" font-weight="600" fill="#B26A00">Пт 12</text>
+    <text x="96" y="242" fill="#B26A00">праздник · День России</text>
+    <text x="608" y="242" text-anchor="end" fill="#B26A00">нормы нет</text>
+
+    <!-- Weekend -->
+    <text x="32" y="280" fill="#8A93A6">Сб 13</text>
+    <text x="96" y="280" fill="#8A93A6">выходной</text>
+    <text x="32" y="312" fill="#8A93A6">Вс 14</text>
+    <text x="96" y="312" fill="#8A93A6">выходной</text>
+  </g>
+
+  <!-- Absence callout -->
+  <g transform="translate(412 262)">
+    <rect width="196" height="58" rx="10" fill="#E5F1FB" stroke="#2196F3" stroke-width="1.5"/>
+    <text x="14" y="24" font-size="13" font-weight="700" fill="#0D5FA8">Отпуск 22–26 июня</text>
+    <text x="14" y="44" font-size="12" fill="#0D5FA8">заведён в профиле · норма 0</text>
+  </g>
+</svg>

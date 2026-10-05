@@ -41,7 +41,8 @@ namespace Chronos.UnitTests.Application.Users
                          Username = "alice",
                          WorkingStartTime = TimeSpan.FromHours(9),
                          WorkingEndTime = TimeSpan.FromHours(18),
-                         LunchTime = TimeSpan.FromMinutes(45)
+                         LunchTime = TimeSpan.FromMinutes(45),
+                         ShortenPreHolidayDays = false
                      });
 
             var result = await CreateHandler().Handle(new GetUserSettings.Query("alice"), CancellationToken.None);
@@ -51,6 +52,7 @@ namespace Chronos.UnitTests.Application.Users
                 Assert.That(result.WorkingStartTime, Is.EqualTo(TimeSpan.FromHours(9)));
                 Assert.That(result.WorkingEndTime, Is.EqualTo(TimeSpan.FromHours(18)));
                 Assert.That(result.LunchTime, Is.EqualTo(TimeSpan.FromMinutes(45)));
+                Assert.That(result.ShortenPreHolidayDays, Is.False);
             });
         }
 

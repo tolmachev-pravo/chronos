@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using Chronos.Application.Calendar;
 using Chronos.Application.Users.Dto;
 using Chronos.Application.Worklogs.Dto;
 using System;
@@ -20,6 +21,13 @@ namespace Chronos.Web.Components.Worklogs
         [Parameter] public IEnumerable<WorkingDay> Days { get; set; }
 
         [Parameter] public UserSettingsDto Settings { get; set; } = UserSettingsDto.Default;
+
+        /// <summary>
+        /// What each day of <see cref="Period"/> is — so a holiday or a vacation is not drawn
+        /// as a working day before the period is read. Days it does not hold are told by
+        /// their weekday. See issue #310.
+        /// </summary>
+        [Parameter] public IReadOnlyDictionary<DateTime, WorkingCalendarDay> Calendar { get; set; }
 
         [Inject] private IJSRuntime JS { get; set; }
 
@@ -46,7 +54,10 @@ namespace Chronos.Web.Components.Worklogs
                 {
                     var day = days?.GetValueOrDefault(date);
                     yield return day is null
-                        ? Cell.Pending(date, WorkingDayFormat.Norm(Settings), isLoaded: days is not null)
+                        ? Cell.Pending(
+                            Calendar?.GetValueOrDefault(date) ?? WorkingCalendarDay.ByWeekday(date),
+                            WorkingDayFormat.Norm(Settings),
+                            isLoaded: days is not null)
                         : Cell.From(day);
                 }
             }
@@ -77,27 +88,27 @@ namespace Chronos.Web.Components.Worklogs
             value.TotalHours == Math.Floor(value.TotalHours) ? $"{(int)value.TotalHours}" : $"{value.TotalHours:0.#}";
 
         private sealed record Cell(
-            DateTime Date,
+            WorkingCalendarDay Day,
             bool IsLoaded,
-            bool IsWeekend,
             TimeSpan Logged,
             TimeSpan Norm,
             int Suggestions)
         {
-            public static Cell Pending(DateTime date, TimeSpan norm, bool isLoaded) =>
-                new(date, isLoaded, IsWeekendDay(date), TimeSpan.Zero, IsWeekendDay(date) ? TimeSpan.Zero : norm, 0);
+            public static Cell Pending(WorkingCalendarDay day, TimeSpan workingTime, bool isLoaded) =>
+                new(day, isLoaded, TimeSpan.Zero, day.NormOf(workingTime), 0);
 
             public static Cell From(WorkingDay day) =>
-                new(day.Date.Date, true, day.IsWeekend, day.ActualWorklogTimeSpent,
-                    day.IsWeekend ? TimeSpan.Zero : day.Settings.WorkingTime, day.OpenSuggestionCount);
+                new(day.Calendar, true, day.ActualWorklogTimeSpent, day.Norm, day.OpenSuggestionCount);
 
-            private static bool IsWeekendDay(DateTime date) =>
-                date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+            public DateTime Date => Day.Date;
+
+            /// <summary>A weekend, a holiday or an absence: no norm, so no bar and no shortfall.</summary>
+            public bool IsDayOff => !Day.IsWorking;
 
             public bool IsClosed => IsLoaded && Norm > TimeSpan.Zero && Logged >= Norm;
 
             /// <summary>A working day that is over and still short of its norm.</summary>
-            public bool IsShort => IsLoaded && !IsWeekend && Logged < Norm && Date < DateTime.Today;
+            public bool IsShort => IsLoaded && !IsDayOff && Logged < Norm && Date < DateTime.Today;
 
             public int Percent => Norm > TimeSpan.Zero
                 ? (int)Math.Min(100, Math.Round(Logged / Norm * 100))
@@ -107,21 +118,25 @@ namespace Chronos.Web.Components.Worklogs
             {
                 get
                 {
-                    if (IsWeekend)
-                        return Logged > TimeSpan.Zero ? $"{WorklogDayStrip.Hours(Logged)} ч" : "выходной";
+                    if (IsDayOff)
+                        return Logged > TimeSpan.Zero ? $"{WorklogDayStrip.Hours(Logged)} ч" : WorkingDayLabel.Short(Day);
                     var logged = IsLoaded ? WorklogDayStrip.Hours(Logged) : "?";
                     return $"{logged} / {WorklogDayStrip.Hours(Norm)} ч";
                 }
             }
 
-            public string Title => Date.ToString("dddd, d MMMM", Russian);
+            public string Title => WorkingDayLabel.Describe(Day) is { } kind
+                ? $"{Date.ToString("dddd, d MMMM", Russian)} — {kind}"
+                : Date.ToString("dddd, d MMMM", Russian);
 
             public string Class
             {
                 get
                 {
                     var classes = new List<string> { "chr-day-strip__day" };
-                    if (IsWeekend) classes.Add("chr-day-strip__day--weekend");
+                    if (IsDayOff) classes.Add("chr-day-strip__day--weekend");
+                    if (Day.Kind == WorkingDayKind.Holiday) classes.Add("chr-day-strip__day--holiday");
+                    if (Day.Kind == WorkingDayKind.Absence) classes.Add("chr-day-strip__day--absence");
                     if (!IsLoaded) classes.Add("chr-day-strip__day--pending");
                     if (IsClosed) classes.Add("chr-day-strip__day--closed");
                     if (IsShort) classes.Add("chr-day-strip__day--short");

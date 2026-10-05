@@ -18,6 +18,10 @@
                     <span class="chr-day-bar-pct">@ProgressPercent</span>
                 </div>
             </div>
+            @if (DayKindText is not null)
+            {
+                <div class="chr-day-kind" title="@DayKindText">@DayKindText</div>
+            }
         </div>
     </td>
 </tr>

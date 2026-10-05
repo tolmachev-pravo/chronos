@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Chronos.Application.Calendar;
 using Chronos.Application.Worklogs.Commands;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Domain.Models.Events;
@@ -29,13 +30,22 @@ namespace Chronos.Web.Components.Worklogs
 
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; } = default!;
 
-        public Color Color => Entity.IsWeekend ? Color.Error : Color.Default;
+        public Color Color => Entity.IsWorking ? Color.Default : Color.Error;
 
+        /// <summary>
+        /// A day off is coloured by what it is — a weekend, a holiday or the user's own
+        /// absence — rather than by how full it is: there is no norm to fill. See issue #310.
+        /// </summary>
         private string DayHeaderClass
         {
             get
             {
-                if (Entity.IsWeekend) return "chr-day-header chr-day-header-weekend";
+                switch (Entity.Kind)
+                {
+                    case WorkingDayKind.Holiday: return "chr-day-header chr-day-header-holiday";
+                    case WorkingDayKind.Absence: return "chr-day-header chr-day-header-absence";
+                    case WorkingDayKind.Weekend: return "chr-day-header chr-day-header-weekend";
+                }
                 if (Entity.Progress >= 100) return "chr-day-header chr-day-header-done";
                 if (Entity.Progress > 0) return "chr-day-header chr-day-header-progress";
                 return "chr-day-header";
@@ -43,7 +53,8 @@ namespace Chronos.Web.Components.Worklogs
         }
 
         private string DayDateText => Entity.Date.ToString("ddd, dd MMM");
-        private string ProgressPercent => Entity.IsWeekend && Entity.Progress == 0 ? "—" : $"{Entity.Progress}%";
+        private string DayKindText => WorkingDayLabel.Describe(Entity.Calendar);
+        private string ProgressPercent => !Entity.IsWorking && Entity.Progress == 0 ? "—" : $"{Entity.Progress}%";
 
         private static string FormatTime(TimeSpan ts)
         {
