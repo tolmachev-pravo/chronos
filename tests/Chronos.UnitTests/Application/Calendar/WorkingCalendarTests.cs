@@ -1,5 +1,7 @@
 using Moq;
 using Chronos.Application.Calendar;
+using Chronos.Application.Users;
+using Chronos.Domain.Entities.Users;
 using Chronos.Domain.Entities.Calendar;
 
 namespace Chronos.UnitTests.Application.Calendar
@@ -13,6 +15,7 @@ namespace Chronos.UnitTests.Application.Calendar
     {
         private Mock<ICalendarDayRepository> _calendarDays;
         private Mock<IUserAbsenceRepository> _absences;
+        private Mock<IUserSettingsRepository> _settings;
         private WorkingCalendar _sut;
 
         [SetUp]
@@ -20,9 +23,10 @@ namespace Chronos.UnitTests.Application.Calendar
         {
             _calendarDays = new Mock<ICalendarDayRepository>();
             _absences = new Mock<IUserAbsenceRepository>();
+            _settings = new Mock<IUserSettingsRepository>();
             SetUpCalendar();
             SetUpAbsences();
-            _sut = new WorkingCalendar(_calendarDays.Object, _absences.Object);
+            _sut = new WorkingCalendar(_calendarDays.Object, _absences.Object, _settings.Object);
         }
 
         private void SetUpCalendar(params CalendarDay[] days) =>
@@ -66,6 +70,30 @@ namespace Chronos.UnitTests.Application.Calendar
             Assert.That(days[new DateTime(2026, 6, 12)].Title, Is.EqualTo("День России"));
             Assert.That(days[new DateTime(2026, 6, 13)].Kind, Is.EqualTo(WorkingDayKind.Workday));
             Assert.That(days[new DateTime(2026, 6, 13)].IsWorking, Is.True);
+        }
+
+        [Test]
+        public async Task GetDaysAsync_UserKeepsFullPreHolidayDay_TellsItAsWorkday()
+        {
+            SetUpCalendar(new CalendarDay { Date = new DateTime(2026, 6, 11), Kind = CalendarDayKind.ShortDay, Title = "Предпраздничный день" });
+            _settings
+                .Setup(repository => repository.GetAsync("john", It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new UserSettings { Username = "john", ShortenPreHolidayDays = false });
+
+            var day = (await _sut.GetDaysAsync("john", new DateTime(2026, 6, 11), new DateTime(2026, 6, 11))).Single().Value;
+
+            Assert.That(day.Kind, Is.EqualTo(WorkingDayKind.Workday));
+            Assert.That(day.NormOf(TimeSpan.FromHours(8)), Is.EqualTo(TimeSpan.FromHours(8)));
+        }
+
+        [Test]
+        public async Task GetDaysAsync_UserWithoutSettings_ShortensPreHolidayDay()
+        {
+            SetUpCalendar(new CalendarDay { Date = new DateTime(2026, 6, 11), Kind = CalendarDayKind.ShortDay, Title = "Предпраздничный день" });
+
+            var day = (await _sut.GetDaysAsync("john", new DateTime(2026, 6, 11), new DateTime(2026, 6, 11))).Single().Value;
+
+            Assert.That(day.Kind, Is.EqualTo(WorkingDayKind.ShortDay));
         }
 
         [Test]

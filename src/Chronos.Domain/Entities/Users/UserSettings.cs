@@ -13,5 +13,11 @@ namespace Chronos.Domain.Entities.Users
 		public TimeSpan WorkingStartTime { get; set; }
 		public TimeSpan WorkingEndTime { get; set; }
 		public TimeSpan LunchTime { get; set; }
+
+		/// <summary>
+		/// Whether a working day before a holiday is an hour shorter, as the Labour Code has
+		/// it. Off for those whose contract keeps the full day. See issue #310.
+		/// </summary>
+		public bool ShortenPreHolidayDays { get; set; } = true;
 	}
 }

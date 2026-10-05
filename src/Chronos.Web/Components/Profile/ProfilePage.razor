@@ -89,6 +89,16 @@
                     <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-4">@ValidationError</MudAlert>
                 }
 
+                @* The Labour Code shortens the day before a holiday by an hour, but not every
+                   contract does; the user says which applies to them. See issue #310. *@
+                <div class="prf-switch mt-4">
+                    <MudSwitch T="bool" @bind-Value="_shortenPreHolidayDays" Color="Color.Primary"
+                               Label="Предпраздничный день короче на час" />
+                    <MudText Typo="Typo.caption" Style="opacity:.6;display:block">
+                        По производственному календарю. Выключите, если по договору у вас полный день.
+                    </MudText>
+                </div>
+
                 <div class="prf-card__foot">
                     @if (IsDirty && ValidationError is null)
                     {

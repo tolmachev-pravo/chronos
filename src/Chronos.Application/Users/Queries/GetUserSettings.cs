@@ -34,7 +34,8 @@ namespace Chronos.Application.Users.Queries
                 return new UserSettingsDto(
                     entity.WorkingStartTime,
                     entity.WorkingEndTime,
-                    entity.LunchTime);
+                    entity.LunchTime,
+                    entity.ShortenPreHolidayDays);
             }
         }
     }

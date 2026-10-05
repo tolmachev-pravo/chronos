@@ -1,3 +1,4 @@
+using Chronos.Application.Users;
 using Chronos.Domain.Entities.Calendar;
 using System;
 using System.Collections.Generic;
@@ -17,13 +18,16 @@ namespace Chronos.Application.Calendar
     {
         private readonly ICalendarDayRepository _calendarDays;
         private readonly IUserAbsenceRepository _absences;
+        private readonly IUserSettingsRepository _settings;
 
         public WorkingCalendar(
             ICalendarDayRepository calendarDays,
-            IUserAbsenceRepository absences)
+            IUserAbsenceRepository absences,
+            IUserSettingsRepository settings)
         {
             _calendarDays = calendarDays;
             _absences = absences;
+            _settings = settings;
         }
 
         public async Task<IReadOnlyDictionary<DateTime, WorkingCalendarDay>> GetDaysAsync(
@@ -40,6 +44,10 @@ namespace Chronos.Application.Calendar
                 ? Array.Empty<UserAbsence>()
                 : await _absences.GetAsync(username, first, last, ct);
 
+            // A user whose contract keeps the full day before a holiday works it as any other.
+            var shortenPreHolidayDays = string.IsNullOrEmpty(username)
+                || (await _settings.GetAsync(username, ct))?.ShortenPreHolidayDays != false;
+
             var days = new Dictionary<DateTime, WorkingCalendarDay>();
             for (var date = first; date <= last; date = date.AddDays(1))
             {
@@ -49,7 +57,7 @@ namespace Chronos.Application.Calendar
                 if (absence is not null)
                     days[date] = new WorkingCalendarDay(date, WorkingDayKind.Absence, absence.Comment, absence.Kind);
                 else if (calendarDays.TryGetValue(date, out var calendarDay))
-                    days[date] = new WorkingCalendarDay(date, KindOf(calendarDay.Kind), calendarDay.Title);
+                    days[date] = new WorkingCalendarDay(date, KindOf(calendarDay.Kind, shortenPreHolidayDays), calendarDay.Title);
                 else
                     days[date] = WorkingCalendarDay.ByWeekday(date);
             }
@@ -57,10 +65,10 @@ namespace Chronos.Application.Calendar
             return days;
         }
 
-        private static WorkingDayKind KindOf(CalendarDayKind kind) => kind switch
+        private static WorkingDayKind KindOf(CalendarDayKind kind, bool shortenPreHolidayDays) => kind switch
         {
             CalendarDayKind.Holiday => WorkingDayKind.Holiday,
-            CalendarDayKind.ShortDay => WorkingDayKind.ShortDay,
+            CalendarDayKind.ShortDay when shortenPreHolidayDays => WorkingDayKind.ShortDay,
             _ => WorkingDayKind.Workday
         };
     }

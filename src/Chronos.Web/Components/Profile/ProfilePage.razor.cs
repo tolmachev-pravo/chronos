@@ -48,6 +48,7 @@ namespace Chronos.Web.Components.Profile
         private TimeSpan? _workingStartTime;
         private TimeSpan? _workingEndTime;
         private TimeSpan? _lunchTime;
+        private bool _shortenPreHolidayDays = true;
 
         protected override async Task OnInitializedAsync()
         {
@@ -182,6 +183,7 @@ namespace Chronos.Web.Components.Profile
             _workingStartTime = settings.WorkingStartTime;
             _workingEndTime = settings.WorkingEndTime;
             _lunchTime = settings.LunchTime;
+            _shortenPreHolidayDays = settings.ShortenPreHolidayDays;
         }
 
         /// <summary>
@@ -191,7 +193,8 @@ namespace Chronos.Web.Components.Profile
         private bool IsDirty =>
             _workingStartTime != _savedSettings.WorkingStartTime
             || _workingEndTime != _savedSettings.WorkingEndTime
-            || _lunchTime != _savedSettings.LunchTime;
+            || _lunchTime != _savedSettings.LunchTime
+            || _shortenPreHolidayDays != _savedSettings.ShortenPreHolidayDays;
 
         /// <summary>
         /// Mirrors UpsertUserSettingsValidator so the page says what is wrong instead of
@@ -246,7 +249,7 @@ namespace Chronos.Web.Components.Profile
             try
             {
                 var settings = new UserSettingsDto(
-                    _workingStartTime.Value, _workingEndTime.Value, _lunchTime.Value);
+                    _workingStartTime.Value, _workingEndTime.Value, _lunchTime.Value, _shortenPreHolidayDays);
                 await Mediator.Send(new UpsertUserSettings.Command(Username, settings));
                 _savedSettings = settings;
                 Snackbar.Add("Рабочий день сохранён", Severity.Success);
