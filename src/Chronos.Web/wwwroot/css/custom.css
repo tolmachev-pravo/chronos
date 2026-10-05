@@ -554,6 +554,11 @@
     font-size: inherit;
     line-height: inherit;
 }
+/* MudMarkdown spaces paragraphs with margin-bottom: 1.25em !important, which beats the
+   rule above; without this the unclamped hero preview ends in 20px of empty space. */
+.feat-card__preview .mud-markdown-body p:last-child {
+    margin-bottom: 0 !important;
+}
 .feat-card__date {
     display: inline-flex;
     align-items: center;
@@ -563,6 +568,20 @@
 }
 .feat-card__date-icon { opacity: .55; }
 .feat-page__skeleton { border-radius: 16px; }
+/* Heights of the hero and of a carousel card they stand in for; the compact sizes follow
+   the max-height media query next to .feat-hero. Two classes, since .mud-skeleton loads
+   later and sets a height of its own. */
+.feat-page__skeleton.feat-page__skeleton--hero { height: 300px; }
+.feat-page__skeleton.feat-page__skeleton--card { height: 348px; }
+@media (min-width: 1000px) {
+    .feat-page__skeleton.feat-page__skeleton--hero { height: 352px; }
+}
+@media (min-width: 1000px) and (max-height: 999.98px) {
+    .feat-page__skeleton.feat-page__skeleton--hero { height: 300px; }
+}
+@media (max-height: 999.98px) {
+    .feat-page__skeleton.feat-page__skeleton--card { height: 326px; }
+}
 
 /* Latest-features promo shown in the worklog empty state */
 /* The worklog empty state centers text; keep the promo left-aligned like /features. */
@@ -839,6 +858,28 @@
         color: rgba(var(--mud-palette-primary-rgb), .55);
         filter: drop-shadow(0 10px 34px rgba(var(--mud-palette-primary-rgb), .4));
         animation: feat-hero-float 6s ease-in-out infinite;
+    }
+}
+
+/* A maximized window on a 1080p screen leaves ~930px of viewport: tighten the banner so
+   the carousel below it fits without scrolling. The cards give up a preview line at the
+   same height (see CompactHeight in FeaturesPage.razor.cs). */
+@media (min-width: 1000px) and (max-height: 999.98px) {
+    .feat-hero {
+        padding: 28px 46px;
+    }
+    .feat-hero__badge { margin-bottom: 10px; }
+    .feat-hero__preview {
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+    }
+    .feat-hero__art { min-height: 180px; }
+    .feat-hero__art::before { width: 230px; height: 230px; }
+    .feat-hero__art::after { width: 160px; height: 160px; }
+    .feat-hero__art-glyph {
+        width: 124px !important;
+        height: 124px !important;
     }
 }
 

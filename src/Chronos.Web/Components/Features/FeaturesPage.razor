@@ -11,11 +11,11 @@
     @if (_isLoading)
     {
         <div class="feat-catalog mt-5">
-            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="260px" Class="feat-page__skeleton" />
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="feat-page__skeleton feat-page__skeleton--hero" />
             <div class="extv-glow__grid">
                 @for (var i = 0; i < 3; i++)
                 {
-                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="330px" Class="feat-page__skeleton" />
+                    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="feat-page__skeleton feat-page__skeleton--card" />
                 }
             </div>
         </div>
