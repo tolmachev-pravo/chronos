@@ -1,16 +1,9 @@
 @using Chronos.Web.Components.Common
 
 <div class="rel-page">
-    <div class="chr-section-head">
-        <MudText Typo="Typo.h5" Style="font-weight:700">Releases</MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
-            История релизов приложения — прямиком со страницы релизов в GitHub.
-        </MudText>
-    </div>
-
     @if (_isLoading)
     {
-        <div class="rel-list mt-5">
+        <div class="rel-list">
             @for (var i = 0; i < 3; i++)
             {
                 <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="180px" Class="rel-page__skeleton" />
@@ -19,7 +12,7 @@
     }
     else if (_result.Releases.Count > 0)
     {
-        <div class="rel-list mt-5">
+        <div class="rel-list">
             @foreach (var release in _result.Releases)
             {
                 <ReleaseCard Release="release" />
@@ -28,7 +21,7 @@
     }
     else if (_result.LoadFailed)
     {
-        <div class="rel-error mt-5">
+        <div class="rel-error">
             <MudIcon Icon="@Icons.Material.Outlined.CloudOff" Class="rel-error__icon" />
             <MudText Typo="Typo.h6" Class="rel-error__title">Не удалось загрузить релизы</MudText>
             <MudText Typo="Typo.body2" Class="rel-error__text">

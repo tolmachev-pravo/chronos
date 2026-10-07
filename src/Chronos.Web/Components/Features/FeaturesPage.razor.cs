@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using MudBlazor.Interop;
 using MudBlazor.Services;
 using Chronos.Web.Shared;
 using System;
@@ -24,8 +25,26 @@ namespace Chronos.Web.Components.Features
 
         private const int MaxColumns = 5;
 
+        /// <summary>
+        /// A card without its preview: 44px padding + 48px icon row + 12px + 2x32px title + 4px
+        /// + 48px footer, the 5px under the card and a little slack for font metrics. Every
+        /// preview line adds <see cref="PreviewLineHeight"/> (.9rem x 1.5).
+        /// </summary>
+        private const int CardChrome = 240;
+        private const double PreviewLineHeight = 21.6;
+
+        /// <summary>Vertical gap between two rows of cards — the .extv-glow__grid gap.</summary>
+        private const int RowGap = 20;
+
+        private const int MaxRows = 3;
+
+        /// <summary>The shortest preview a card shows when that buys the slide another row.</summary>
+        private const int CompactPreviewLines = 4;
+        private const int MaxPreviewLines = 12;
+
         [Inject] private IFeatureCatalogService FeatureCatalogService { get; init; } = default!;
         [Inject] private IBrowserViewportService BrowserViewportService { get; init; } = default!;
+        [Inject] private IResizeObserver ResizeObserver { get; init; } = default!;
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; } = default!;
 
         /// <summary>Feature shown in the full-width banner; excluded from the carousel.</summary>
@@ -40,30 +59,52 @@ namespace Chronos.Web.Components.Features
         /// <summary>Cards per slide — the number of columns the current viewport fits.</summary>
         private int _columns = 1;
 
-        /// <summary>Column count the last completed render used; see <see cref="OnAfterRenderAsync"/>.</summary>
-        private int _renderedColumns;
+        /// <summary>Rows of cards per slide — as many as the height under the banner fits.</summary>
+        private int _rows = 1;
 
-        /// <summary>One slide per row of cards, so a slide never wraps onto a second row.</summary>
-        private IEnumerable<FeatureSummary[]> Pages => _rest.Chunk(_columns);
+        /// <summary>Lines of preview text a card shows; grows with the height a row gets.</summary>
+        private int _previewLines = 4;
 
-        private int PageCount => (_rest.Count + _columns - 1) / _columns;
+        /// <summary>Slide size the last completed render used; see <see cref="OnAfterRenderAsync"/>.</summary>
+        private int _renderedPageSize;
+
+        /// <summary>The frame the carousel fills, and its last measured height (0 until measured).</summary>
+        private ElementReference _track;
+        private bool _isTrackObserved;
+        private double _trackHeight;
+
+        private int PageSize => _columns * _rows;
+
+        /// <summary>One slide per <see cref="_rows"/> rows of cards, so a slide never wraps further.</summary>
+        private IEnumerable<FeatureSummary[]> Pages => _rest.Chunk(PageSize);
+
+        private int PageCount => (_rest.Count + PageSize - 1) / PageSize;
 
         /// <summary>
-        /// Lines of preview text a card shows. A single card spans the whole row and fits the
-        /// teaser in fewer lines, so that layout also needs less height.
+        /// The fewest preview lines a card is allowed. A single card spans the whole row and fits
+        /// the teaser in fewer lines, so that layout also needs less height.
         /// </summary>
-        private int PreviewLines => _columns == 1 ? 4 : 5;
+        private int MinPreviewLines => _columns == 1 ? 4 : 5;
 
         /// <summary>
-        /// MudCarousel positions its slides absolutely, so the track needs an explicit height.
         /// A card is at its tallest with a two-line title and a full preview — both are clamped
-        /// (see .feat-card__title and --feat-preview-lines), so that is a real maximum:
-        /// 44px padding + 48px icon row + 12px + 2x32px title + 4px + PreviewLines x 21.6px
-        /// + 48px footer, plus the slide padding and the 5px under the card. Rounded up with a
-        /// little slack for font metrics: a card that runs out of room does not scroll or grow,
-        /// it clips the preview mid-line.
+        /// (see .feat-card__title and --feat-preview-lines), so that is a real maximum. A card that
+        /// runs out of room does not scroll or grow, it clips the preview mid-line.
         /// </summary>
-        private int TrackHeight => _columns == 1 ? 344 : 396;
+        private static int RowHeightFor(int previewLines) =>
+            CardChrome + (int)Math.Ceiling(previewLines * PreviewLineHeight);
+
+        /// <summary>
+        /// The least height the carousel gets: one row of the shortest cards. MudCarousel positions
+        /// its slides absolutely, so below this the page scrolls instead of the cards shrinking.
+        /// </summary>
+        private int MinTrackHeight => RowHeightFor(MinPreviewLines) + VerticalPadding;
+
+        /// <summary>
+        /// Slide padding above and below the cards. Decided by the column count alone: whether the
+        /// bullets show depends on the page count, which depends on the rows worked out from this.
+        /// </summary>
+        private int VerticalPadding => 6 + (_columns > 1 ? 42 : 12);
 
         /// <summary>
         /// Overlaid arrows on a one-card slide leave the card no width on a phone, and a bullet
@@ -80,8 +121,8 @@ namespace Chronos.Web.Components.Features
         private int BottomPadding => ShowOverlayControls ? 42 : 12;
 
         private string CarouselStyle =>
-            $"--feat-cols:{_columns};--feat-preview-lines:{PreviewLines};" +
-            $"--feat-side-pad:{SidePadding}px;--feat-bottom-pad:{BottomPadding}px;height:{TrackHeight}px";
+            $"--feat-cols:{_columns};--feat-rows:{_rows};--feat-preview-lines:{_previewLines};" +
+            $"--feat-side-pad:{SidePadding}px;--feat-bottom-pad:{BottomPadding}px";
 
         Guid IBrowserViewportObserver.Id { get; } = Guid.NewGuid();
 
@@ -121,13 +162,87 @@ namespace Chronos.Web.Components.Features
                 await BrowserViewportService.SubscribeAsync(this, fireImmediately: true);
             }
 
+            // The frame appears once the catalog has loaded; from then on its height follows the
+            // window, and every change of it may change the rows and the preview length.
+            if (!_isTrackObserved && _track.Id is not null)
+            {
+                _isTrackObserved = true;
+                ResizeObserver.OnResized += OnTrackResized;
+                var rect = await ResizeObserver.Observe(_track);
+                if (rect is not null && ApplyTrackHeight(rect.Height))
+                {
+                    StateHasChanged();
+                }
+            }
+
             // MudCarousel counts its bullets from the MudCarouselItem children, and those only
             // register themselves while the render that changed their number is running. One more
             // render once they have, otherwise the bullets keep the previous slide count.
-            if (_renderedColumns != _columns)
+            if (_renderedPageSize != PageSize)
             {
-                _renderedColumns = _columns;
+                _renderedPageSize = PageSize;
                 StateHasChanged();
+            }
+        }
+
+        private void OnTrackResized(IDictionary<ElementReference, BoundingClientRect> changes)
+        {
+            if (changes.TryGetValue(_track, out var rect) && ApplyTrackHeight(rect.Height))
+            {
+                InvokeAsync(StateHasChanged);
+            }
+        }
+
+        private bool ApplyTrackHeight(double height)
+        {
+            _trackHeight = height;
+            return Relayout();
+        }
+
+        /// <summary>
+        /// Fits the cards into the measured height: as many rows as fit with the shortest preview,
+        /// then the room a row has left goes to longer previews.
+        /// </summary>
+        /// <returns>Whether anything the page renders has changed.</returns>
+        private bool Relayout()
+        {
+            var rows = 1;
+            var previewLines = MinPreviewLines;
+
+            if (_trackHeight > 0)
+            {
+                // Another row of cards is worth more than longer previews: it is added as soon as
+                // it fits with the shortest preview a card can have at all.
+                var available = _trackHeight - VerticalPadding;
+                var compactRow = RowHeightFor(CompactPreviewLines);
+                while (rows < MaxRows && (rows + 1) * compactRow + rows * RowGap <= available)
+                {
+                    rows++;
+                }
+
+                var rowHeight = (available - (rows - 1) * RowGap) / rows;
+                var fitting = (int)Math.Floor((rowHeight - CardChrome) / PreviewLineHeight);
+                var least = rows > 1 ? CompactPreviewLines : MinPreviewLines;
+                previewLines = Math.Clamp(fitting, least, MaxPreviewLines);
+            }
+
+            if (rows == _rows && previewLines == _previewLines)
+            {
+                return false;
+            }
+
+            _rows = rows;
+            _previewLines = previewLines;
+            ClampPage();
+            return true;
+        }
+
+        /// <summary>Fewer cards per slide means more slides and vice versa; keep the selection in range.</summary>
+        private void ClampPage()
+        {
+            if (PageCount > 0)
+            {
+                _page = Math.Clamp(_page, 0, PageCount - 1);
             }
         }
 
@@ -141,16 +256,19 @@ namespace Chronos.Web.Components.Features
 
             _columns = columns;
 
-            // Fewer columns means more slides and vice versa; keep the selection in range.
-            if (PageCount > 0)
-            {
-                _page = Math.Clamp(_page, 0, PageCount - 1);
-            }
+            // The column count also moves the shortest preview and the slide padding.
+            Relayout();
+            ClampPage();
 
             return InvokeAsync(StateHasChanged);
         }
 
-        public async ValueTask DisposeAsync() => await BrowserViewportService.UnsubscribeAsync(this);
+        public async ValueTask DisposeAsync()
+        {
+            await BrowserViewportService.UnsubscribeAsync(this);
+            ResizeObserver.OnResized -= OnTrackResized;
+            await ResizeObserver.DisposeAsync();
+        }
 
         private void ShowPage(int page) => _page = Math.Clamp(page, 0, PageCount - 1);
 
