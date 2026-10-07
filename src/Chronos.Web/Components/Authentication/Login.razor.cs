@@ -1,6 +1,8 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.WebUtilities;
+using Chronos.Web.Authentication;
 using Chronos.Application.Authentication;
 using Chronos.Application.Authentication.Dto;
 using Chronos.Web.Components.Common;
@@ -18,6 +20,20 @@ namespace Chronos.Web.Components.Authentication
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
         private readonly ComponentModel Model = ComponentModel.Create();
+
+        /// <summary>
+        /// The login page is also what an anonymous visitor sees on any address, so the reason
+        /// is read off the current URL rather than a routed query parameter.
+        /// </summary>
+        private bool IsRefused
+        {
+            get
+            {
+                var query = QueryHelpers.ParseQuery(new Uri(NavigationManager.Uri).Query);
+                return query.TryGetValue(RefusedCredentials.ReasonParameter, out var reason)
+                    && reason == RefusedCredentials.Reason;
+            }
+        }
 
         public async Task BasicOnKeyUp(KeyboardEventArgs keyboardEventArgs)
         {

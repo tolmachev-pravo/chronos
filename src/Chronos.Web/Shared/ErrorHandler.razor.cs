@@ -2,19 +2,15 @@
 using Microsoft.Extensions.Logging;
 using MudBlazor;
 using Chronos.Application.Authentication;
+using Chronos.Web.Authentication;
 using System;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Chronos.Web.Shared
 {
     public partial class ErrorHandler
     {
-        /// <summary>
-        /// Where a refused user is sent: signing out clears the cookie their stale
-        /// credentials live in, and the login page is what follows. See issue #305.
-        /// </summary>
-        private const string LogoutPath = "/logout";
-
         [Parameter] public RenderFragment ChildContent { get; set; }
 
         [Inject] public ISnackbar Snackbar { get; set; }
@@ -29,7 +25,10 @@ namespace Chronos.Web.Shared
                 return;
             }
 
-            var message = $"<b>{ex.Source}</b><br>{ex.Message}";
+            // A plain string is shown as text, tags and all; the markup has to say it is markup,
+            // and what goes into it comes from the exception, so it is encoded.
+            var message = new MarkupString(
+                $"<b>{WebUtility.HtmlEncode(ex.Source)}</b><br>{WebUtility.HtmlEncode(ex.Message)}");
             Snackbar.Add(
                 message,
                 Severity.Error,
@@ -47,9 +46,7 @@ namespace Chronos.Web.Shared
         private void ProcessAuthenticationError(Exception exception)
         {
             Snackbar.Add(
-                "<b>Сессия Jira недействительна</b><br>Jira отклонила ваши учётные данные — " +
-                "скорее всего, изменился пароль. Войдите заново: вход по personal access " +
-                "token переживает смену пароля.",
+                new MarkupString($"<b>{RefusedCredentials.Title}</b><br>{RefusedCredentials.Explanation}"),
                 Severity.Error,
                 config =>
                 {
@@ -58,7 +55,7 @@ namespace Chronos.Web.Shared
                     config.RequireInteraction = true;
                     config.OnClick = _ =>
                     {
-                        Navigation.NavigateTo(LogoutPath, forceLoad: true);
+                        Navigation.NavigateTo(RefusedCredentials.LogoutPath, forceLoad: true);
                         return Task.CompletedTask;
                     };
                 });

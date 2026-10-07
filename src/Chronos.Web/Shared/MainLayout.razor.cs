@@ -8,6 +8,9 @@ using Chronos.Application.Users.Commands;
 using Chronos.Application.Users.Dto;
 using Chronos.Application.Worklogs.Dto;
 using Chronos.Domain.Models.Users;
+using Chronos.Web.Authentication;
+using Microsoft.Extensions.Logging;
+using MudBlazor;
 using System;
 using System.Threading.Tasks;
 
@@ -23,6 +26,9 @@ namespace Chronos.Web.Shared
         [Inject] private IStorage<string, UserWorklogFilter> _userWorklogFilterStorage { get; set; }
         [Inject] private IIdentityService _identityService { get; set; }
         [Inject] private IMediator _mediator { get; set; }
+        [Inject] private NavigationManager _navigation { get; set; }
+        [Inject] private ISnackbar _snackbar { get; set; }
+        [Inject] private ILogger<MainLayout> _logger { get; set; }
         [CascadingParameter] public ErrorHandler ErrorHandler { get; set; }
 
         /// <summary>
@@ -79,7 +85,10 @@ namespace Chronos.Web.Shared
             if (firstRender)
             {
                 await RenderThemeAsync();
-                await RenderProfileAsync();
+                if (!await RenderProfileAsync())
+                {
+                    return;
+                }
                 await EnsureUserRecordsAsync();
                 _model.Initialize();
                 StateHasChanged();
@@ -99,23 +108,52 @@ namespace Chronos.Web.Shared
             await _userThemeStorage.UpdateAsync(user?.Key, theme);
         }
 
-        private async Task RenderProfileAsync()
+        /// <summary>
+        /// Reads the profile from Jira on every opening, even when the cache already has it:
+        /// the cache outlives credentials, and while it answered, a cookie Jira no longer
+        /// accepts went unnoticed until the app pool restarted and the next opening crashed
+        /// (issue #322). This is the first request to Jira an opening makes, so it is also
+        /// where a refusal is noticed.
+        /// </summary>
+        /// <returns>False when the user is being signed out and nothing else should run.</returns>
+        private async Task<bool> RenderProfileAsync()
         {
-            if (_model.Profile.IsInitialized)
-            {
-                return;
-            }
-
             var user = await _identityService.GetCurrentUserAsync();
             if (user == null)
             {
-                return;
+                return true;
             }
-            else
+
+            try
             {
                 await _userProfileStorage.ForceInitAsync(user.Key);
                 var profile = await _userProfileStorage.GetValueAsync(user.Key);
                 _model.Profile.Initialize(profile);
+                return true;
+            }
+            catch (Exception e) when (JiraAuthenticationException.Describes(e))
+            {
+                // Nothing on any page will work with these credentials, so there is nothing
+                // to ask: out, and the login page says why (issue #322).
+                _logger.LogWarning(e, "Jira refused the credentials of the current user on opening; signing out");
+                _navigation.NavigateTo(RefusedCredentials.LogoutPath, forceLoad: true);
+                return false;
+            }
+            catch (Exception e)
+            {
+                // Jira did not answer, or answered with an error of its own. That is no reason
+                // to sign anyone out or to bring the page down: the profile only fills the
+                // AppBar, and a cached one does that well enough.
+                _logger.LogWarning(e, "Could not read the profile of the current user from Jira");
+                if (!_model.Profile.IsInitialized)
+                {
+                    _snackbar.Add(
+                        new MarkupString(
+                            "<b>Jira сейчас недоступна</b><br>Не удалось загрузить профиль. " +
+                            "Если что-то не загружается, обновите страницу чуть позже."),
+                        Severity.Warning);
+                }
+                return true;
             }
         }
 
