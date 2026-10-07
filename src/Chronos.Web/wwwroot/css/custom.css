@@ -1349,6 +1349,31 @@ body #components-reconnect-modal {
     text-overflow: ellipsis;
 }
 .chr-period-panel__picker { position: relative; }
+
+/* «Другой период» (issue #317). The popover opens under the period panel, which always
+   sits at the top of the page, ~112px down: below that it is capped and scrolls, and the
+   buttons stay pinned to its bottom — on a phone held sideways nothing else would fit. */
+.chr-period-popover {
+    max-height: calc(100dvh - 128px);
+    overflow-y: auto;
+}
+.chr-period-picker__actions {
+    position: sticky;
+    bottom: -12px;           /* over the popover's pa-3, so nothing shows through below */
+    z-index: 1;
+    margin-top: 8px;
+    padding: 4px 0 12px;
+    margin-bottom: -12px;
+    background: var(--mud-palette-surface);
+}
+/* A phone: one month instead of two stacked ones — the first, where the chosen range
+   starts; the second is the month after it — and the range in the toolbar at a size that
+   fits on one line. */
+@media (max-width: 599.98px) {
+    .chr-period-picker .mud-picker-calendar-container:nth-child(n+2) { display: none; }
+    .chr-period-picker .mud-picker-datepicker-toolbar { min-height: 0; padding-top: 8px; padding-bottom: 8px; }
+    .chr-period-picker .mud-button-date .mud-button-label { font-size: 1.25rem; line-height: 1.3; }
+}
 .chr-period-panel__action { min-height: 32px; }
 .chr-period-panel__logged { color: var(--mud-palette-text-primary); font-weight: 600; }
 

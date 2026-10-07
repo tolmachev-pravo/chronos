@@ -16,7 +16,7 @@
         <div class="chr-period-panel__picker">
             <MudIconButton Icon="@Icons.Material.Outlined.CalendarMonth" Size="Size.Small" aria-label="Другой период"
                            Disabled="IsLoading" OnClick="@(() => _pickerOpen = !_pickerOpen)" />
-            <MudPopover Open="_pickerOpen" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Class="pa-3">
+            <MudPopover Open="_pickerOpen" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Class="pa-3 chr-period-popover">
                 <WorklogPeriodPicker Initial="Selected" OnPicked="PickAsync" />
             </MudPopover>
         </div>
