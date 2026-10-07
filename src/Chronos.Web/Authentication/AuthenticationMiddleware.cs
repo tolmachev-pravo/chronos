@@ -68,7 +68,10 @@ namespace Chronos.Web.Authentication
             else if (context.Request.Path == "/logout")
             {
                 await context.SignOutAsync();
-                context.Response.Redirect("/");
+                // Only the one known reason is carried over — a flag, never a URL taken
+                // from the request.
+                var refused = context.Request.Query[RefusedCredentials.ReasonParameter] == RefusedCredentials.Reason;
+                context.Response.Redirect(refused ? RefusedCredentials.LoginPath : "/");
                 return;
             }
             else

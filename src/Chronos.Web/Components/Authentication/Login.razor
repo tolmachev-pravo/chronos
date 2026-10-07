@@ -1,9 +1,19 @@
 ﻿@page "/login"
+@using Chronos.Web.Authentication
 @attribute [AllowAnonymous]
 
 <MudOverlay Visible="@Model.InProgress" DarkBackground="true" Absolute="true">
     <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
 </MudOverlay>
+
+@* Sent here because Jira refused the credentials in the cookie (issues #305, #322): the
+   page that signed the user out cannot say why, so this one does. *@
+@if (IsRefused)
+{
+    <MudAlert Severity="Severity.Warning" Class="mb-3">
+        <b>@RefusedCredentials.Title</b><br />@RefusedCredentials.Explanation
+    </MudAlert>
+}
 
 @* The token comes first, and the first panel is the one a tab set opens on: a token
    outlives a password change, and a password kept in the authentication cookie is
