@@ -633,9 +633,6 @@
    Features section ("Новинки") — reuses the .extv-glow card
    language; only the feature-specific bits live here.
    ============================================================ */
-.chr-section-head {
-    max-width: 720px;
-}
 .feat-card {
     cursor: pointer;
 }

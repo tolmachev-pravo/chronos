@@ -2,19 +2,10 @@
 @using Chronos.Web.Components.Profile.Absences
 
 <div class="prf-page">
-    <div class="chr-section-head">
-        <MudText Typo="Typo.h5" Style="font-weight:700">Profile</MudText>
-        @* Says which half of the page is yours to change — the account card is read-only
-           because Jira owns it. *@
-        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
-            Chronos знает вас по Jira — остальное вы настраиваете сами.
-        </MudText>
-    </div>
-
     @* Settings and absences are separate tabs: the year of absences needs the whole
        width, and it is where people come back to. ?tab=absences opens it. See issue #310. *@
     <MudTabs @bind-ActivePanelIndex="ActiveTab" Elevation="0" ApplyEffectsToContainer="true" Color="Color.Transparent"
-             SliderColor="Color.Primary" Class="prf-tabs mt-4" PanelClass="pt-1">
+             SliderColor="Color.Primary" Class="prf-tabs" PanelClass="pt-1">
         <MudTabPanel Text="Настройки" Icon="@Icons.Material.Outlined.Tune">
             <MudPaper Elevation="0" Class="prf-card prf-hero mt-5">
                 <MudAvatar Class="prf-hero__avatar" Color="Color.Primary">

@@ -1,16 +1,9 @@
 @using Chronos.Web.Components.Common
 
 <div class="feat-page">
-    <div class="chr-section-head">
-        <MudText Typo="Typo.h5" Style="font-weight:700">Features</MudText>
-        <MudText Typo="Typo.body2" Style="opacity:.6" Class="mt-1">
-            Свежие возможности приложения — что нового и как этим пользоваться.
-        </MudText>
-    </div>
-
     @if (_isLoading)
     {
-        <div class="feat-catalog mt-5">
+        <div class="feat-catalog">
             <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="feat-page__skeleton feat-page__skeleton--hero" />
             <div class="extv-glow__grid">
                 @for (var i = 0; i < 3; i++)
@@ -26,7 +19,7 @@
     }
     else
     {
-        <div class="feat-catalog mt-5">
+        <div class="feat-catalog">
             <FeatureHero Feature="_hero" />
 
             @if (_rest.Count > 0)
