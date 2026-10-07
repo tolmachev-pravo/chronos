@@ -1,6 +1,6 @@
 @using Chronos.Web.Components.Common
 
-<div class="feat-page">
+<div class="feat-page flex-grow-1">
     @if (_isLoading)
     {
         <div class="feat-catalog">
@@ -24,28 +24,32 @@
 
             @if (_rest.Count > 0)
             {
-                <MudCarousel TData="object"
-                             Class="feat-carousel"
-                             Style="@CarouselStyle"
-                             ShowArrows="@ShowOverlayControls"
-                             ShowBullets="@ShowOverlayControls"
-                             NavigationButtonsClass="feat-carousel__control"
-                             BulletsClass="feat-carousel__control"
-                             EnableSwipeGesture="true"
-                             AutoCycle="false"
-                             @bind-SelectedIndex="_page">
-                    @foreach (var page in Pages)
-                    {
-                        <MudCarouselItem Transition="Transition.Slide">
-                            <div class="extv-glow__grid feat-carousel__page @(_columns == 1 ? "feat-carousel__page--single" : null)">
-                                @foreach (var feature in page)
-                                {
-                                    <FeatureCard Feature="feature" />
-                                }
-                            </div>
-                        </MudCarouselItem>
-                    }
-                </MudCarousel>
+                @* Takes whatever height the banner leaves; the page measures it to decide how many
+                   rows of cards a slide holds and how much of each preview they show. *@
+                <div class="feat-carousel__frame" style="min-height:@(MinTrackHeight)px" @ref="_track">
+                    <MudCarousel TData="object"
+                                 Class="feat-carousel"
+                                 Style="@CarouselStyle"
+                                 ShowArrows="@ShowOverlayControls"
+                                 ShowBullets="@ShowOverlayControls"
+                                 NavigationButtonsClass="feat-carousel__control"
+                                 BulletsClass="feat-carousel__control"
+                                 EnableSwipeGesture="true"
+                                 AutoCycle="false"
+                                 @bind-SelectedIndex="_page">
+                        @foreach (var page in Pages)
+                        {
+                            <MudCarouselItem Transition="Transition.Slide">
+                                <div class="extv-glow__grid feat-carousel__page @(_columns == 1 ? "feat-carousel__page--single" : null)">
+                                    @foreach (var feature in page)
+                                    {
+                                        <FeatureCard Feature="feature" />
+                                    }
+                                </div>
+                            </MudCarouselItem>
+                        }
+                    </MudCarousel>
+                </div>
 
                 @if (ShowCounter)
                 {

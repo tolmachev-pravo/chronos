@@ -822,10 +822,21 @@
    Features catalog page: a full-width hero banner for the top
    feature, followed by the standard responsive card grid.
    ------------------------------------------------------------ */
+/* The page fills the viewport (see .chr-fill-height): the banner keeps its own height and
+   the carousel frame takes the rest, down to its min-height — below that the page scrolls. */
+.feat-page {
+    display: flex;
+    flex-direction: column;
+}
 .feat-catalog {
     display: flex;
     flex-direction: column;
+    flex: 1 1 auto;
     gap: 22px;
+}
+.feat-carousel__frame {
+    position: relative;
+    flex: 1 1 auto;
 }
 
 /* ------------------------------------------------------------
@@ -837,6 +848,10 @@
    ------------------------------------------------------------ */
 .feat-carousel {
     background: transparent;
+    /* MudCarousel positions its slides absolutely, so it has no height of its own:
+       it covers the frame, whose height is the room left under the banner. */
+    position: absolute !important;
+    inset: 0;
 }
 /* MudCarousel draws its arrows and bullets for a slide over a picture: the carousel's
    colour (.mud-inherit-text, !important) at .75 opacity (set inline). Over the bare page
@@ -852,7 +867,11 @@
 .feat-carousel__page {
     /* Explicit columns instead of auto-fill: the count has to match the slice. */
     grid-template-columns: repeat(var(--feat-cols, 1), minmax(0, 1fr));
-    grid-template-rows: minmax(0, 1fr);
+    /* Rows as tall as their tallest card, not as the track: the page sizes the previews
+       so the rows fit, and the height they leave is split above and below them rather
+       than turning into empty space inside every card. */
+    grid-template-rows: repeat(var(--feat-rows, 1), auto);
+    align-content: center;
     height: 100%;
     box-sizing: border-box;
     /* Side room for the arrows and bottom room for the bullets — both only when they
