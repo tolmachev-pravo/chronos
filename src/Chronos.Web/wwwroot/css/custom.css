@@ -341,6 +341,10 @@
 
 /* The year of absences (issue #310): twelve months beside a balance and a list. */
 .prf-tabs .mud-tabs-tabbar { border-bottom: 1px solid var(--mud-palette-lines-default); }
+/* MudBlazor hangs the tab badge past the end of the label, and .mud-tab clips its overflow
+   (it has to, for the ripple) — so the counter on «Отсутствия» lost its right edge (#318).
+   Room inside the tab instead of unclipping it, enough for a two-digit count. */
+.prf-tabs .mud-tab-badge { margin-inline-end: 16px; }
 .abs-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
 @media (max-width: 960px) { .abs-layout { grid-template-columns: 1fr; } }
 .abs-side { display: flex; flex-direction: column; gap: 20px; }
