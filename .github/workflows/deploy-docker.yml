@@ -50,7 +50,7 @@ jobs:
         fi
         for file in docker-compose.yml .env; do
           if [ ! -f "$COMPOSE_DIR/$file" ]; then
-            echo "::error::$COMPOSE_DIR/$file is missing. Copy it from deploy/docker, see docs/docker.md."
+            echo "::error::$COMPOSE_DIR/$file is missing. Copy it from deploy/docker, see deploy/docker/README.md."
             exit 1
           fi
         done

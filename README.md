@@ -286,7 +286,7 @@ dotnet ef migrations add Migration_Name --startup-project ../Chronos.Web --conte
 своей версии. На Linux-сервер образ разворачивает
 [Deploy to Docker](.github/workflows/deploy-docker.yml): он срабатывает на тот же опубликованный релиз,
 что и IIS, поэтому оба деплоя могут работать параллельно. Как настроить сервер, перенести данные с IIS
-и откатиться, описано в [docs/docker.md](docs/docker.md).
+и откатиться, описано в [deploy/docker/README.md](deploy/docker/README.md).
 
 ## Обратная связь
 

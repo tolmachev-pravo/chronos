@@ -4,7 +4,7 @@
 #   docker compose pull && docker compose up -d
 #
 # The Deploy to Docker workflow writes the released version into CHRONOS_TAG in .env and
-# runs the same two commands. See docs/docker.md.
+# runs the same two commands. See deploy/docker/README.md.
 
 services:
   chronos:
