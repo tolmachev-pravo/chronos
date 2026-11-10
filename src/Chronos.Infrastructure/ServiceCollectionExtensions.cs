@@ -39,8 +39,14 @@ namespace Chronos.Infrastructure
 {
     public static class ServiceCollectionExtensions
     {
-        public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration jiraConfigurationSection)
+        public const string ConnectionStringName = "Chronos";
+        public const string DefaultConnectionString = "Data Source = JiraCopilot.sqlite3";
+        public const string DataProtectionKeysPathKey = "DataProtection:KeysPath";
+
+        public static IServiceCollection AddInfrastructureLayer(this IServiceCollection services, IConfiguration configuration)
         {
+            var jiraConfigurationSection = configuration.GetSection("Jira");
+
             services.AddTransient<IJiraService, JiraService>();
             services.Configure<JiraConfiguration>(jiraConfigurationSection);
 
@@ -89,12 +95,21 @@ namespace Chronos.Infrastructure
             services.AddTransient<IMemoryCache<string, Issue>, IssueMemoryCache>();
 
 			// The file name predates the rename to Chronos (issue #226) and stays as it is on
-			// purpose. The path is relative, so on the server it resolves inside the deployed
-			// site folder. Renaming it here without renaming the file on the server first, with
-			// the AppPool stopped, silently creates an empty database and hides every existing
-			// user, their extensions and their encrypted secrets.
+			// purpose. The default path is relative, so under IIS it resolves inside the
+			// deployed site folder. Renaming it here without renaming the file on the server
+			// first, with the AppPool stopped, silently creates an empty database and hides
+			// every existing user, their extensions and their encrypted secrets.
+			//
+			// The Docker image (issue #325) points ConnectionStrings:Chronos at its data volume.
+			// The default lives here and not in appsettings.json because the IIS deployment
+			// keeps the appsettings already on the server, which never get the new key.
+			var connectionString = configuration.GetConnectionString(ConnectionStringName);
+			if (string.IsNullOrWhiteSpace(connectionString))
+			{
+				connectionString = DefaultConnectionString;
+			}
 			services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite("Data Source = JiraCopilot.sqlite3"));
+                options.UseSqlite(connectionString));
 
 			services.AddTransient<IArticleRepository, ArticleRepository>();
 			services.AddTransient<IArticleDataSource, ArticleDataSource>();
@@ -112,9 +127,16 @@ namespace Chronos.Infrastructure
 				client.Timeout = TimeSpan.FromSeconds(Math.Max(1, options.TimeoutSeconds));
 			});
 
+			// The keys encrypt the secrets users store (extension passwords, tokens). Losing
+			// the folder makes every stored secret unreadable, so a container must keep it on
+			// a volume next to the database: DataProtection:KeysPath says where.
+			var keysPath = configuration[DataProtectionKeysPathKey];
+			if (string.IsNullOrWhiteSpace(keysPath))
+			{
+				keysPath = System.IO.Path.Combine(System.AppContext.BaseDirectory, "DataProtection-Keys");
+			}
 			services.AddDataProtection()
-				.PersistKeysToFileSystem(new System.IO.DirectoryInfo(
-					System.IO.Path.Combine(System.AppContext.BaseDirectory, "DataProtection-Keys")))
+				.PersistKeysToFileSystem(new System.IO.DirectoryInfo(keysPath))
 				.SetApplicationName("Chronos");
 			services.AddSingleton<ISecretProtector, DataProtectionSecretProtector>();
 

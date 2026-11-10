@@ -1,0 +1,100 @@
+name: Deploy to Docker (Self-Hosted)
+
+# The Linux counterpart of Deploy to IIS (issue #325). Runs on a self-hosted runner that
+# lives on the Docker host, next to the folder holding docker-compose.yml and .env from
+# deploy/docker. The image itself was built and pushed by the Release workflow on the tag.
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to deploy, for example v1.6.0 (also how you roll back)'
+        required: true
+        type: string
+
+# two deployments must never touch the container at the same time
+concurrency:
+  group: deploy-docker
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Pre-releases are published for testing and must not reach production on their own.
+    # Until COMPOSE_DIR is set there is no Docker host yet, and a release would otherwise
+    # leave this job queued for a runner that does not exist.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.release.prerelease == false && vars.COMPOSE_DIR != '')
+    runs-on: [ self-hosted, linux ]
+
+    # No checkout and no token: the image is pulled from ghcr.io by the Docker host itself,
+    # anonymously or with the login the host already has.
+    permissions: {}
+
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+      COMPOSE_DIR: ${{ vars.COMPOSE_DIR }}
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+    - name: Check the deployment target is configured
+      run: |
+        if [ -z "$COMPOSE_DIR" ]; then
+          echo "::error::Repository variable COMPOSE_DIR is not set: Settings - Secrets and variables - Actions - Variables."
+          exit 1
+        fi
+        for file in docker-compose.yml .env; do
+          if [ ! -f "$COMPOSE_DIR/$file" ]; then
+            echo "::error::$COMPOSE_DIR/$file is missing. Copy it from deploy/docker, see docs/docker.md."
+            exit 1
+          fi
+        done
+        echo "Target: $COMPOSE_DIR, version ${RELEASE_TAG#v}"
+
+    # Pulled before anything is changed: a tag without an image, or a registry that is
+    # down, fails here while the running container is still untouched. The shell variable
+    # wins over .env, so .env keeps the old version until the pull has succeeded.
+    - name: Pull the image
+      working-directory: ${{ vars.COMPOSE_DIR }}
+      run: CHRONOS_TAG="${RELEASE_TAG#v}" docker compose pull
+
+    # .env is what a plain "docker compose up -d" on the host reads, so the deployed
+    # version is written there: a restart by hand keeps running this release.
+    - name: Start the new version
+      working-directory: ${{ vars.COMPOSE_DIR }}
+      run: |
+        version="${RELEASE_TAG#v}"
+        if grep -q '^CHRONOS_TAG=' .env; then
+          sed -i "s/^CHRONOS_TAG=.*/CHRONOS_TAG=$version/" .env
+        else
+          echo "CHRONOS_TAG=$version" >> .env
+        fi
+        docker compose up -d --remove-orphans
+
+    - name: Smoke check the container
+      working-directory: ${{ vars.COMPOSE_DIR }}
+      run: |
+        # The published address, as the host sees it: "127.0.0.1:8080" or "0.0.0.0:8080".
+        address="$(docker compose port chronos 8080 | head -1)"
+        url="http://${address/0.0.0.0/127.0.0.1}/health/live"
+
+        # /health/live runs no checks and answers "Healthy" exactly when the app serves.
+        # The body matters: the Blazor fallback page answers 200 on every unknown path.
+        for attempt in $(seq 1 10); do
+          body="$(curl --silent --max-time 15 "$url" || true)"
+          if [ "$(echo "$body" | tr -d '[:space:]')" = "Healthy" ]; then
+            echo "$url answered Healthy on attempt $attempt"
+            exit 0
+          fi
+          echo "Attempt $attempt: no Healthy answer from $url yet"
+          sleep 6
+        done
+
+        echo "::error::$url did not come up after the deployment of $RELEASE_TAG."
+        docker compose logs --tail 100 chronos
+        exit 1

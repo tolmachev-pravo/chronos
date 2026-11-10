@@ -103,7 +103,7 @@ namespace Chronos.Web
             });
 
             // Layers
-            services.AddInfrastructureLayer(Configuration.GetSection("Jira"));
+            services.AddInfrastructureLayer(Configuration);
             services.AddApplicationLayer();
             // Mock
             if (EnvironmentExtensions.IsMock())

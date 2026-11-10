@@ -10,7 +10,7 @@ namespace Chronos.Infrastructure.Data.Contexts
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             // Keep in step with ServiceCollectionExtensions: the pre-Chronos file name is
             // deliberate, see the comment there before changing it.
-            optionsBuilder.UseSqlite("Data Source = JiraCopilot.sqlite3");
+            optionsBuilder.UseSqlite(ServiceCollectionExtensions.DefaultConnectionString);
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }

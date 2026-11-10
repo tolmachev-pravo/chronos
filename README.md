@@ -279,6 +279,15 @@ dotnet ef migrations add Migration_Name --startup-project ../Chronos.Web --conte
 Откат и повторный деплой — вручную, через `workflow_dispatch` с тегом уже опубликованного релиза: у
 черновика скачиваемого артефакта нет.
 
+### Docker
+
+Кроме архива, Release собирает Docker-образ и публикует его в
+`ghcr.io/tolmachev-pravo/chronos` с тегом версии (`1.8.0`) и `latest`. Pre-release получает только тег
+своей версии. На Linux-сервер образ разворачивает
+[Deploy to Docker](.github/workflows/deploy-docker.yml): он срабатывает на тот же опубликованный релиз,
+что и IIS, поэтому оба деплоя могут работать параллельно. Как настроить сервер, перенести данные с IIS
+и откатиться, описано в [docs/docker.md](docs/docker.md).
+
 ## Обратная связь
 
 Пожелания, идеи и баги — в [Issues](https://github.com/tolmachev-pravo/chronos/issues) или

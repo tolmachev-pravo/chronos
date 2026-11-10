@@ -1,0 +1,17 @@
+# Only src/ and Directory.Build.props are needed to build the image (see Dockerfile).
+**/bin/
+**/obj/
+**/logs/
+**/*.sqlite3*
+**/DataProtection-Keys/
+**/appsettings.Development.json
+**/*.user
+**/.vs/
+.git/
+.github/
+.claude/
+.superpowers/
+docs/
+tests/
+deploy/
+*.log

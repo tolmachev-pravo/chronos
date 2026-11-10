@@ -45,3 +45,17 @@ jobs:
         indicators: true
         output: both
         thresholds: '10 30'
+
+  # Keeps the Dockerfile from rotting between releases (issue #325): the image is only
+  # pushed by the Release workflow, but every change has to still build into one.
+  docker:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - uses: actions/checkout@v7
+    - name: Build the Docker image
+      run: docker build --tag chronos:ci .
