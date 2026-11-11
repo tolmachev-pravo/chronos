@@ -30,7 +30,7 @@
 
 1. Создайте папку, например `/opt/chronos`, и положите в неё файлы из
    этой папки ([deploy/docker](.)):
-   - `docker-compose.yml`, а за общим Traefik также `docker-compose.edge.yml` (см. «Обратный прокси»);
+   - `docker-compose.yml`, а за общим nginx также `docker-compose.edge.yml` и `chronos.edge.conf` (см. «Обратный прокси»);
    - `.env.example` под именем `.env`. Укажите в нём `CHRONOS_TAG` (версию без `v`), порт и
      часовой пояс;
    - при необходимости `chronos.env.example` под именем `chronos.env`, чтобы переопределить настройки
@@ -51,17 +51,23 @@
 По умолчанию порт открыт только на `127.0.0.1`. HTTPS завершается на прокси перед контейнером.
 Blazor Server работает через WebSocket, поэтому прокси должен пропускать `Upgrade`.
 
-**Общий Traefik на сервере.** Подходит, когда на хосте несколько сайтов или внешний балансировщик
-ходит на сервер по HTTPS на 443: запросы по имени хоста разводит общий Traefik из
-[deploy/edge](../edge), и рядом можно поднимать другие сайты. Поставьте Traefik по его README, затем
-раскомментируйте в `.env` две строки:
+**Общий nginx на сервере.** Подходит, когда на хосте несколько приложений или внешний балансировщик
+ходит на сервер по HTTPS на 443: запросы по имени хоста разводит общий nginx из
+[deploy/edge](../edge), и рядом можно поднимать другие приложения. Поставьте его по README, затем:
 
-```bash
-COMPOSE_FILE=docker-compose.yml:docker-compose.edge.yml
-CHRONOS_HOST=chronos.example.com
-```
+1. Положите `docker-compose.edge.yml` рядом с `docker-compose.yml` и раскомментируйте в `.env`:
 
-Положите `docker-compose.edge.yml` рядом с `docker-compose.yml` и выполните `docker compose up -d`.
+   ```bash
+   COMPOSE_FILE=docker-compose.yml:docker-compose.edge.yml
+   ```
+
+2. Выполните `docker compose up -d`: контейнер `chronos` подключится к сети `edge`.
+3. Скопируйте `chronos.edge.conf` в папку сайтов nginx как `chronos.conf`, впишите в `server_name`
+   свой хост и перезагрузите nginx:
+
+   ```bash
+   docker exec edge-nginx nginx -t && docker exec edge-nginx nginx -s reload
+   ```
 
 **Свой прокси на хосте.** Пример для nginx:
 
