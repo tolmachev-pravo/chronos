@@ -30,7 +30,9 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 
 # Everything that has to survive a new container lives in /data: the SQLite database, the
-# DataProtection keys that decrypt the secrets stored in it, and the logs. The folder is
+# DataProtection keys that decrypt the secrets stored in it, and the logs. The logs also go
+# to the console, so "docker logs" shows them, as does the Deploy to Docker workflow when
+# the smoke check fails. The folder is
 # created here and owned by the unprivileged "app" user, so a named volume mounted over it
 # starts out writable.
 RUN mkdir -p /data && chown app:app /data
@@ -40,6 +42,7 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     ConnectionStrings__Chronos="Data Source=/data/JiraCopilot.sqlite3" \
     DataProtection__KeysPath=/data/DataProtection-Keys \
     Serilog__WriteTo__0__Args__path=/data/logs/log-.txt \
+    Serilog__WriteTo__1__Name=Console \
     TZ=Europe/Moscow
 
 COPY --from=build /app ./
