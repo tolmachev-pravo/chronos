@@ -1,0 +1,44 @@
+# The shared entry point of a Docker host (issue #325): one Traefik that owns port 443 and
+# hands each request to the container whose labels claim its host name. Chronos is one such
+# container; any other site joins the same way, without touching this file.
+#
+#   docker network create edge        # once per host
+#   docker compose up -d
+#
+# Works on its own or behind a load balancer that ends the public TLS itself and connects to
+# this host over HTTPS on 443: Traefik answers that hop with its own self-signed certificate,
+# which such balancers usually do not check. See README.md here.
+
+services:
+  traefik:
+    # 3.6 or newer: older Traefik speaks a Docker API version that Docker 29 refuses.
+    image: traefik:v3.6.25
+    container_name: edge-traefik
+    restart: unless-stopped
+    command:
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.websecure.http.tls=true
+      # Trust X-Forwarded-* from the balancer, so the sites see the client address.
+      - --entrypoints.websecure.forwardedHeaders.trustedIPs=${EDGE_TRUSTED_IPS:-10.0.0.0/8}
+      - --providers.docker=true
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=edge
+      - --log.level=${EDGE_LOG_LEVEL:-INFO}
+      - --accesslog=${EDGE_ACCESS_LOG:-false}
+      - --ping=true
+    ports:
+      - "443:443"
+    volumes:
+      # Read-only: Traefik only watches containers come and go to read their labels.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD", "traefik", "healthcheck", "--ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  edge:
+    external: true

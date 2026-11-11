@@ -1,0 +1,23 @@
+# Puts Chronos behind the shared Traefik from deploy/edge. Turned on from .env:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.edge.yml
+#   CHRONOS_HOST=chronos.example.com
+#
+# Compose reads COMPOSE_FILE from .env, so "docker compose up -d" by hand and the Deploy to
+# Docker workflow both pick this file up without being told.
+
+services:
+  chronos:
+    networks:
+      - default
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.chronos.rule=Host(`${CHRONOS_HOST:?set CHRONOS_HOST in .env}`)
+      - traefik.http.routers.chronos.entrypoints=websecure
+      - traefik.http.routers.chronos.tls=true
+      - traefik.http.services.chronos.loadbalancer.server.port=8080
+
+networks:
+  edge:
+    external: true
