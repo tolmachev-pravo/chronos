@@ -266,9 +266,9 @@ namespace Chronos.Infrastructure.Jira
             CancellationToken cancellationToken = default)
         {
             var myself = await _jiraClient.Users.GetMyselfAsync(cancellationToken);
-            var userData = _jiraClient.RestClient.DownloadData(myself.Self);
+            var userData = _jiraClient.RestClient.DownloadData(_config.ToApiUrl(myself.Self));
             var timeZoneId = GetJsonParameterValue(userData, "timeZone");
-            var avatar = DownloadAvatar(myself.AvatarUrls.Large);
+            var avatar = DownloadAvatar(_config.ToApiUrl(myself.AvatarUrls.Large));
             string img64 = Convert.ToBase64String(avatar);
             string urlData = string.Format("data:image/jpg;base64, {0}", img64);
 
@@ -397,7 +397,7 @@ namespace Chronos.Infrastructure.Jira
             try
             {
                 var myself = await _jiraClient.Users.GetMyselfAsync(cancellationToken);
-                var avatarUrl = myself.AvatarUrls.Large;
+                var avatarUrl = _config.ToApiUrl(myself.AvatarUrls.Large);
                 var avatar = _jiraClient.RestClient.DownloadData(avatarUrl);
                 string img64 = Convert.ToBase64String(avatar);
                 string urlData = string.Format("data:image/jpg;base64, {0}", img64);

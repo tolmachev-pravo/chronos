@@ -34,6 +34,23 @@ namespace Chronos.UnitTests.Infrastructure.Jira
             Assert.That(linkGenerator.Generate("ABC-1"), Does.StartWith("https://jira.test"));
         }
 
+        [TestCase("https://jira.test/", "http://jira.internal:8080/",
+            "https://jira.test/rest/api/2/user?username=me", "http://jira.internal:8080/rest/api/2/user?username=me")]
+        [TestCase("https://jira.test", "http://jira.internal:8080",
+            "https://JIRA.test/secure/useravatar?ownerId=me", "http://jira.internal:8080/secure/useravatar?ownerId=me")]
+        [TestCase("https://jira.test/", "http://jira.internal:8080/",
+            "https://jira.test2/rest/api/2/user", "https://jira.test2/rest/api/2/user")]
+        [TestCase("https://jira.test/", "http://jira.internal:8080/",
+            "https://www.gravatar.com/avatar/1", "https://www.gravatar.com/avatar/1")]
+        [TestCase("https://jira.test/", "",
+            "https://jira.test/rest/api/2/user", "https://jira.test/rest/api/2/user")]
+        public void ToApiUrl_MovesOnlyPublicJiraLinks(string url, string apiUrl, string link, string expected)
+        {
+            var configuration = new JiraConfiguration { Url = url, ApiUrl = apiUrl };
+
+            Assert.That(configuration.ToApiUrl(link), Is.EqualTo(expected));
+        }
+
         [Test]
         public void ApiUrl_BindsFromConfiguration()
         {
