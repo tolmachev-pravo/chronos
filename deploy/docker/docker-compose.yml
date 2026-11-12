@@ -1,0 +1,31 @@
+# Chronos on a Linux server (issue #325). Copy this file and .env.example (as .env) into one
+# folder on the server, then:
+#
+#   docker compose pull && docker compose up -d
+#
+# The Deploy to Docker workflow writes the released version into CHRONOS_TAG in .env and
+# runs the same two commands. See deploy/docker/README.md.
+
+services:
+  chronos:
+    image: ghcr.io/tolmachev-pravo/chronos:${CHRONOS_TAG:?set CHRONOS_TAG in .env, for example 1.6.0}
+    container_name: chronos
+    restart: unless-stopped
+    ports:
+      # Plain HTTP. HTTPS belongs to the reverse proxy in front, which must also pass
+      # WebSocket upgrades through: Blazor Server lives on one.
+      - "${CHRONOS_BIND:-127.0.0.1}:${CHRONOS_PORT:-8080}:8080"
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+      # Trust X-Forwarded-For/-Proto from the proxy, so the app sees the original https
+      # scheme and client address.
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+    env_file:
+      - path: ./chronos.env
+        required: false
+    volumes:
+      - chronos-data:/data
+
+volumes:
+  chronos-data:
+    name: chronos-data

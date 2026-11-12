@@ -1,0 +1,36 @@
+# The shared entry point of a Docker host (issue #325): one nginx that owns port 443 and hands
+# each request to the application whose site file in ./sites claims its host name. Chronos is
+# one such application; any other joins the same way, without touching this file.
+#
+#   docker network create edge        # once per host
+#   ./make-cert.sh                    # once: the certificate nginx answers 443 with
+#   docker compose up -d
+#
+# Works on its own or behind a load balancer that ends the public TLS itself and connects to
+# this host over HTTPS on 443: nginx answers that hop with a self-signed certificate, which
+# such balancers usually do not check. See README.md here.
+
+services:
+  nginx:
+    image: nginx:1.27.5-alpine
+    container_name: edge-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+    volumes:
+      # The image's own default.conf is replaced, so nothing but the files here is served.
+      - ./conf.d:/etc/nginx/conf.d:ro
+      - ./snippets:/etc/nginx/snippets:ro
+      - ./sites:/etc/nginx/sites:ro
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD", "nginx", "-t", "-q"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+
+networks:
+  edge:
+    external: true

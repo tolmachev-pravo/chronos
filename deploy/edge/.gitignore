@@ -1,0 +1,4 @@
+# Made on the server by make-cert.sh, never committed.
+certs/
+# Real site files carry real host names; only the sample belongs in the repository.
+sites/*.conf

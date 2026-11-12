@@ -1,0 +1,13 @@
+# One file per application: copy to <app>.conf in this folder, change the two marked lines,
+# then reload nginx (see ../README.md). Files not ending in .conf are ignored.
+
+server {
+    listen 443 ssl;
+    server_name myapp.example.com;                 # the public host name
+
+    location / {
+        set $upstream http://myapp:8080;           # container name (or alias) on network "edge" and its port
+        proxy_pass $upstream;
+        include /etc/nginx/snippets/proxy.conf;
+    }
+}

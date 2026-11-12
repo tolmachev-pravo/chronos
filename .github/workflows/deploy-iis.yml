@@ -19,7 +19,8 @@ jobs:
   deploy:
     # pre-releases are published for testing and must not reach production on their own
     if: github.event_name == 'workflow_dispatch' || github.event.release.prerelease == false
-    runs-on: self-hosted
+    # The OS label keeps this job off the Linux runner that serves Deploy to Docker.
+    runs-on: [ self-hosted, windows ]
 
     # This job never uses GITHUB_TOKEN: there is no checkout, and the release archive is
     # downloaded anonymously over its public URL. So it needs no permissions at all, and

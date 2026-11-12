@@ -6,6 +6,7 @@ on:
 
 permissions:
   contents: write
+  packages: write # push the Docker image to ghcr.io (issue #325)
 
 jobs:
   release:
@@ -53,6 +54,26 @@ jobs:
       run: |
         mkdir -p artifact
         (cd publish && zip -qr "../artifact/${ARTIFACT}" .)
+
+    # The image is pushed before the draft is created, so a release never exists without
+    # its image. A pre-release gets only its own version tag: "latest" must keep pointing at
+    # what production may run.
+    - name: Build and push the Docker image
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        version="${GITHUB_REF_NAME#v}"
+        image="ghcr.io/${GITHUB_REPOSITORY,,}"
+
+        tags=(--tag "$image:$version")
+        case "$GITHUB_REF_NAME" in
+          *-*) ;;
+          *) tags+=(--tag "$image:latest") ;;
+        esac
+
+        echo "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+        docker build --build-arg VERSION="$version" "${tags[@]}" .
+        docker push --all-tags "$image"
 
     - name: Create draft release with the artifact
       env:

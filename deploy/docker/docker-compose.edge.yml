@@ -1,0 +1,18 @@
+# Puts Chronos behind the shared nginx from deploy/edge: joins its network "edge", where the
+# nginx finds the container by its name, "chronos". Turned on from .env:
+#
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.edge.yml
+#
+# Compose reads COMPOSE_FILE from .env, so "docker compose up -d" by hand and the Deploy to
+# Docker workflow both pick this file up without being told. The host name itself lives in
+# the site file, chronos.edge.conf here, copied once into the nginx's sites folder.
+
+services:
+  chronos:
+    networks:
+      - default
+      - edge
+
+networks:
+  edge:
+    external: true

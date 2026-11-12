@@ -103,7 +103,7 @@ namespace Chronos.Web
             });
 
             // Layers
-            services.AddInfrastructureLayer(Configuration.GetSection("Jira"));
+            services.AddInfrastructureLayer(Configuration);
             services.AddApplicationLayer();
             // Mock
             if (EnvironmentExtensions.IsMock())
@@ -150,7 +150,12 @@ namespace Chronos.Web
             services
                 .AddHealthChecksUI(setupSettings: setup =>
                 {
-                    setup.AddHealthCheckEndpoint("Application health checks", "/health");
+                    // A relative URI is resolved against the address Kestrel listens on. In the
+                    // container that is [::]:8080, which cannot be dialled, so the image gives
+                    // an absolute one (issue #325).
+                    setup.AddHealthCheckEndpoint(
+                        "Application health checks",
+                        Configuration["HealthChecks:EndpointUri"] is { Length: > 0 } endpointUri ? endpointUri : "/health");
                     setup.SetEvaluationTimeInSeconds(30);
                     setup.SetApiMaxActiveRequests(1);
                     setup.SetMinimumSecondsBetweenFailureNotifications(120);
