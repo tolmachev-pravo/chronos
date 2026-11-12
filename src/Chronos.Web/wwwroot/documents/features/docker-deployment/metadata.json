@@ -1,0 +1,8 @@
+{
+  "id": "docker-deployment",
+  "title": "Запуск в Docker на Linux",
+  "author": "tolmachev-pravo",
+  "date": "2026-11-12",
+  "tags": ["deployment", "docker", "linux"],
+  "isHighlighted": false
+}
