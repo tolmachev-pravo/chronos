@@ -43,6 +43,7 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     DataProtection__KeysPath=/data/DataProtection-Keys \
     Serilog__WriteTo__0__Args__path=/data/logs/log-.txt \
     Serilog__WriteTo__1__Name=Console \
+    HealthChecks__EndpointUri=http://localhost:8080/health \
     TZ=Europe/Moscow
 
 COPY --from=build /app ./
