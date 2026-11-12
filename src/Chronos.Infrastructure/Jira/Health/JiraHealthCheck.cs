@@ -30,7 +30,7 @@ namespace Chronos.Infrastructure.Jira.Health
                 var healthy = statusCode == HttpStatusCode.OK;
                 var data = new Dictionary<string, object>
                 {
-                    {"Url", _jiraConfiguration.Url},
+                    {"Url", _jiraConfiguration.ResolvedApiUrl},
                     {"StatusCode", statusCode}
                 };
                 var description = $"Status code: {statusCode}";
@@ -43,7 +43,7 @@ namespace Chronos.Infrastructure.Jira.Health
             {
                 var data = new Dictionary<string, object>
                 {
-                    {"Url", _jiraConfiguration.Url}
+                    {"Url", _jiraConfiguration.ResolvedApiUrl}
                 };
                 return HealthCheckResult.Unhealthy(exception: ex, data: data);
             }
@@ -52,7 +52,7 @@ namespace Chronos.Infrastructure.Jira.Health
         public async Task<HttpStatusCode> PingAsync(CancellationToken cancellationToken = default)
         {
             HttpClient httpClient = new();
-            var content = await httpClient.GetAsync(_jiraConfiguration.Url, cancellationToken);
+            var content = await httpClient.GetAsync(_jiraConfiguration.ResolvedApiUrl, cancellationToken);
             return content.StatusCode;
         }
     }

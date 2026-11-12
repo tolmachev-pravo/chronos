@@ -34,7 +34,9 @@
    - `.env.example` под именем `.env`. Укажите в нём `CHRONOS_TAG` (версию без `v`), порт и
      часовой пояс;
    - при необходимости `chronos.env.example` под именем `chronos.env`, чтобы переопределить настройки
-     из `appsettings.json`, например `Jira__Url`.
+     из `appsettings.json`, например `Jira__Url`. Если публичный адрес Jira с сервера недоступен, а
+     внутренний доступен, задайте его в `Jira__ApiUrl`: запросы к API пойдут на него, а ссылки для
+     пользователей останутся на `Jira__Url`.
 2. Если образ в GHCR приватный, один раз выполните на сервере `docker login ghcr.io` с PAT, у которого
    есть право `read:packages`. Публичный образ скачивается без логина. Видимость меняется в настройках
    пакета на GitHub: Packages → chronos → Package settings → Change visibility.

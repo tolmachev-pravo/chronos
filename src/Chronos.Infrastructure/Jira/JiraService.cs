@@ -49,8 +49,8 @@ namespace Chronos.Infrastructure.Jira
             _config = jiraConfiguration.Value;
             _user = identityService.CurrentUser;
             _jiraClient = _user?.PersonalAccessToken != null
-                ? CreateBearerRestClient(_config.Url, _user.PersonalAccessToken)
-                : Atlassian.Jira.Jira.CreateRestClient(_config.Url, _user?.Username, _user?.Password);
+                ? CreateBearerRestClient(_config.ResolvedApiUrl, _user.PersonalAccessToken)
+                : Atlassian.Jira.Jira.CreateRestClient(_config.ResolvedApiUrl, _user?.Username, _user?.Password);
         }
 
         /// <summary>
@@ -357,7 +357,7 @@ namespace Chronos.Infrastructure.Jira
             BasicLoginRequest request,
             CancellationToken cancellationToken = default)
         {
-            var jiraClient = Atlassian.Jira.Jira.CreateRestClient(_config.Url, request.Username, request.Password);
+            var jiraClient = Atlassian.Jira.Jira.CreateRestClient(_config.ResolvedApiUrl, request.Username, request.Password);
             return await LoginAsync(jiraClient, cancellationToken);
         }
 
@@ -371,7 +371,7 @@ namespace Chronos.Infrastructure.Jira
             BearerLoginRequest request,
             CancellationToken cancellationToken = default)
         {
-            var jiraClient = CreateBearerRestClient(_config.Url, request.Token);
+            var jiraClient = CreateBearerRestClient(_config.ResolvedApiUrl, request.Token);
             return await LoginAsync(jiraClient, cancellationToken);
         }
 
@@ -454,7 +454,7 @@ namespace Chronos.Infrastructure.Jira
         public async Task<HttpStatusCode> PingAsync(CancellationToken cancellationToken = default)
         {
             HttpClient httpClient = new();
-            var content = await httpClient.GetAsync(_config.Url, cancellationToken);
+            var content = await httpClient.GetAsync(_config.ResolvedApiUrl, cancellationToken);
             return content.StatusCode;
         }
 
@@ -532,7 +532,7 @@ namespace Chronos.Infrastructure.Jira
                 // datetime string to the app host's local timezone, corrupting the offset
                 // (e.g. returns +4 on a +4 host for a +3 server). System.Text.Json keeps
                 // the string verbatim. See issue #245.
-                var serverInfoUrl = _config.Url.AppendUrl("rest", "api", "2", "serverInfo");
+                var serverInfoUrl = _config.ResolvedApiUrl.AppendUrl("rest", "api", "2", "serverInfo");
                 var serverInfoData = _jiraClient.RestClient.DownloadData(serverInfoUrl);
                 var serverTime = GetJsonParameterValue(serverInfoData, "serverTime");
 
